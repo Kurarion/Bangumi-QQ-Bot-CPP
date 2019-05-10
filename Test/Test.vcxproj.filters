@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="头文件\Bangumi-Bot">
+      <UniqueIdentifier>{439122c3-08a3-4286-93c0-e1ae24d56934}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Bangumi-Bot\Http">
+      <UniqueIdentifier>{569bb762-7065-417c-a211-7544cbfbb718}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Bangumi-Bot\Bangumi">
+      <UniqueIdentifier>{e8ac728b-eb1a-4148-bbcd-37007366a7c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Bangumi-Bot\Parser">
+      <UniqueIdentifier>{4e37c5fe-ff48-4185-890b-916053f0b935}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Bangumi-Bot\Datebase">
+      <UniqueIdentifier>{71c6abed-6460-4e10-a160-f1d4746c4cb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Bangumi-Bot\BaseFunction">
+      <UniqueIdentifier>{c23a95b5-d16d-4cb3-8b34-f36c3e714b6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Bangumi-Bot\Init">
+      <UniqueIdentifier>{9600284a-a049-47fb-b25a-de148b2e5381}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="源.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\BangumiInterface.h">
+      <Filter>头文件\Bangumi-Bot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\Http.h">
+      <Filter>头文件\Bangumi-Bot\Http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\Bangumi.h">
+      <Filter>头文件\Bangumi-Bot\Bangumi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\BangumiInfo.h">
+      <Filter>头文件\Bangumi-Bot\Bangumi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\Parser.h">
+      <Filter>头文件\Bangumi-Bot\Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\ParserElements.h">
+      <Filter>头文件\Bangumi-Bot\Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\Database.h">
+      <Filter>头文件\Bangumi-Bot\Datebase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\BaseDataStruct.h">
+      <Filter>头文件\Bangumi-Bot\BaseFunction</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\Functions.h">
+      <Filter>头文件\Bangumi-Bot\BaseFunction</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\GlobalVariable.h">
+      <Filter>头文件\Bangumi-Bot\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cc.sirokuma.Bangumi\Init.h">
+      <Filter>头文件\Bangumi-Bot\Init</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\cc.sirokuma.Bangumi\CQP.lib">
+      <Filter>资源文件</Filter>
+    </Library>
+  </ItemGroup>
+</Project>

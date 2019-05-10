@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="None">
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Bangumi娘使用指南</title>
+    <link href="css/bootstrap-3.3.7.min.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+    <link href="css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="js/jquery-1.10.2.min.js" defer></script>
+    <script src="js/bootstrap-3.3.7.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body class="homepage">
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href=".">Bangumi娘使用指南</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#bangumi">Bangumi娘使用指南</a></li>
+        <li class="main "><a href="#1">1. 简介与用途</a></li>
+        <li class="main "><a href="#2">2. 基础指南</a></li>
+        <li class="main "><a href="#3">3. 指令集</a></li>
+            <li><a href="#31">3.1 用户查询</a></li>
+            <li><a href="#32">3.2 条目查询</a></li>
+            <li><a href="#33">3.3 条目搜索</a></li>
+            <li><a href="#34">3.4 绑定</a></li>
+            <li><a href="#35">3.5 条目收藏</a></li>
+            <li><a href="#36">3.6 条目更新</a></li>
+            <li><a href="#37">3.7 标签搜索</a></li>
+        <li class="main "><a href="#4">4. 复杂参数</a></li>
+            <li><a href="#41">4.1 基本复杂参数</a></li>
+            <li><a href="#42">4.2 条目查询的复杂参数</a></li>
+            <li><a href="#43">4.3 条目收藏的复杂参数</a></li>
+            <li><a href="#44">4.4 条目更新的复杂参数</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="bangumi">Bangumi娘使用指南</h1>
+<h1 id="1">1. 简介与用途</h1>
+<p>Bangumi QQ机器人简称<a href="https://baike.baidu.com/item/Bangumi/9673531">Bangumi娘</a>，是为方便Bangumi用户进行分享，交流，收藏与更新动画进度等而开发的QQ机器人。</p>
+<h1 id="2">2. 基础指南</h1>
+<ul>
+<li>一切可识别的指令以<strong>中文或英文</strong>下的<code>冒号「:」</code>或<code>分号「;」</code>开头，可以一条消息中使用多种指令，对于一些指令本身也支持多个参数的识别。</li>
+<li>多个指令之间的连接符有<code>冒号「:」</code>，<code>分号「;」</code>，<code>等号「=」</code>和<code>反斜杠「/」</code>但是需要<strong>注意</strong>用于连接符的冒号和分号<strong>只能是英文下</strong>的，否则只会被看成是一个参数。</li>
+<li>一个指令可以批量参数执行，比如你希望查询两个ID的条目，你可以只使用一个指令符和两个参数即可，连接两个参数之间的符号叫参数连接符
+，它只包括<code>空格「 」</code>，另外<code>指令关键字</code>也可以充当一个参数连接符。</li>
+<li>机器人使用了缓存机制，但当使用两个<strong>英文</strong>下的冒号即<code>「::」</code>发起指令时，该指令会请求最新的数据而非缓存的数据，但速度上会相对慢一点，此操作会导致此消息所有的指令都不使用缓存。</li>
+<li><strong>注意:</strong> 因为参数分割符包括<code>空格</code>，因此请务必注意一个参数中间不能出现空格。</li>
+<li><strong>注意:</strong> 所有的指令的识别是从<code>前缀(也就是分号冒号那些)</code>开始找到的第一个与已有的指令匹配的字符决定，也就是说你的参数与指令没有绝对的位置关系，但你的参数中可能包含指令的字符，这时你就需要先将你需要的指令的关键字尽量放在<code>前缀</code>后面。</li>
+<li><strong>注意:</strong> 一条指令只会将第一个出现的指令作为此指令的功能，也就是说一旦指令已经被识别出来，这条指令之后的参数中出现的指令关键字都会作为参数处理而不是指令。</li>
+<li>当前机器人使用的指令识别符有<code>user/用户(用户查询)</code>，<code>acg/条目/查询(条目查询)</code>，<code>?/？/搜索(条目搜索)</code>，<code>reg/绑定(用户绑定)</code>，<code>co/收藏(条目收藏)</code>，<code>up/++/更新(条目更新)</code>和<code>tag/标签（标签搜索）</code>，另外指令不分大小写，也就是说任意大小写都可以被识别。</li>
+</ul>
+<h1 id="3">3. 指令集</h1>
+<h2 id="31">3.1 用户查询</h2>
+<ul>
+<li><strong>关键字</strong><code>user</code>或<code>用户</code>表示<code>用户查询</code></li>
+<li><strong>参数</strong>：需要查询的用户的<code>数字ID</code>或<code>英文ID</code></li>
+<li><strong>返回</strong>：此用户的一些基本信息</li>
+<li>需要提醒一下Bangumi的ID是可以自定义英文用户名的，拥有含英文的ID同时也拥有数字ID，也就是说有两个不同的ID，但两种ID都能够查询到同一位用户，在返回的消息中第一行即是该用户的数字ID，如果此用户拥有英文ID则在头像下一行的@之后是他的英文ID，否则是数字ID。</li>
+<li>具体使用示例如下：</li>
+</ul>
+<p><img alt="用户查询" src="pic/user.png" /></p>
+<hr />
+<h2 id="32">3.2 条目查询</h2>
+<ul>
+<li><strong>关键字</strong><code>acg</code>，<code>查询</code>，<code>条目</code>或<code>空指令</code>表示<code>条目查询</code></li>
+<li><strong>参数</strong>：需要查询的条目的<code>数字ID</code>或<code>复杂参数</code>(有关<code>复杂参数</code>请向后查阅)以及可选的条目相关的参数</li>
+<li><strong>返回</strong>：此条目的一些基本信息 <strong>[如果用户绑定了QQ则会额外提供用户收藏与进度信息]</strong> </li>
+<li>具体使用示例如下：</li>
+</ul>
+<p><img alt="基础的条目查询" src="pic/subject_base.png" /></p>
+<ul>
+<li>额外的参数</li>
+<li><code>条目ID或复杂参数+标识符(t/r/c/s/o)</code></li>
+<li><code>条目ID或复杂参数/标识符(t/r/c/s/o)</code></li>
+<li><strong>注意：加号与斜杠的区别在于附加原本条目信息与否，使用+则在回复额外信息的同时也会回复条目本身的信息，使用/则只会回复额外信息</strong></li>
+<li><strong>注意：标识符是可以同时出现或任意组合的，但尽量不要全部同时使用，会影响速度与结果</strong></li>
+<li><code>条目ID或复杂参数</code>即想要收藏的条目，可以是<code>数字的ID</code>也可以是<code>复杂参数</code>，同时针对一个绑定过的用户还可以<code>空缺</code>来表示上一次进行条目查询的那个条目</li>
+<li><code>标识符</code>即相关此条目的其他信息的标识</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>标识符(不区分大小写)</th>
+<th>对应的信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>t</td>
+<td>此条目的标签</td>
+</tr>
+<tr>
+<td>r</td>
+<td>此条目的角色</td>
+</tr>
+<tr>
+<td>c</td>
+<td>此条目的吐槽</td>
+</tr>
+<tr>
+<td>s</td>
+<td>此条目的放送状态</td>
+</tr>
+<tr>
+<td>o</td>
+<td>此条目的staff信息</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>----以下是具体例子----</li>
+<li>例如：现假定要收藏的动画条目的ID为<code>220632</code></li>
+<li><code>: 220632/s</code> 表示 只回复条目<code>放送状态</code>的消息</li>
+<li><code>: 220632+s</code> 表示 回复条目<code>放送状态</code>与此条目原有的消息</li>
+<li><code>: 220632/stc</code> 表示 回复条目的<code>放送状态</code>，<code>标签</code>和<code>吐槽信息</code>的消息</li>
+<li><code>: 220632+</code> 表示 与直接查询条目得到相同的结果</li>
+<li>
+<p><code>: 220632/</code> 表示 什么也不回复</p>
+</li>
+<li>
+<p>示例如下</p>
+</li>
+</ul>
+<p><img alt="额外的条目查询" src="pic/subject_extra.png" /></p>
+<hr />
+<h2 id="33">3.3 条目搜索</h2>
+<ul>
+<li><strong>关键字</strong><code>?</code>，<code>？</code>或<code>搜索</code>表示<code>条目搜索</code></li>
+<li><strong>参数</strong>：需要查询的条目的关键字与可选的额外的精确条件</li>
+<li><strong>返回</strong>：搜索到的相关条目的信息</li>
+<li>具体使用示例如下：</li>
+</ul>
+<p><img alt="基础的条目搜索" src="pic/search.png" /></p>
+<ul>
+<li>以上是默认不加参数的情况</li>
+<li>其实不加参数的 <code>搜索的关键字</code>，也就是默认情况，等价于加参数情况下的 <code>搜索的关键字/a/5/0</code></li>
+<li>也就是说<code>:?一拳</code>等价于<code>:?一拳/a/5/0</code></li>
+<li>以下是加了参数的情况</li>
+</ul>
+<p><img alt="含参数的条目搜索" src="pic/search_param.png" /></p>
+<ul>
+<li>额外的精确条件即额外的参数</li>
+<li><code>关键字/类型/返回的结果数/返回的第一个结果的编号</code></li>
+<li><code>关键字</code>即需要检索的关键字，同时它有一些额外的语法：<code>+</code>代表空格（因为一个参数之间不能出现<code>空格</code>，因此使用<code>+</code>代替）<code>-</code>代表需要排除的关键字</li>
+<li><code>类型</code>即想要检索的条目的类型</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>类型关键字(不区分大小写)</th>
+<th>对应的条目类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a (默认)</td>
+<td>动画</td>
+</tr>
+<tr>
+<td>c</td>
+<td>书籍</td>
+</tr>
+<tr>
+<td>g</td>
+<td>游戏</td>
+</tr>
+<tr>
+<td>m</td>
+<td>音乐</td>
+</tr>
+<tr>
+<td>r</td>
+<td>三次元</td>
+</tr>
+<tr>
+<td>x</td>
+<td>全部分类</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>返回的结果数</code>即返回的最大条目的数量，随着数量的增加消息回复会变慢</li>
+<li><code>返回的第一个结果的编号</code>即从此条目开始向后数<code>返回的结果数</code>个作为消息返回</li>
+<li>----以下是具体例子----</li>
+<li>例如：现假定搜索的关键字为<code>英雄</code></li>
+<li><code>:?英雄</code> 表示 搜索关键字为英雄的<strong>动画</strong>类型的从0开始的5个结果 <strong>[注意编号是从0开始的]</strong></li>
+<li><code>:?英雄/g/1/0</code> 表示 搜索关键字为英雄的<strong>游戏</strong>类型的第一个结果 <strong>[因为只返回一个结果，编号又是0，因此即为返回第一个结果]</strong></li>
+<li><code>:?英雄//1/0</code> 表示 搜索关键字为英雄的<strong>动画</strong>类型的第一个结果 <strong>[如果对应参数位置为空则会使用默认的参数，这里是使用默认的a]</strong></li>
+<li><code>:?英雄/x//1</code> 表示 搜索关键字为英雄的<strong>所有</strong>类型的从1开始的5个结果 <strong>[任意参数都可以空参数]</strong></li>
+<li><code>:?英雄///</code> 表示 搜索关键字为英雄的<strong>动画</strong>类型的从0开始的5个结果 <strong>[甚至可以完全空着参数，但与默认参数无异]</strong></li>
+</ul>
+<hr />
+<h2 id="34">3.4 绑定</h2>
+<ul>
+<li><strong>关键字</strong><code>reg</code>或<code>绑定</code>表示<code>绑定</code></li>
+<li><strong>参数</strong>：无</li>
+<li><strong>返回</strong>：一个绑定的网址的卡片消息</li>
+<li><strong>注意</strong>：因涉及Bangumi账号的授权问题，此功能只能在私聊下完成，而且也请不要分享自己的卡片消息给他人</li>
+<li><strong>注意</strong>：一旦用户收到了绑定的消息回复，请在5分钟之内完成绑定，否则机器人将不会受理，而且请尽量确保在点开链接之前，bangumi是处于登陆状态的，否则可能会出现问题，解决方法是登陆后重新打开绑定链接，不过即使因超时而没有完成绑定也可以重新发送<code>reg</code>,机器人会继续等待5分钟</li>
+</ul>
+<p><img alt="绑定" src="pic/reg.png" /></p>
+<ul>
+<li>当打开这个链接时会出现以下授权界面</li>
+</ul>
+<p><img alt="绑定bgm" src="pic/reg_web_bgm.png" /></p>
+<ul>
+<li>正如授权页面中头像旁边的文字所述的那样，当看到如下界面，并且Bangumi娘也进行了相应回复则表示绑定成功</li>
+</ul>
+<p><img alt="绑定bgm成功1" src="pic/reg_web_over.png" /></p>
+<ul>
+<li>Bangumi娘的回复如下</li>
+</ul>
+<p><img alt="绑定bgm成功" src="pic/reg_qq_over.png" /></p>
+<ul>
+<li>至此，便完成了绑定的功能，偶尔授权可能会失效，此时可以通过重新绑定来解决</li>
+<li>之前提到如果绑定了Bangumi账号，针对条目查询则会有额外的信息显示</li>
+<li>如下所示</li>
+</ul>
+<p><img alt="绑定后的条目查询" src="pic/subject_plus1.png" /></p>
+<hr />
+<h2 id="35">3.5 条目收藏</h2>
+<ul>
+<li><strong>关键字</strong><code>co</code>或<code>收藏</code>表示<code>条目收藏</code></li>
+<li><strong>参数</strong>：需要收藏的条目的<code>数字ID</code>或<code>复杂参数</code>(有关<code>复杂参数</code>请向后查阅)以及可选的收藏相关的参数</li>
+<li><strong>返回</strong>：此条目的一些放送信息与个人的收藏等信息</li>
+<li><strong>注意</strong>：<strong>使用前提是用户QQ已经绑定了Bangumi账号</strong></li>
+<li>具体使用示例如下：</li>
+<li>默认情况下会收藏为<strong>在看</strong>，<strong>不评分</strong>，<strong>不吐槽</strong></li>
+</ul>
+<p><img alt="默认参数的收藏" src="pic/collection_default.png" /></p>
+<ul>
+<li>额外的参数</li>
+<li><code>条目ID或复杂参数/收藏类型/评分/吐槽</code></li>
+<li><code>条目ID或复杂参数</code>即想要收藏的条目，可以是<code>数字的ID</code>也可以是<code>复杂参数</code>，同时针对一个绑定过的用户还可以<code>空缺</code>来表示上一次进行条目查询的那个条目</li>
+<li><code>收藏类型</code>即想要将条目收藏为什么状态</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>类型关键字(不区分大小写)</th>
+<th>对应的收藏状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>do / on (默认)</td>
+<td>在看/玩/听/读</td>
+</tr>
+<tr>
+<td>collect / fin</td>
+<td>看/玩/听/读过</td>
+</tr>
+<tr>
+<td>wish / td</td>
+<td>想看/玩/听/读</td>
+</tr>
+<tr>
+<td>hold</td>
+<td>搁置</td>
+</tr>
+<tr>
+<td>drop</td>
+<td>抛弃</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>评分</code>即想要给此条目评多少分</li>
+<li><code>吐槽</code>即想要对此条目发表的吐槽 <strong>[注意：不能够包含基础指南中提到的两种连接符以及参数连接符，会被忽略和截断，请使用相应中文字符代替]</strong></li>
+<li>----以下是具体例子----</li>
+<li>例如：现假定要收藏的动画条目的ID为<code>220632</code></li>
+<li><code>:co 220632/fin</code> 表示 收藏此动画为<strong>看过</strong>状态</li>
+<li><code>:co 220632/drop/1/我后悔点开了它</code> 表示 收藏此动画为<strong>抛弃</strong>状态</li>
+<li><code>:co 220632///我，觉得它还可以抢救</code> 表示 收藏此动画为<strong>在看</strong>状态，这里是使用了空白参数，会默认使用<code>do</code>即表示<code>在看</code>，同时<code>评分</code>也是如此，默认不打分，最后只加上了<code>吐槽</code><del>，<strong>注意：吐槽中使用的是中文下的逗号，使用英文下的话会只吐槽"我"</strong></del></li>
+<li><code>:co 220632///</code> 表示 收藏此动画为<strong>在看</strong>状态 <strong>[甚至可以完全空着参数，但与默认参数无异]</strong></li>
+</ul>
+<hr />
+<h2 id="36">3.6 条目更新</h2>
+<ul>
+<li><strong>关键字</strong><code>up</code>，<code>++</code>或<code>更新</code>表示<code>条目更新</code></li>
+<li><strong>参数</strong>：需要更新的条目的<code>数字ID</code>或<code>复杂参数</code>(有关<code>复杂参数</code>请向后查阅)以及可选的更新相关的参数</li>
+<li><strong>返回</strong>：此条目的一些放送信息与个人的进度等信息</li>
+<li><strong>注意</strong>：<strong>使用前提是用户QQ已经绑定了Bangumi账号</strong></li>
+<li>具体使用示例如下：</li>
+<li>现在更新条目为193619的动画，在示例之前，示例用的Bangumi账号没有收藏过此条目</li>
+<li>默认参数的情况下会将用户进度+1，如果原本用户没有收藏过条目，则此指令会自动收藏为<code>在看</code>状态，进度更新至第一话</li>
+</ul>
+<p><img alt="默认参数的更新" src="pic/update_default.png" /></p>
+<ul>
+<li>额外的参数</li>
+<li><code>条目ID或复杂参数/进度参数/评分/吐槽</code></li>
+<li><code>条目ID或复杂参数</code>即想要收藏的条目，可以是<code>数字的ID</code>也可以是<code>复杂参数</code>，同时针对一个绑定过的用户还可以<code>空缺</code>来表示上一次进行条目查询的那个条目</li>
+<li><code>进度参数</code>即想要更新的进度，可以是<code>具体数字</code>表示想更新到的话数，也可以是<code>air</code>与<code>fin</code>，分别表示当前放送的话数和总话数，默认<code>空缺</code>情况下表示当前进度+1</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>进度参数</th>
+<th>对应进度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数字</td>
+<td>此数字的大小</td>
+</tr>
+<tr>
+<td>air</td>
+<td>已放送话数</td>
+</tr>
+<tr>
+<td>fin</td>
+<td>总话数(同时会收藏为看过状态)</td>
+</tr>
+<tr>
+<td>+x</td>
+<td>在自己进度基础上向后加上 x 话</td>
+</tr>
+<tr>
+<td>-x</td>
+<td>在自己进度基础上向前减去 x 话</td>
+</tr>
+<tr>
+<td>(数/参)+x</td>
+<td>在原有的数字和参数表示基础上向后加上 x 话</td>
+</tr>
+<tr>
+<td>(数/参)-x</td>
+<td>在原有的数字和参数表示基础上向前减去 x 话</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>例子： 现假设某番12话，自己的进度是2话，当前放送了6话</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>进度参数</th>
+<th>对应进度结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5</td>
+<td>5/12</td>
+</tr>
+<tr>
+<td>air</td>
+<td>6/12</td>
+</tr>
+<tr>
+<td>fin</td>
+<td>12/12(同时会收藏为看过状态)</td>
+</tr>
+<tr>
+<td>+2</td>
+<td>4/12</td>
+</tr>
+<tr>
+<td>-1</td>
+<td>1/12</td>
+</tr>
+<tr>
+<td>air-2</td>
+<td>4/12</td>
+</tr>
+<tr>
+<td>fin-7</td>
+<td>5/12</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>评分</code>即若收藏为<code>看过</code>时，对此条目的评分 <strong>[注意：只有当更新进度大于等于TV总话数才会触发收藏为看过状态]</strong></li>
+<li><code>吐槽</code>即若收藏为<code>看过</code>时，对此条目发表的吐槽 <strong>[注意：只有当更新进度大于等于TV总话数才会触发收藏为看过状态]</strong></li>
+<li>----以下是具体例子----</li>
+<li>例如：现假定要更新的动画条目的ID为<code>240760</code></li>
+<li><code>:++ 240760/fin</code> 表示 更新进度为<strong>百分百</strong>同时收藏此动画为<strong>看过</strong>状态</li>
+<li><code>:++ 240760/air</code> 表示 更新进度为<strong>百分百</strong>同时收藏此动画为<strong>看过</strong>状态，原因是现已经全部放送，此时<code>fin</code>等价于<code>air</code></li>
+<li><code>:up 240760/fin/9/和第一季一样精彩</code> 表示 更新进度为<strong>百分百</strong>同时收藏此动画为<strong>看过</strong>状态，评分9分，吐槽：和第一季一样精彩</li>
+<li><code>:++ 240760/5/5/这里没用</code> 表示 如未收藏此动画，则收藏为<strong>在看</strong>状态，更新进度为5话，由于5话小于放送的总话数，因此后两个参数并不会被使用</li>
+<li><code>:++ 240760///</code> 表示 如未收藏此动画，则收藏为<strong>在看</strong>状态，进度为上次更新进度+1，如果未收藏则表示0+1=1 <strong>[甚至可以完全空着参数，但与默认参数无异]</strong></li>
+</ul>
+<hr />
+<h2 id="37">3.7 标签搜索</h2>
+<ul>
+<li><strong>关键字</strong><code>tag</code>或<code>标签</code>表示<code>标签搜索</code></li>
+<li><strong>参数</strong>：需要查询的条目的关键字与可选的额外的精确条件</li>
+<li><strong>返回</strong>：拥有符合条件的条目列表</li>
+<li><strong>注意</strong>：考虑到常用性当前只会返回TV动画</li>
+<li>具体使用示例如下：</li>
+<li>默认是以日期排序的</li>
+</ul>
+<p><img alt="默认参数的tag" src="pic/tag_base.png" /></p>
+<ul>
+<li>额外的精确条件即额外的参数</li>
+<li><code>标签名/放送季度/结果的页码</code></li>
+<li><code>标签名</code>即需要检索的标签</li>
+<li><code>放送季度</code>即想要限定的放送的季度</li>
+<li>示例如下</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>放送季度参数</th>
+<th>放送季度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2015-1</td>
+<td>2015年的春季番</td>
+</tr>
+<tr>
+<td>2018-04</td>
+<td>2018年的夏季番</td>
+</tr>
+<tr>
+<td>2018-7</td>
+<td>2018年的秋季番</td>
+</tr>
+<tr>
+<td>2018-10</td>
+<td>2018年的冬季番</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>
+<p><code>结果的页码</code>即返回所在页码的结果，默认不填写即表示第一页，结果有多页时可以调整此参数</p>
+</li>
+<li>
+<p>----以下是具体例子----</p>
+</li>
+<li>例如：现假定搜索的关键字为<code>原创</code></li>
+<li><code>:tag原创</code> 表示 搜索标签为原创的<code>任意放送日期</code>的TV动画的<code>第一页</code>的所有结果</li>
+<li><code>:tag 原创/2019-04/1</code> 表示 搜索标签为原创的<code>2019年4月放送</code>的TV动画的<code>第一页</code>的所有结果 <strong>[也可以显示的表示第1页]</strong></li>
+<li><code>:tag /2019-04/2</code> 表示 搜索所有<code>2019年4月放送</code>的TV动画的<code>第二页</code>的所有结果 <strong>[标签为空可以匹配任意条目]</strong></li>
+<li><code>:tag //</code> 表示 搜索当前所有TV动画类型的第一页的所有结果 <strong>[甚至可以完全空着参数，但与默认参数无异]</strong></li>
+</ul>
+<h1 id="4">4. 复杂参数</h1>
+<h2 id="41">4.1 基本复杂参数</h2>
+<ul>
+<li>第一类：<code>井号#</code>参数</li>
+<li>功能说明：从数据库中查找条目，结果是以由条目ID<code>由大到小</code>排序并且优先返回<code>动画</code>类型，凡是使用<code>条目查询</code>或<code>条目搜索</code>过的出现的条目数据库都会进行存储，也就是说随着使用查找的结果可能会发生改变</li>
+<li>参数说明：<code>#关键字(+关键字2)(-数字)</code> <code>括号()</code>可以省略</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>含意</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+</td>
+<td>添加多个可不连续关键字</td>
+</tr>
+<tr>
+<td>-</td>
+<td>返回第几个结果</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>----以下是具体例子----</li>
+<li>例如：现假定要查询的关键字为<code>一拳</code></li>
+<li><code>:#一拳</code> 表示 使用<code>条目查询</code>查询数据库中与<code>一拳</code>匹配的<code>第一个</code>结果的条目</li>
+<li><code>:++#一拳+人-1</code> 表示 使用<code>条目更新</code>更新数据库中与<code>一拳 人</code>匹配的<code>第一个</code>结果的条目</li>
+<li><code>:co #一拳-2</code> 表示 使用<code>条目收藏</code>收藏数据库中与<code>一拳</code>匹配的<code>第二个</code>结果的条目</li>
+</ul>
+<hr />
+<ul>
+<li>第二类：<code>百分号%</code>参数</li>
+<li>功能说明：从Bangumi查找条目，功能相当于<code>条目搜索</code>，但只会得到一个条目，使用此参数可以避免使用两次指令</li>
+<li>参数说明：<code>%搜索关键字*类型参数*结果的第几个</code></li>
+<li><code>搜索关键字</code>与<code>条目搜索</code>的参数一样，即需要检索的关键字，同时它有一些额外的语法：<code>+</code>代表空格（因为一个参数之间不能出现<code>空格</code>，因此使用<code>+</code>代替）<code>-</code>代表需要排除的关键字</li>
+<li><code>类型参数</code>即想要检索的条目的类型</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>类型参数关键字(不区分大小写)</th>
+<th>对应的条目类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a (默认)</td>
+<td>动画</td>
+</tr>
+<tr>
+<td>c</td>
+<td>书籍</td>
+</tr>
+<tr>
+<td>g</td>
+<td>游戏</td>
+</tr>
+<tr>
+<td>m</td>
+<td>音乐</td>
+</tr>
+<tr>
+<td>r</td>
+<td>三次元</td>
+</tr>
+<tr>
+<td>x</td>
+<td>全部分类</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>
+<p><code>结果的第几个</code>即想要返回的第几个结果</p>
+</li>
+<li>
+<p>----以下是具体例子----</p>
+</li>
+<li>例如：现假定要查询的关键字为<code>一拳</code></li>
+<li><code>:%一拳</code> 表示 使用<code>条目查询</code>查询Bangumi搜索中与<code>一拳</code>匹配的<code>第一个</code> <code>动画类型</code>结果的条目</li>
+<li><code>:++%一拳+人-Movie</code> 表示 使用<code>条目更新</code>更新Bangumi搜索中与<code>一拳 人 -Movie</code>匹配的<code>第一个</code> <code>动画类型</code>结果的条目</li>
+<li><code>:co %一拳**2</code> 表示 使用<code>条目收藏</code>收藏Bangumi搜索中与<code>一拳</code>匹配的<code>第二个</code> <code>动画类型</code>结果的条目</li>
+<li><code>:co %一拳*g*1</code> 表示 使用<code>条目收藏</code>收藏Bangumi搜索中与<code>一拳</code>匹配的<code>第一个</code> <code>游戏类型</code>结果的条目</li>
+</ul>
+<hr />
+<ul>
+<li>第三类：<code>空缺</code>参数</li>
+<li>功能说明：表示上次使用<code>条目查询</code>查询的条目</li>
+<li>参数说明：无参数，只有指令</li>
+<li>
+<p>特别说明：虽然参数本身是无，但如果没有对应指令的额外参数，Bangumi娘只会无视指令</p>
+</li>
+<li>
+<p>----以下是具体例子----</p>
+</li>
+<li>例如：现假定要查询的关键字为<code>一拳</code></li>
+<li><code>: +</code> 表示 使用<code>条目查询</code>查询上次使用<code>条目查询</code>查询的条目，使用<code>+</code>号防止全空缺指令被无视</li>
+<li><code>: /s</code> 表示 使用<code>条目查询</code>查询上次使用<code>条目查询</code>查询的条目放送状态</li>
+<li><code>:++ /</code> 表示 使用<code>条目更新</code>更新上次使用<code>条目查询</code>查询的条目</li>
+<li><code>:++ /air</code> 表示 使用<code>条目更新</code>更新上次使用<code>条目查询</code>查询的条目，更新到放送话数</li>
+<li><code>:co /</code> 表示 使用<code>条目收藏</code>收藏上次使用<code>条目查询</code>查询的条目</li>
+<li><code>:co /fin/9/4月番中最优秀的作品</code> 表示 使用<code>条目收藏</code>收藏上次使用<code>条目查询</code>查询的条目，评分加吐槽</li>
+</ul>
+<h2 id="42">4.2 条目查询的复杂参数</h2>
+<ul>
+<li>注意：凡是使用了<code>#</code>或<code>%</code>解析一律不能接<code>+</code>，只能接<code>/</code></li>
+</ul>
+<h2 id="43">4.3 条目收藏的复杂参数</h2>
+<ul>
+<li>暂时无特别说明</li>
+</ul>
+<h2 id="44">4.4 条目更新的复杂参数</h2>
+<ul>
+<li>延时指令</li>
+<li>参数说明：在指令的<code>最后</code>加上<code>_倒计时(分钟)</code></li>
+<li>功能目的：为了方便在看完一集动画<code>忘记更新</code>或<code>懒</code>或<code>没那种心情</code>时使用</li>
+<li>
+<p>功能说明：仅仅适用于<code>条目更新</code>，有当前最大使用数量上限，可能会发生意外导致不能更新，时间一般会与预计的晚一点，因此尽量少使用</p>
+</li>
+<li>
+<p>----以下是具体例子----</p>
+</li>
+<li><code>:++ 220632  _24</code> 表示 <code>24分钟</code>后会执行此指令</li>
+</ul>
+<p><img alt="延时指令" src="pic/delay_update.png" /></p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js" defer></script>
+        <script src="search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.0.4
+Build Date UTC : 2019-05-09 07:55:25
+-->

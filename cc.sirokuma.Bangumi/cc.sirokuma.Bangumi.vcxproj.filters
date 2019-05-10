@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot">
+      <UniqueIdentifier>{47ab58fe-a33d-4391-8e70-2ea1de081898}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Bangumi-Bot">
+      <UniqueIdentifier>{bdecae71-8987-4ae1-9963-a32947e864fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\Http">
+      <UniqueIdentifier>{5e7e2c6e-03ca-442b-bb30-a5bf0e8a355b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\Bangumi">
+      <UniqueIdentifier>{febee4d5-cd90-4e57-9a40-c42a8e64dfea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\Parser">
+      <UniqueIdentifier>{d2f9d65f-0882-45c4-9545-ef129e25437b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\Datebase">
+      <UniqueIdentifier>{2dbf5f89-3291-407d-b600-8f652f888b98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\BaseFunction">
+      <UniqueIdentifier>{d82d4faf-4e4c-4e9d-bf16-d87411c50dce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\Init">
+      <UniqueIdentifier>{124a5719-9b83-4c86-9c00-1258d7d7c3c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\Exception">
+      <UniqueIdentifier>{c5e1df25-a79a-4232-864e-72f7e3a28fa6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\Resolver">
+      <UniqueIdentifier>{4c22d8ad-f06a-4257-9e6a-41762a8f0fd0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Bangumi-Bot\Other">
+      <UniqueIdentifier>{d3e3e25e-11e0-425c-a12a-c23c9e4ed9a0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cqp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="appmain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bangumi.h">
+      <Filter>Header Files\Bangumi-Bot\Bangumi</Filter>
+    </ClInclude>
+    <ClInclude Include="BangumiInfo.h">
+      <Filter>Header Files\Bangumi-Bot\Bangumi</Filter>
+    </ClInclude>
+    <ClInclude Include="Functions.h">
+      <Filter>Header Files\Bangumi-Bot\BaseFunction</Filter>
+    </ClInclude>
+    <ClInclude Include="Database.h">
+      <Filter>Header Files\Bangumi-Bot\Datebase</Filter>
+    </ClInclude>
+    <ClInclude Include="Http.h">
+      <Filter>Header Files\Bangumi-Bot\Http</Filter>
+    </ClInclude>
+    <ClInclude Include="Parser.h">
+      <Filter>Header Files\Bangumi-Bot\Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="Init.h">
+      <Filter>Header Files\Bangumi-Bot\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalVariable.h">
+      <Filter>Header Files\Bangumi-Bot\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="BangumiInterface.h">
+      <Filter>Header Files\Bangumi-Bot</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserElements.h">
+      <Filter>Header Files\Bangumi-Bot\Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseDataStruct.h">
+      <Filter>Header Files\Bangumi-Bot\BaseFunction</Filter>
+    </ClInclude>
+    <ClInclude Include="BangumiExceptions.h">
+      <Filter>Header Files\Bangumi-Bot\Exception</Filter>
+    </ClInclude>
+    <ClInclude Include="Resolve.h">
+      <Filter>Header Files\Bangumi-Bot\Resolver</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpServer.h">
+      <Filter>Header Files\Bangumi-Bot\Http</Filter>
+    </ClInclude>
+    <ClInclude Include="iconv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeWorker.h">
+      <Filter>Header Files\Bangumi-Bot\Other</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="appmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="CQP.lib" />
+    <Library Include="libiconv-static.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cc.sirokuma.Bangumi.json" />
+  </ItemGroup>
+</Project>

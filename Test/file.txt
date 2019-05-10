@@ -1,0 +1,111 @@
+1431
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en-US"> <!--<![endif]-->
+<head>
+<title>网站配置未生效 | www.baidu.com | 百度云加速</title></title>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<link rel="stylesheet" id="yjs_styles-css" href="/cdn-cgi/styles/baidu.errors.css" type="text/css" media="screen,projection" />
+<!--[if lt IE 9]><link rel="stylesheet" id='yjs_styles-ie-css' href="/cdn-cgi/styles/baidu.errors.ie.css" type="text/css" media="screen,projection" /><![endif]-->
+<style type="text/css">body{margin:0;padding:0}</style>
+
+
+<!--[if gte IE 10]><!--><script type="text/javascript" src="/cdn-cgi/scripts/zepto.min.js"></script><!--<![endif]-->
+<!--[if gte IE 10]><!--><script type="text/javascript" src="/cdn-cgi/scripts/baidu.common.js"></script><!--<![endif]-->
+
+<link rel="stylesheet"  href="//idm-su.baidu.com/config.css?r=20171010" type="text/css"  />
+
+</head>
+<body>
+  <div id="yjs-wrapper">
+    <div id="yjs-error-banner">
+<div class="yjs-wrapper">
+  <div class="yjs-error-actions">
+    <a href="#" onclick="document.cookie='yjs_use_ob=0;path=/';window.location.reload();return false;" class="yjs-btn yjs-btn-success" data-translate="retry_for_live">刷新重试</a>
+  </div>
+  <div class="yjs-error-header-desc">
+    <h4 data-translate="cached_copy"></h4>
+    <p class="yjs-details">
+      <span data-translate="网站配置未生效">网站配置未生效</span>
+    </p>
+  </div>
+</div>
+</div>
+
+    <div class="yjs-alert yjs-alert-error yjs-cookie-error" id="cookie-alert" data-translate="enable_cookies">请打开cookies.</div>
+    <div id="yjs-error-details" class="yjs-error-details-wrapper">
+      <div class="yjs-wrapper yjs-header yjs-error-overview">
+        <h1>
+          <span class="yjs-error-type" data-translate="error">Error</span>
+          <span class="yjs-error-code">1016</span>
+          <small style="font-size:15px;white-space:nowrap">--网站配置未生效</small>
+        </h1>
+        <p id="js_help_link">如果您是网站管理员，点击查看<a href="https://su.baidu.com/helps/index.html#/0/page/1" target="_blank">如何修复</a>。如需网站监控，可以使用<a href="//bsi.baidu.com/check.html?start_url=www.baidu.com" title="点击进入百度安全指数，进行网站体检" target="_blank">百度安全指数</a>。</p>
+      </div><!-- /.header -->
+
+      <section></section><!-- spacer -->
+      <div class="yjs-section yjs-highlight yjs-status-display">
+        <div class="yjs-wrapper">
+          <div class="error1xxx">
+              <div class="error1xxx_title">
+                <h4 data-translate="what_happened">问题描述</h4>
+                <p><p>你访问的网站(www.baidu.com) 使用了 <a data-orig-proto="http" data-orig-ref="su.baidu.com" target="_blank">百度云加速</a> 网络。 百度云加速目前无法解析此域名 (www.baidu.com). </p></p>
+              </div>
+
+              
+              <div class="error1xxx_list">
+                <h4 data-translate="what_can_i_do">可能原因</h4>
+                <ul>
+               <li><strong>主要因为:</strong> 网站主刚刚在百度云加速添加了这个域名，百度云加速需要几十秒的时间同步到全球网络中。稍等片刻刷新页面即可解决。</li>
+               <li><strong>也有可能:</strong> 网站配置出错. </li>
+            </ul>
+              </div>
+              
+          </div>
+        </div>
+      </div>
+
+
+      <div class="yjs-error-footer yjs-wrapper">
+  <p>
+    <span class="yjs-footer-item">云加速 Event ID: <strong>4bff26c7b89a5444</strong></span>
+    <span class="yjs-footer-separator">&bull;</span>
+    <span class="yjs-footer-item"><span>你的IP</span>: 183.6.159.239</span>
+    <span class="yjs-footer-separator">&bull;</span>
+    <span class="yjs-footer-item"><a href="https://su.baidu.com/helps/index.html#/0/page/1" id="support_link" target="_blank">帮助中心</a></span>
+    <span class="yjs-footer-separator">&bull;</span>
+    <span class="yjs-footer-item"><a href="http://su.baidu.com" id="yunjiasu_link" target="_blank">百度云加速</a></span>
+  </p>
+</div><!-- /.error-footer -->
+
+
+      <script>
+        var _hmt = _hmt || [];
+        (function()
+        { var hm = document.createElement("script"); hm.src = "https://hm.baidu.com/hm.js?24b7d5cc1b26f24f256b6869b069278e"; var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(hm, s); }
+        )();
+      </script>
+
+    </div><!-- /#yjs-error-details -->
+  </div><!-- /#yjs-wrapper -->
+
+  <script type="text/javascript">
+  window._yjs_translation = {};
+  
+  
+</script>
+
+
+  <script src="//idm-su.baidu.com/config.js?r=20171010" async></script>
+</body>
+</html>
+
+0
+
+���
