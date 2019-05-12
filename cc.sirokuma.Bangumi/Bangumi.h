@@ -514,6 +514,10 @@ if(var.compare(var2)!=0)\
 		std::vector<std::string> unair_eps;
 		std::vector<std::string> sp_air_eps;
 		std::vector<std::string> sp_unair_eps;
+		std::vector<std::string> air_eps_info;
+		std::vector<std::string> unair_eps_info;
+		std::vector<std::string> sp_air_eps_info;
+		std::vector<std::string> sp_unair_eps_info;
 		int eps_counts = 0;
 		int sp_eps_counts = 0;
 		//ÓÐÐ§ÐÔ
@@ -555,6 +559,7 @@ if(var.compare(var2)!=0)\
 					for (int i = start_pos; i < n; ++i) {
 
 						ret >> "  " << air_eps[i];
+						ret >> "  [" << air_eps_info[i] << ']';
 					}
 				}
 				if (GetEpsUnAiredCount() != 0) {
@@ -563,6 +568,7 @@ if(var.compare(var2)!=0)\
 					int n = GetEpsUnAiredCount() < output_num ? GetEpsAiredCount() : output_num;
 					for (int i = 0; i < n; ++i) {
 						ret >> "  " << unair_eps[i];
+						ret >> "  [" << unair_eps_info[i] << ']';
 					}
 				}
 				if (GetSPEpsAiredCount() != 0) {
@@ -570,6 +576,7 @@ if(var.compare(var2)!=0)\
 					int n = GetSPEpsAiredCount();
 					for (int i = 0; i < n; ++i) {
 						ret >> "  " << sp_air_eps[i];
+						ret >> "  [" << sp_air_eps_info[i] << ']';
 					}
 				}
 				if (GetSPEpsUnAiredCount() != 0) {
@@ -577,6 +584,7 @@ if(var.compare(var2)!=0)\
 					int n = GetSPEpsUnAiredCount();
 					for (int i = 0; i < n; ++i) {
 						ret >> "  " << sp_unair_eps[i];
+						ret >> "  [" << sp_unair_eps_info[i] << ']';
 					}
 				}
 

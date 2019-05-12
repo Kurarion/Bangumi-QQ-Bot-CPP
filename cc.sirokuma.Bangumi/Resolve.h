@@ -1490,6 +1490,11 @@ namespace Resolve {
 				ThreadVector.push_back(result.second);
 			}
 		}
+		else {
+			//使用缺省图片
+			//下载图片
+			auto result = PicDownload(http_client, "", SUBJECT_PIC_PATH, "", file_path, refresh);
+		}
 		result.file_path = file_path;
 		//图片OVER=====
 
@@ -1497,8 +1502,16 @@ namespace Resolve {
 		//章节
 		int eps_num = 1;
 		size_t chapter_start = html.find("prg_list\">", main_start);
-		if (chapter_start != std::string::npos ) {
-			
+		//章节详细
+		size_t detail_start = html.find("subject_prg_content", chapter_start);
+		std::string detail_chapter_html;
+		//如果存在详细章节
+		if (detail_start != std::string::npos) {
+			size_t detail_end = html.find("</span></div></div>", detail_start);
+			detail_chapter_html = html.substr(detail_start + 21, detail_end - detail_start - 21);
+		}
+		if (chapter_start != std::string::npos) {
+
 			size_t chapter_end = html.find("</ul>", chapter_start);
 			std::string chapter = html.substr(chapter_start + 10, chapter_end - chapter_start - 10);
 			//检查是否有SP
@@ -1512,9 +1525,17 @@ namespace Resolve {
 			size_t ep_status = chapter.find("epBtn");
 			size_t ep_title_start;
 			size_t ep_title_end;
+			size_t detail_ep_info_start;
+			size_t detail_ep_info_end;
+			std::string detail_ep_info;
+			size_t info_content_start;
+			//size_t info_content_end;
+			std::string info_content;
 			std::string ep_name;
+			//记录放送状态的标志
+			int ep_state;
 			//循环处理章节
-			while (ep_status!= std::string::npos&& eps_num< MAX_SUBJECT_COLLECTION_EPS){
+			while (ep_status != std::string::npos&& eps_num < MAX_SUBJECT_COLLECTION_EPS) {
 				++eps_num;
 				//
 				//title
@@ -1523,15 +1544,17 @@ namespace Resolve {
 				//ep name
 				ep_name = chapter.substr(ep_title_start + 7, ep_title_end - ep_title_start - 7);
 				//判断放送状态
-				if (chapter[ep_status+5]=='A'){
+				if (chapter[ep_status + 5] == 'A') {
 					//说明是epBtnAir
 					if (have_sp&&ep_status > sp_pos) {
 						//说明是aired的sp
 						result.sp_air_eps.push_back(ep_name);
+						ep_state = 3;
 					}
 					else {
 						//说明是aired的tv
 						result.air_eps.push_back(ep_name);
+						ep_state = 1;
 					}
 				}
 				else {
@@ -1539,11 +1562,103 @@ namespace Resolve {
 					if (have_sp&&ep_status > sp_pos) {
 						//说明是unaired的sp
 						result.sp_unair_eps.push_back(ep_name);
+						ep_state = 4;
 					}
 					else {
 						//说明是unaired的tv
 						result.unair_eps.push_back(ep_name);
+						ep_state = 2;
 					}
+				}
+				//详细章节的判断
+				if (!detail_chapter_html.empty()) {
+					//确定此ep的info编号
+					detail_ep_info_start = chapter.find("rginfo_", ep_title_end);
+					detail_ep_info_end = chapter.find("\"", detail_ep_info_start + 7);
+					detail_ep_info = chapter.substr(detail_ep_info_start, detail_ep_info_end - detail_ep_info_start);
+					//确定此ep的info信息
+					info_content_start = detail_chapter_html.find(detail_ep_info);
+					if (info_content_start != std::string::npos) {
+						//如果存在
+						bool save = false;
+						//<hr结束
+						for (int i = 0;; ++i) {
+							if (detail_chapter_html[info_content_start + i] == '>')
+							{
+								save = true;
+								continue;
+							}
+							if (detail_chapter_html[info_content_start + i] == '<')
+							{
+								if (detail_chapter_html[info_content_start + i + 1] == 'b')
+								{
+									//说明是<br
+									save = false;
+									++i;
+									info_content += ' ';
+									continue;
+								}
+								if (detail_chapter_html[info_content_start + i + 1] == 'h')
+								{
+									//说明是<hr
+									//保存数据
+									switch (ep_state)
+									{
+									case 1:
+										result.air_eps_info.push_back(info_content);
+										break;
+									case 2:
+										result.unair_eps_info.push_back(info_content);
+										break;
+									case 3:
+										result.sp_air_eps_info.push_back(info_content);
+										break;
+									case 4:
+										result.sp_unair_eps_info.push_back(info_content);
+										break;
+									default:
+										break;
+									}
+									//清空
+									info_content = "";
+									//结束
+									break;
+								}
+								//其他情况直接false save
+								save = false;
+								continue;
+							}
+							if (save) {
+								//如果不在<>内则直接保存
+								info_content += detail_chapter_html[info_content_start + i];
+							}
+
+						}
+					}
+					else {
+						//几乎不可能的事情
+						//但还是填入一个空的数据 
+						info_content = "未知...";
+						//保存数据
+						switch (ep_state)
+						{
+						case 1:
+							result.air_eps_info.push_back(info_content);
+							break;
+						case 2:
+							result.unair_eps_info.push_back(info_content);
+							break;
+						case 3:
+							result.sp_air_eps_info.push_back(info_content);
+							break;
+						case 4:
+							result.sp_unair_eps_info.push_back(info_content);
+							break;
+						default:
+							break;
+						}
+					}
+
 				}
 				//下一个ep_status
 				ep_status = chapter.find("epBtn", ep_title_start);
