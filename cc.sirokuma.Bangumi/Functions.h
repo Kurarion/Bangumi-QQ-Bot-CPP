@@ -4,7 +4,7 @@
 #include "Resolve.h"
 #include "HttpServer.h"
 #include "BaseDataStruct.h"
-
+#include"boost/format.hpp"
 
 #ifndef BANGUMI_FUNCTION_H
 #define BANGUMI_FUNCTION_H
@@ -1597,12 +1597,11 @@ param.find(s1)!=npos||param.find(s2)!=npos
 
 	//Bot: 读取Bangumi娘的配置信息
 	inline void BOT_Read_Ini(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
-		
-		//if (std::to_string(param.qq) == bgm.owner_qq&&param.type == BgmRetType::Private)
-		//	DEFAULT_SEND(param.type, bgm.GetConf());
+		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
+			DEFAULT_SEND(param.type, bgm.GetConf());
 
-	}
-	//Bot: Help
+			}
+	//Bot: Help信息
 	inline void BOT_Help(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
 		
 		bangumi::string help_msg;
@@ -1614,7 +1613,260 @@ param.find(s1)!=npos||param.find(s2)!=npos
 
 
 	}
-	//API: 返回Bangumi用户信息
+	//Bot: 统计信息
+	inline void BOT_Statis(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
+		//参数
+		//例如：rank me 返回自己的使用统计
+		//例如：rank 默认返回今日的使用排行
+		//参数解析
+		//类型
+		enum class StatisParam
+		{
+			me,
+			default
+		};
+		//返回me
+		StatisParam current_param = StatisParam::default;
+		//只有str类型的参数，只接受一个参数
+		for (auto&p: parameters_str){
+			if (p.find("me")!=std::string::npos){
+				current_param = StatisParam::me;
+			}
+		}
+
+		//Main
+		const unsigned max_list_rank = 5;
+		//回复的消息
+		bangumi::string msg;
+		//用户基本信息
+		std::string user_id;
+		std::string user_qq;
+		std::string bangumi_id;
+		//用户头像
+		std::string image_path = (bgm.cache_path) + USER_PIC_PATH;
+		std::string image_file;
+		//总使用情况
+		std::string all_type[10];
+		int all_times = 0;
+		std::string today_type[10];
+		int today_times = 0;
+		//今日使用情况
+
+		//查询语句
+		bangumi::string query;
+		switch (current_param)
+		{
+		case StatisParam::me:
+		{
+			//前置信息
+			//msg << "今日使用排行：";
+			query << "SELECT user_id,user_qq,user_bangumi,"
+				<< "BgmCode_subject,BgmCode_search,BgmCode_user,BgmCode_up,BgmCode_collect,BgmCode_reg,BgmCode_help,BgmCode_tag,BgmCode_statis,BgmCode_unknow,"
+				<< "TBgmCode_subject,TBgmCode_search,TBgmCode_user,TBgmCode_up,TBgmCode_collect,TBgmCode_reg,TBgmCode_help,TBgmCode_tag,TBgmCode_statis,TBgmCode_unknow "
+				<< "FROM bgm_users "
+				<< "WHERE user_qq="
+				<< param.qq;
+		}
+			break;
+		case StatisParam::default:
+		{
+			//前置信息
+			msg << "今日使用排行：";
+			//当前时间
+			boost::posix_time::ptime current_time = boost::posix_time::second_clock::universal_time() + boost::posix_time::hours(8);
+			boost::gregorian::date current_date = current_time.date();
+			std::string current_date_str(boost::gregorian::to_iso_extended_string(current_date));
+
+			query << "SELECT user_id,user_qq,user_bangumi,"
+				<< "BgmCode_subject,BgmCode_search,BgmCode_user,BgmCode_up,BgmCode_collect,BgmCode_reg,BgmCode_help,BgmCode_tag,BgmCode_statis,BgmCode_unknow,"
+				<< "TBgmCode_subject,TBgmCode_search,TBgmCode_user,TBgmCode_up,TBgmCode_collect,TBgmCode_reg,TBgmCode_help,TBgmCode_tag,TBgmCode_statis,TBgmCode_unknow "
+				<< "FROM bgm_users "
+				<< "WHERE BgmCode_Last_Date>'"
+				<< current_date_str
+				<< "' ORDER BY TBgmCode_subject+TBgmCode_search+TBgmCode_user+TBgmCode_up+TBgmCode_collect+TBgmCode_reg+TBgmCode_help+TBgmCode_tag+TBgmCode_statis+TBgmCode_unknow DESC";
+
+		}
+			break;
+		default:
+			break;
+		}
+		//SQL查询
+#ifndef NDEBUG
+		{
+			bangumi::string debug_msg;
+			debug_msg << "SQL查询语句:"
+				<< query;
+
+			CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-BOT-Statis", debug_msg);
+		}
+#endif	
+		//查询结果
+		BGMSQLResult result;
+		//影响的行数
+		unsigned long affect_rows_num = sql_pool.ExecQuery(query, result);
+		try
+		{
+			SQLCheckResult(affect_rows_num);
+		}
+		catch (boost::system::system_error& e)
+		{
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << "SQL查询失败:"
+					<< std::to_string(affect_rows_num)
+					>> e.what();
+
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-BOT-Statis", debug_msg);
+			}
+#endif	
+			//通过异常结束函数
+			//throw e;
+			//直接返回
+			msg = "查询失败...";
+			DEFAULT_SEND(param.type, msg);
+			return;
+		}
+		if (affect_rows_num > 0) {
+			//说明有结果
+			switch (current_param)
+			{
+			case StatisParam::me:
+			{
+				//用户的基本信息
+				user_id = result[0];
+				user_qq = result[1];
+				bangumi_id = result[2];
+				//用户总使用
+				for (unsigned j = 0; j < 10; ++j) {
+					all_type[j] = result[j + 3];
+					all_times += std::stoi(all_type[j]);
+				}
+				//用户今日使用
+
+				for (unsigned j = 0; j < 10; ++j) {
+					today_type[j] = result[j + 13];
+					today_times += std::stoi(today_type[j]);
+				}
+				//头像路径
+				if (bangumi_id != "0") {
+					image_file = image_path + bangumi_id + ".jpg";
+				}
+				else {
+					image_file = bgm.not_found_ava_path;
+				}
+				//format
+				boost::format fmt("%5d/%-5d");
+
+				//回复消息拼接
+				msg << "[CQ:image,file=" << image_file << "]"
+					>> "QQ: " << user_qq << " x BGM: " << bangumi_id << "  [" << user_id << ']'
+					>> "今日使用： " << today_times << "    总计使用： " << all_times
+					>> "------------"
+					>> "条目指令：" << (fmt%today_type[0] % all_type[0]).str()
+					<< "搜索指令：" << (fmt%today_type[1] % all_type[1]).str()
+					>> "用户指令：" << (fmt%today_type[2] % all_type[2]).str()
+					<< "更新指令：" << (fmt%today_type[3] % all_type[3]).str()
+					>> "收藏指令：" << (fmt%today_type[4] % all_type[4]).str()
+					<< "绑定指令：" << (fmt%today_type[5] % all_type[5]).str()
+					>> "帮助指令：" << (fmt%today_type[6] % all_type[6]).str()
+					<< "标签指令：" << (fmt%today_type[7] % all_type[7]).str()
+					>> "统计指令：" << (fmt%today_type[8] % all_type[8]).str()
+					<< "未知指令：" << (fmt%today_type[9] % all_type[9]).str()
+					>> "------------";
+			}
+				break;
+			case StatisParam::default:
+			{
+				//如果结果大于最大输出，则修正
+				if (affect_rows_num > max_list_rank) {
+					affect_rows_num = max_list_rank;
+				}
+				//format
+				boost::format fmt("%5d/%-5d");
+				//循环处理
+				for (unsigned i = 0; i < affect_rows_num; ++i) {
+					//用户的基本信息
+					user_id = result[0];
+					user_qq = result[1];
+					bangumi_id = result[2];
+					//用户总使用
+					for (unsigned j = 0; j < 10; ++j) {
+						all_type[j] = result[j + 3];
+						all_times += std::stoi(all_type[j]);
+					}
+					//用户今日使用
+					for (unsigned j = 0; j < 10; ++j) {
+						today_type[j] = result[j + 13];
+						today_times += std::stoi(today_type[j]);
+					}
+					//头像路径
+					if (bangumi_id != "0") {
+						image_file = image_path + bangumi_id + ".jpg";
+					}
+					else {
+						image_file = bgm.not_found_ava_path;
+					}
+
+					//回复消息拼接
+					msg >> "____<" << (i + 1) << ">____"
+						>> "[CQ:image,file=" << image_file << "]"
+						>> "QQ: " << user_qq << " x BGM: " << bangumi_id << "  [" << user_id << ']'
+						>> "今日使用： "<<today_times<<"    总计使用： "<<all_times
+						>> "------------"
+						>> "条目指令：" << (fmt%today_type[0] % all_type[0]).str()
+						<< "搜索指令：" << (fmt%today_type[1] % all_type[1]).str()
+						>> "用户指令：" << (fmt%today_type[2] % all_type[2]).str()
+						<< "更新指令：" << (fmt%today_type[3] % all_type[3]).str()
+						>> "收藏指令：" << (fmt%today_type[4] % all_type[4]).str()
+						<< "绑定指令：" << (fmt%today_type[5] % all_type[5]).str()
+						>> "帮助指令：" << (fmt%today_type[6] % all_type[6]).str()
+						<< "标签指令：" << (fmt%today_type[7] % all_type[7]).str()
+						>> "统计指令：" << (fmt%today_type[8] % all_type[8]).str()
+						<< "未知指令：" << (fmt%today_type[9] % all_type[9]).str()
+						//>> "------------"
+						>> "============";
+
+					//取下一行
+					result.FetchRow(1);
+					//重置次数
+					all_times = 0;
+					today_times = 0;
+				}
+
+			}
+				break;
+			default:
+				break;
+			}
+
+			
+		}
+		else {
+			switch (current_param)
+			{
+			case StatisParam::me:
+			{
+				msg = "我好像没找到你诶...";
+			}
+				break;
+			case StatisParam::default:
+			{
+				//说明今日没有人使用过机器人
+				msg = "今天又是寂寞没人理的一天...";
+			}
+				break;
+			default:
+				break;
+			}
+
+		}
+
+		//发送消息
+		DEFAULT_SEND(param.type, msg);
+	}
+	
+		//API: 返回Bangumi用户信息
 	inline void BGM_API_User(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
 
 		//bangumi::string ret("<User>");
@@ -1730,7 +1982,33 @@ param.find(s1)!=npos||param.find(s2)!=npos
 			request_one->execute();
 		}
 
-
+		//boost::this_thread::sleep(boost::posix_time::seconds(10));
+//		std::string json;
+//
+//		//TODO:完成回调函数
+//		boost::this_thread::sleep(boost::posix_time::seconds(2));
+//
+//		GetResponseContent(request_one, json);
+//		//DEBUG
+//		//DEFAULT_SEND(param.type, json.c_str());
+//#ifndef NDEBUG
+//		{
+//			bangumi::string debug_msg;
+//			debug_msg<<"收到响应的Json"
+//				>>json.c_str();
+//			CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-HTTP", debug_msg);
+//		}
+//#endif
+//		auto pic_threads = Resolve::Resolve_User(json);
+//		bangumi::string msg = pic_threads.second.Get();
+//
+//		//结束的等待
+//		for (auto &t : pic_threads.first) {
+//			if(t != nullptr&&t->joinable())
+//				t->join();
+//		}
+//		//发送回复
+//		DEFAULT_SEND(param.type, msg);
 	}
 	//API: 返回Bangumi条目信息
 	inline void BGM_API_Subject(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
@@ -1745,6 +2023,10 @@ param.find(s1)!=npos||param.find(s2)!=npos
 		if (parameters_str.empty() && parameters_id.empty()) {
 			//这是不进行last判断
 			//由于空消息体,各种方面都不合适,还是选择直接返回,因为空消息也走不到这里
+			//同时设置code_type清除Subject指令
+			param.bgm_code.erase(BgmCode::Subject);
+			//同时添加一个Unknow的指令类型
+			param.bgm_code.emplace(BgmCode::Unknow);
 			return;
 		}
 		//bangumi::string ret("<Subject>");
@@ -2141,6 +2423,7 @@ if (!res3.empty())\
 
 		std::string redirect_url = GetRedirectUrl(param.qq);
 
+		//https://bgm.tv/oauth/authorize?client_id=bgm2435affad00821e3&response_type=code&redirect_uri=http%3A%2F%2Fwww.irisu.cc%2Fbangumi.php%3Fnu%3D0dyvwccxw&state=dcyw
 		bangumi::string request_url = "http://bgm.tv/oauth/authorize?response_type=code";
 		request_url << "&client_id=" << bgm.bangumi_client_id
 			<< "&redirect_uri=" << redirect_url;
@@ -2185,6 +2468,8 @@ if (!res3.empty())\
 		//例如: <空> (更新last为在看)
 		//构建一个复杂参数类的Vector
 		std::vector<ComplexParam> paramters;
+		//last_subject 主要用于更新last_subject用
+		size_t last_subject_id = 0;
 		//last_subject_id
 		size_t sql_last_subject_id = 0;
 		//排除空语句
@@ -2272,7 +2557,38 @@ if (!res3.empty())\
 		//对每一个识别的ID进行main func
 		for (const auto& complex_param : paramters) {
 			const size_t &subject_id = complex_param.id;
-
+			//更新上次使用的Last subject
+			last_subject_id = subject_id;
+//			//判断是否use_last_subject
+//			if (complex_param.use_last_subject_id) {
+//				//判断是否已经读取过last_subject
+//				if (last_subject_id == 0&&!user_have_not_last) {
+//					try {
+//						last_subject_id = GetLastSubjectID(param.qq);
+//					}
+//					catch (boost::system::system_error& e) {
+//#ifndef NDEBUG
+//						{
+//							bangumi::string debug_msg;
+//							debug_msg << "GetLastSubjectFailed! in for"
+//								>> e.what();
+//							CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-Collection-API", debug_msg);
+//						}
+//#endif	
+//						last_subject_id = 0;
+//					}
+//					if (last_subject_id == 0)
+//					{
+//						//用户没有last_subject的标识
+//						user_have_not_last = true;
+//					}
+//				}
+//					
+//				subject_id = last_subject_id;
+//			}
+//			else {
+//				subject_id = complex_param.id;
+//			}
 			//无效subject回复
 			if (subject_id == 0) {
 				bangumi::string error_msg = boost::system::system_error(bangumi_bot_errors::empty_subject).what();
@@ -2504,7 +2820,35 @@ if (!res3.empty())\
 
 			//======Main Over======
 		}
+		//结束之后更新last_subject
+		if (last_subject_id != 0) {
+			//简单一点直接单线程
+			//查询语句
+			bangumi::string update_query;
 
+			update_query << "UPDATE bgm_users SET "
+				//<< "user_bangumi=" << auth.user_id << ","
+				<< "user_last_searched=" << last_subject_id
+				<< " WHERE user_qq=" << param.qq;
+			auto affect_rows_num = sql_pool.ExecQueryNoRes(update_query);
+			try
+			{
+				SQLCheckResult(affect_rows_num);
+			}
+			catch (boost::system::system_error& e)
+			{
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "Update Last Subject失败:"
+						<< std::to_string(affect_rows_num)
+						>> e.what();
+
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-Subject-API", debug_msg);
+				}
+#endif	
+			}
+		}
 
 	}
 	//API: 更新进度API
@@ -2547,6 +2891,8 @@ if (!res3.empty())\
 		}
 		//构建一个复杂参数类的Vector
 		std::vector<ComplexParam> paramters;
+		//last_subject 主要用于更新last_subject用
+		size_t last_subject_id = 0;
 		//last_subject_id
 		size_t sql_last_subject_id = 0;
 
@@ -2632,6 +2978,8 @@ if (!res3.empty())\
 		//对每一个识别的ID进行main func
 		for (auto& complex_param : paramters) {
 			const auto& subject_id = complex_param.id;
+			//更新last subject
+			last_subject_id = subject_id;
 			//无效的ID
 			if (subject_id == 0) {
 				bangumi::string error_msg = boost::system::system_error(bangumi_bot_errors::empty_subject).what();
@@ -3076,6 +3424,36 @@ if (!res3.empty())\
 			}
 
 
+		}
+
+		//结束之后更新last_subject
+		if (last_subject_id != 0) {
+			//简单一点直接单线程
+			//查询语句
+			bangumi::string update_query;
+
+			update_query << "UPDATE bgm_users SET "
+				//<< "user_bangumi=" << auth.user_id << ","
+				<< "user_last_searched=" << last_subject_id
+				<< " WHERE user_qq=" << param.qq;
+			auto affect_rows_num = sql_pool.ExecQueryNoRes(update_query);
+			try
+			{
+				SQLCheckResult(affect_rows_num);
+			}
+			catch (boost::system::system_error& e)
+			{
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "Update Last Subject失败:"
+						<< std::to_string(affect_rows_num)
+						>> e.what();
+
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-Subject-API", debug_msg);
+				}
+#endif	
+			}
 		}
 
 	}

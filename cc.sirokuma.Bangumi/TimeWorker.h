@@ -7,6 +7,8 @@ using namespace boost;
 //使用asio的超时回调函数
 
 
+
+
 class TimeWorker {
 
 public:
@@ -14,6 +16,11 @@ public:
 		:m_ios(ios)
 		//m_timer(new asio::steady_timer(ios, boost::asio::chrono::seconds(15)))
 	{}
+
+	//返回Timer
+	//std::shared_ptr<asio::steady_timer> GetTimer() {
+	//	return m_timer;
+	//}
 
 	//
 	void AddAPIFunc(std::function<void(const bangumi::BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&)> func,

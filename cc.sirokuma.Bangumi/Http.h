@@ -8,6 +8,12 @@ using namespace boost;
 #ifndef BANGUMI_HTTP_H
 #define BANGUMI_HTTP_H
 
+//#ifndef NDEBUG
+//bangumi::string debug_code_set = "CodeSet: ";
+//DEBUG_STRING_SET(code_set, debug_code_set);
+//CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-BGMCode-AnalyseCode", debug_code_set);
+//#endif
+
 //前向声明
 class HTTPClient;
 class HTTPRequest;
@@ -25,6 +31,7 @@ enum class HTTP_WAY {
 //};
 
 //回调函数类型
+//TODO:正确的函数签名
 typedef void(*BGMCallback)(std::shared_ptr<HTTPRequest>, bangumi::BGMRetParam, int ec);
 //在Request之后存储响应消息需要
 class HTTPResponse {
@@ -605,7 +612,18 @@ public:
 		//一开始初始化时并没有挂起的异步操作
 		m_work.reset(new boost::asio::io_service::work(m_ios));
 
-
+		//m_thread.reset(new boost::thread([this]() {
+		//	//新的线程须有自己的异常处理
+		//	//因回调函数都是由ios.run()调用的
+		//	try {
+		//		m_ios.run();
+		//	}
+		//	catch (boost::system::system_error& ec)
+		//	{
+		//		std::string test = "HTTPClient中异步中捕捉到错误,错误ID:" + std::to_string(ec.code().value()) + " 错误信息:" + ec.what();
+		//		CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-IOS", test.c_str());
+		//	}
+		//}));
 		m_thread.reset(new boost::thread([this]() {
 			RunIos();
 		}));
@@ -1201,9 +1219,27 @@ inline void GetResponseContent(std::shared_ptr<HTTPRequest> request, std::string
 			std::string(boost::asio::buffers_begin((request->m_response).m_response_buf.data()),
 				boost::asio::buffers_end((request->m_response).m_response_buf.data()));//, "GBK");
 
+		//这里有一定机会出现301重定向问题
+		//auto maybe_301 = s.find("Location: ");
+		//if (maybe_301 != std::string::npos) {
+		//	//的确发生的重定向
+		//	//
+		//	auto location_num = s.find("\r", maybe_301);
+		//	std::string new_uri = s.substr(maybe_301 + 10, location_num - maybe_301 - 10);
+		//	request->set_uri(new_uri);
+		//	//清理m_response_buf
+		//	(request->m_response).m_response_buf.consume((request->m_response).m_response_buf.size());
+		//	//一般是Subject的重定向,直接使用GET
+		//	request->set_request(request_message(request, HTTP_WAY::GET));
+		//	//Callback已经设置完毕,因此直接exec即可
+		//	request->execute();
+		//}
+
+
 		//清除最后一个0字符(Transfer-Encoding：chunk模式的0结束标志)
 		//[注意] 不能使用'\0'空字符来代替0, property_tree会认为data后有垃圾不能read_json
-
+		//s[s.find_last_of('0')] = '\0';
+		//s[361] = *R"(\)";
 		if (isChunk)
 			s.erase(s.find_last_of('0'));
 
@@ -1237,10 +1273,47 @@ inline void GetResponseContent(std::shared_ptr<HTTPRequest> request, std::string
 		throw boost::system::system_error(bangumi_bot_errors::http_get_contents_error);
 	}
 
+	//std::string x("\"\\u9535\u9535!\"");
+	//std::string ss;
+	//escape(x);
+	//std::cout <<"0000000000 ="<< x << std::endl;
+	//s.erase(366,2);
+	//std::cout  << std::endl;
+	//std::cout << R"(\\u9535\u9535!)";
 
+
+	
+	//清除string内所有的转义符'\'(事实上收到的\u就只是\u而不是\\u)
+	//s.erase(std::remove(s.begin(), s.end(), '\\'), s.end());
+	//s = boost::locale::conv::from_utf(s, "Unicode");
+	//boost::asio::basic_streambuf<std::allocator<wchar_t>>::const_buffers_type cbt = (request->m_response).m_response_buf.data();
+	//std::string request_data(boost::asio::buffers_begin(cbt), boost::asio::buffers_end(cbt));
+	//
+	//std::cout << "xxxxx\n" << s1 << "xxxxxx\n" << std::endl;
 }
 
-
+//封装函数请求HTTP
+//uri:已经包含了url,可以简写为/user/XXX等
+//void HTTPSendRequestFixed(std::string &uri, std::string &request) {
+//
+//	std::shared_ptr<HTTPRequest> request_one =
+//		http_client.create_request_fixed(1);
+//	//create fixed情况下不需要set_host
+//	//request_one->set_host("api.bgm.tv");
+//	request_one->set_uri("/user/wz97315");
+//	//设置头部
+//	request_one->set_request(request_message(request_one, HTTP_WAY::GET));
+//	//执行异步处理
+//	request_one->execute();
+//}
+//void HTTPSendRequest(std::string &url, std::string &) {
+//	
+//	std::shared_ptr<HTTPRequest> request_one =
+//		http_client.create_request(1);
+//
+//	request_one->set_host("api.bgm.tv");
+//	request_one->set_uri("/user/wz97315");
+//}
 
 //路径定义
 #define SUBJECT_PIC_PATH "Subject\\"
@@ -1332,6 +1405,15 @@ std::pair<DownloadStatus, std::shared_ptr<boost::thread>> HTTPDownload(HTTPClien
 }
 	else {
 		//使用单线程
+
+		////使用HTTP下载
+		//std::shared_ptr<HTTPRequest> request_one =
+		//	http_client.create_request(1);
+		////boost::thread use([request_one]() {
+		//request_one->set_host(host);
+		//request_one->set_uri(uri);
+		//request_one->set_request(request_message(request_one, HTTP_WAY::GET));
+		//request_one->execute();
 
 		try {
 			//此处使用同步HTTP请求来处理
@@ -1471,7 +1553,14 @@ std::pair<DownloadStatus, std::shared_ptr<boost::thread>> PicDownload
 	else {
 		//使用单线程
 
-
+		////使用HTTP下载
+		//std::shared_ptr<HTTPRequest> request_one =
+		//	http_client.create_request(1);
+		////boost::thread use([request_one]() {
+		//request_one->set_host(host);
+		//request_one->set_uri(uri);
+		//request_one->set_request(request_message(request_one, HTTP_WAY::GET));
+		//request_one->execute();
 #ifndef NDEBUG
 		{
 			bangumi::string debug_msg;

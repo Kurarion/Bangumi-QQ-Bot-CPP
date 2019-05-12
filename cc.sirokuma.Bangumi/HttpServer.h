@@ -4,7 +4,7 @@
 #include <iostream>
 
 using namespace boost;
-
+//typedef void(*BGMServerCallback)(unsigned,std::string,int64_t,std::string);
 
 //加密QQ函数
 std::string EncryptQQ(const int64_t &qq) {
@@ -34,10 +34,10 @@ std::string EncryptState(const int64_t &qq) {
 
 	std::string result;
 	std::string qq_str = std::to_string(qq);
-	result += table.at(qq_str[2]);
 	result += table.at(qq_str[1]);
+	result += table.at(qq_str[2]);
 	result += table.at(qq_str[3]);
-	result += table.at(qq_str[5]);
+	result += table.at(qq_str[4]);
 	return std::move(result);
 }
 //https://stackoverflow.com/questions/154536/encode-decode-urls-in-c
@@ -352,6 +352,8 @@ private:
 				"Content-Type: application/x-www-form-urlencoded\r\n");
 			header << "Content-Length: " << content.length() << "\r\n";
 
+			
+
 			//创建一个请求
 			std::shared_ptr<HTTPRequest> request_one =
 				http_client.create_request_fixed(http_client.GetID());
@@ -453,17 +455,18 @@ private:
 					}
 					else {
 						//首次注册
-						query << "INSERT INTO bgm_users VALUES("
+						query << "INSERT INTO bgm_users(user_id,user_qq,user_bangumi,user_access_token,user_refresh_token)"
+							<< "VALUES("
 							<< "NULL,"
 							<< std::to_string(param.qq) << ","
 							<< std::to_string(auth.user_id) << ","
 							<< "'" << auth.access_token << "',"
-							<< "'" << auth.refresh_token << "',"
-							<< "0,"
-							<< "0,"
-							<< "NULL,"
-							<< "'1000-01-01 00:00:00',"
-							<< "0)";
+							<< "'" << auth.refresh_token << "')";
+							//<< "0)";
+							//<< "0,"
+							//<< "NULL,"
+							//<< "'1000-01-01 00:00:00',"
+							//<< "0)";
 					}
 
 
@@ -574,11 +577,13 @@ private:
 private:
 	std::shared_ptr<boost::asio::ip::tcp::socket> m_sock;
 	boost::asio::streambuf m_request;
-
+	//std::map<std::string, std::string> m_request_headers;
 	std::string m_requested_resource;
-
+	//std::unique_ptr<char[]> m_resource_buffer;
 	unsigned int m_response_status_code;
-
+	//std::size_t m_resource_size_bytes;
+	//std::string m_response_headers;
+	//std::string m_response_status_line;
 
 	int64_t qq = 0;
 	std::string code = "";

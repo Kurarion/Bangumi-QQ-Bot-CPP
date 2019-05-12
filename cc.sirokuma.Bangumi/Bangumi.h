@@ -32,6 +32,7 @@ enum class BgmCode {
 	Reg,
 	Help,
 	Tag,
+	Statis,
 	Unknow
 };
 //转码类
@@ -334,6 +335,8 @@ if(var.compare(var2)!=0)\
 		}
 	};
 	//classes of bangumi
+	//TODO:完成两个基类的基本功能:一个方法EXEC(),自动解析一个json数据来完成对自己的构造,或者使用一个工厂类来创建他们
+	//TODO:可能的话为SUBJECT类添加一个数据结构来记录USER和SUBJECT的关联
 	struct BangumiSubject :public Msg_Interface
 	{
 	public:
@@ -870,8 +873,24 @@ if(var.compare(var2)!=0)\
 		bangumi::string extra_msg;
 	};
 
+	//class Msg
+	//{
+	//public:
+	//	//return the msg
+	//	const char * Get() { return msg; }
+	//	const char * Get() const { return msg; }
+	//protected:
+	//private:
+	//	std::shared_ptr<BangumiSubject> this_subject;
+	//	std::shared_ptr<BangumiUser> this_user;
+	//	const char* msg;
+	//};
 
-
+	//在Msg定义之后定义bangumi::string的函数
+	//string& string::operator<<(const Msg &msg) {
+	//	*this += msg.Get();
+	//	return *this;
+	//}
 
 
 	//参数解析函数声明
@@ -891,6 +910,8 @@ if(var.compare(var2)!=0)\
 	extern void BOT_Read_Ini(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
 	//Help信息
 	extern void BOT_Help(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
+	//统计信息
+	extern void BOT_Statis(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
 
 	//BangumiAPI函数声明
 	//User信息

@@ -347,7 +347,8 @@ namespace bangumi {
 		//对每个参数进行解析
 		void UnPara() {
 			//如果是需要Int类型的命令
-			if (instruct_no_need_int.find(instruct_name) == instruct_no_need_int.cend())
+			//注意这里是从不需要int参数中查找的，也就是说没找到即需要INT类型的参数
+			if (instruct_no_need_int.count(code_type) == 0)
 			{
 				for (const auto& para : parameters) {
 					//默认没有使用解析符
@@ -389,9 +390,9 @@ namespace bangumi {
 						//}
 						//if (!decode_found)
 						//字符串参数,仅仅在个别的命令中有用
-						if (instruct_need_str.find(instruct_name) != instruct_need_str.cend()) {
-							unparameters_str.insert(para);
-						}
+						//if (instruct_need_str.find(instruct_name) != instruct_need_str.cend()) {
+						//	unparameters_str.insert(para);
+						//}
 					}
 				}
 
@@ -407,24 +408,24 @@ namespace bangumi {
 			}
 
 			//如果没有int参数,也没有str参数,检查是否是使用last的命令
-			if (unparameters_id.empty()&&unparameters_str.empty()) {
-				//如果是一个可能的使用last参数的命令
-				//暂时不用
-				//if (instruct_may_use_last.find(instruct_name) == instruct_may_use_last.cend())
-				//{
-				//	//TODO
-				//	//请求得到last subject id
-				//	//向unparameters_id中插入 last id
-				//}
+			//if (unparameters_id.empty()&&unparameters_str.empty()) {
+			//	//如果是一个可能的使用last参数的命令
+			//	//暂时不用
+			//	//if (instruct_may_use_last.find(instruct_name) == instruct_may_use_last.cend())
+			//	//{
+			//	//	//TODO
+			//	//	//请求得到last subject id
+			//	//	//向unparameters_id中插入 last id
+			//	//}
 
-				//针对特别的subject可以没有命令符
-				//如果last也没有说明是一个无效的Code
-				if (code_type == BgmCode::Subject)
-					//经过上面步骤仍没有一个int类型参数则为未知的命令
-					if (unparameters_id.empty()) {
-						code_type = BgmCode::Unknow;
-					}
-			}
+			//	//针对特别的subject可以没有命令符
+			//	//如果last也没有说明是一个无效的Code
+			//	if (code_type == BgmCode::Subject)
+			//		//经过上面步骤仍没有一个int类型参数则为未知的命令
+			//		if (unparameters_id.empty()) {
+			//			code_type = BgmCode::Unknow;
+			//		}
+			//}
 			//向bgm_code中压入这个Code的类型
 			InsertBgmCode();
 		}

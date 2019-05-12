@@ -37,7 +37,15 @@
 
                 <!-- Expanded navigation -->
                 <div class="navbar-collapse collapse">
-
+                    <ul class="nav navbar-nav">
+                    
+                    
+                        <li class="active">
+                            <a href="https://github.com/Kurarion/Bangumi-QQ-Bot-CPP" target="_blank">Github</a>
+                        </li>
+                    
+                    
+                    </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li>
                             <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
@@ -63,6 +71,7 @@
             <li><a href="#35">3.5 条目收藏</a></li>
             <li><a href="#36">3.6 条目更新</a></li>
             <li><a href="#37">3.7 标签搜索</a></li>
+            <li><a href="#38">3.8 统计使用情况</a></li>
         <li class="main "><a href="#4">4. 复杂参数</a></li>
             <li><a href="#41">4.1 基本复杂参数</a></li>
             <li><a href="#42">4.2 条目查询的复杂参数</a></li>
@@ -85,7 +94,7 @@
 <li><strong>注意:</strong> 因为参数分割符包括<code>空格</code>，因此请务必注意一个参数中间不能出现空格。</li>
 <li><strong>注意:</strong> 所有的指令的识别是从<code>前缀(也就是分号冒号那些)</code>开始找到的第一个与已有的指令匹配的字符决定，也就是说你的参数与指令没有绝对的位置关系，但你的参数中可能包含指令的字符，这时你就需要先将你需要的指令的关键字尽量放在<code>前缀</code>后面。</li>
 <li><strong>注意:</strong> 一条指令只会将第一个出现的指令作为此指令的功能，也就是说一旦指令已经被识别出来，这条指令之后的参数中出现的指令关键字都会作为参数处理而不是指令。</li>
-<li>当前机器人使用的指令识别符有<code>user/用户(用户查询)</code>，<code>acg/条目/查询(条目查询)</code>，<code>?/？/搜索(条目搜索)</code>，<code>reg/绑定(用户绑定)</code>，<code>co/收藏(条目收藏)</code>，<code>up/++/更新(条目更新)</code>和<code>tag/标签（标签搜索）</code>，另外指令不分大小写，也就是说任意大小写都可以被识别。</li>
+<li>当前机器人使用的指令识别符有<code>user/用户(用户查询)</code>，<code>acg/条目/查询(条目查询)</code>，<code>?/？/搜索(条目搜索)</code>，<code>reg/绑定(用户绑定)</code>，<code>co/收藏(条目收藏)</code>，<code>up/++/更新(条目更新)</code>，<code>tag/标签（标签搜索）</code>和<code>rank/统计（统计使用情况）</code>，另外指令不分大小写，也就是说任意大小写都可以被识别。</li>
 </ul>
 <h1 id="3">3. 指令集</h1>
 <h2 id="31">3.1 用户查询</h2>
@@ -477,6 +486,34 @@
 <li><code>:tag /2019-04/2</code> 表示 搜索所有<code>2019年4月放送</code>的TV动画的<code>第二页</code>的所有结果 <strong>[标签为空可以匹配任意条目]</strong></li>
 <li><code>:tag //</code> 表示 搜索当前所有TV动画类型的第一页的所有结果 <strong>[甚至可以完全空着参数，但与默认参数无异]</strong></li>
 </ul>
+<h2 id="38">3.8 统计使用情况</h2>
+<ul>
+<li><strong>关键字</strong><code>rank</code>或<code>统计</code>表示<code>统计使用情况</code></li>
+<li><strong>参数</strong>：<code>空</code>或<code>me</code></li>
+<li><strong>返回</strong>：如下表</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>返回</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>空</td>
+<td>今日使用前五位</td>
+</tr>
+<tr>
+<td>me</td>
+<td>自己的使用情况</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>具体使用示例如下：</li>
+</ul>
+<p><img alt="用户查询" src="pic/rank.png" /></p>
 <h1 id="4">4. 复杂参数</h1>
 <h2 id="41">4.1 基本复杂参数</h2>
 <ul>
@@ -567,21 +604,21 @@
 <hr />
 <ul>
 <li>第三类：<code>空缺</code>参数</li>
-<li>功能说明：表示上次使用<code>条目查询</code>查询的条目</li>
+<li>功能说明：表示上次使用<code>条目查询</code>，<code>条目收藏</code>或<code>条目更新</code>操作的条目</li>
 <li>参数说明：无参数，只有指令</li>
 <li>
-<p>特别说明：虽然参数本身是无，但如果没有对应指令的额外参数，Bangumi娘只会无视指令</p>
+<p>特别说明：虽然参数本身是无，但如果没有对应指令的额外参数（只针对<code>条目查询</code>而言），Bangumi娘只会无视指令</p>
 </li>
 <li>
 <p>----以下是具体例子----</p>
 </li>
 <li>例如：现假定要查询的关键字为<code>一拳</code></li>
-<li><code>: +</code> 表示 使用<code>条目查询</code>查询上次使用<code>条目查询</code>查询的条目，使用<code>+</code>号防止全空缺指令被无视</li>
-<li><code>: /s</code> 表示 使用<code>条目查询</code>查询上次使用<code>条目查询</code>查询的条目放送状态</li>
-<li><code>:++ /</code> 表示 使用<code>条目更新</code>更新上次使用<code>条目查询</code>查询的条目</li>
-<li><code>:++ /air</code> 表示 使用<code>条目更新</code>更新上次使用<code>条目查询</code>查询的条目，更新到放送话数</li>
-<li><code>:co /</code> 表示 使用<code>条目收藏</code>收藏上次使用<code>条目查询</code>查询的条目</li>
-<li><code>:co /fin/9/4月番中最优秀的作品</code> 表示 使用<code>条目收藏</code>收藏上次使用<code>条目查询</code>查询的条目，评分加吐槽</li>
+<li><code>: +</code> 表示 使用<code>条目查询</code>查询上次使用<code>条目</code>的条目，使用<code>+</code>号防止全空缺指令被无视</li>
+<li><code>: /s</code> 表示 使用<code>条目查询</code>查询上次使用<code>条目</code>的条目放送状态</li>
+<li><code>:++</code> 表示 使用<code>条目更新</code>更新上次使用<code>条目</code>的条目</li>
+<li><code>:++ /air</code> 表示 使用<code>条目更新</code>更新上次使用<code>条目</code>的条目，更新到放送话数</li>
+<li><code>:co</code> 表示 使用<code>条目收藏</code>收藏上次使用<code>条目</code>的条目</li>
+<li><code>:co /fin/9/4月番中最优秀的作品</code> 表示 使用<code>条目收藏</code>收藏上次使用<code>条目</code>的条目，评分加吐槽</li>
 </ul>
 <h2 id="42">4.2 条目查询的复杂参数</h2>
 <ul>
@@ -687,5 +724,5 @@
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2019-05-09 07:55:25
+Build Date UTC : 2019-05-11 13:16:34
 -->

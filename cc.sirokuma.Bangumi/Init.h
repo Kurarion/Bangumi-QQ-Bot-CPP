@@ -9,9 +9,10 @@
 #define BANGUMI_INIT_H
 //bangumi-bot init
 
+
 //global variable 
 //Http
-
+//TODO:完成Client的超时暂时关闭功能(使用asio的计时器)
 static HTTPClient http_client;
 //global variable 
 //SQL
@@ -22,40 +23,7 @@ TimeWorker time_worker(http_client.GetIOS());
 void HTTPRequest::RemoveSelf() {
 	http_client.RemoveID(m_id);
 }
-//When301函数定义 
-//void HTTPRequest::When301() {
-//	try {
-//		
-//		std::string new_uri = m_response.get_headers().at("Location").substr(1);
-//		//boost::this_thread::sleep(boost::posix_time::seconds(5));
-//		//std::string new_uri = "/subject/123456";
-//		//不能在此创建,一旦退出域就析构
-//		std::shared_ptr<HTTPRequest> request_one =
-//			http_client.create_request_fixed(http_client.GetID());
-//
-//		request_one->set_ret_param(m_bgm_ret_param);
-//		request_one->set_host("api.bgm.tv");
-//		request_one->set_uri(new_uri);
-//		//一般是Subject的重定向,直接使用GET
-//		request_one->set_request("GET " + new_uri + " HTTP/1.1\r\n"
-//			"Host: " + m_host + "\r\n");
-//
-//		request_one->set_callback(m_callback);
-//		//Callback已经设置完毕,因此直接exec即可
-//		request_one->execute();
-//		//
-//#ifndef NDEBUG
-//		std::string str2 = "遇到301重定向问题,开启新的处理request...";
-//		CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-HTTP", str2.c_str());
-//#endif
-//		//此处不要进行throw会导致资源失效
-//		//on_finish(boost::system::system_error(bangumi_bot_errors::api_301_error).code());
-//		//return;
-//	}
-//	catch (std::out_of_range) {
-//		//正常,不做处理
-//	}
-//}
+
 //数字简单替换加密
 const boost::bimap<char, char> num_bimap;
 
@@ -102,7 +70,7 @@ inline bangumi::BangumiUser& BangumiAddUser(size_t &user_id, std::string &url,
 	std::string &user_name, std::string &nick_name,
 	std::string &ava_file, std::string &sign/*, bool refresh = false*/) {
 
-
+	
 		{
 			//没有命中,直接构造
 #ifndef NDEBUG
@@ -278,6 +246,8 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 	bangumi::Collection& collection
 ) {
 
+
+	
 	{
 		//没有命中,直接构造
 #ifndef NDEBUG
@@ -440,6 +410,7 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 	}
 
 }
+
 
 
 

@@ -92,7 +92,8 @@ namespace Resolve {
 #endif
 			//解析树的问题
 			throw boost::system::system_error(bangumi_bot_errors::json_resolve_error);
-
+			//std::cout << "Error! Code = "
+			//	<< "Message = " << e.what() << std::endl;
 		}
 	}
 	
@@ -288,7 +289,8 @@ namespace Resolve {
 #endif
 			//解析树的问题
 			throw boost::system::system_error(bangumi_bot_errors::json_resolve_error);
-
+			//std::cout << "Error! Code = "
+			//	<< "Message = " << e.what() << std::endl;
 		}
 	}
 
@@ -298,10 +300,10 @@ namespace Resolve {
 	size_t
 		Resolve_Auth_Status(std::string json) {
 		//{
-		//	"access_token": "f1b237ae5xxxxx431d7b2a42f9ac6de6b",
-		//		"client_id" : "bgm101xxxxxxd09805b",
-		//		"user_id" : 4xx87,
-		//		"expires" : 1556354941,
+		//	"access_token": "f1b2xxxxxxxxf9ac6de6b",
+		//		"client_id" : "bgm10xxxxxx9805b",
+		//		"user_id" : 42xxxx,
+		//		"expires" : 155xxxx41,
 		//		"scope" : null
 		//}
 		//{
@@ -468,7 +470,7 @@ namespace Resolve {
 		//		}
 		//}
 		//{
-		//	"request": "/collection/21811?access_token=08xxxxxx30926e6f72c7b06c33a45d",
+		//	"request": "/collection/21811?access_token=088e77fbxxxxxxx7b06c33a45d",
 		//		"code" : 400,
 		//		"error" : "40001 Error: Nothing found with that ID"
 		//}
@@ -1610,42 +1612,59 @@ namespace Resolve {
 			//
 			//std::cout << html<<std::endl;
 
-			//图片下载地址
-			size_t src_start = html.find("src=\"/", href_end);
-			size_t src_end = html.find("\"", src_start + 5);
-			std::string pre_url = html.substr(src_start + 5, src_end - src_start - 5);
-			std::string pic_subject_id = subject_id;
-			if (pre_url[1] == 'i'&&pre_url[2] == 'm') {
-				//img/no_icon
-				pre_url = "//bgm.tv" + pre_url;
-				pic_subject_id = "no_icon";
-			}
-			else {
-				//将图片大小换成l类型
-				temp = pre_url.find("/s/");
-				pre_url[temp + 1] = 'm';
-			}
-			pic_url = "http:" + pre_url;
-//#ifndef NDEBUG
-//			{
-//				bangumi::string debug_msg;
-//				debug_msg << "图片下载地址 " << pic_url;
-//				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-TAG-PIC-DOWNLOAD", debug_msg);
-//			}
-//#endif
-			//开始下载图片
-			//下载图片
-			auto result = PicDownload(http_client, pic_url, TAG_PIC_PATH, pic_subject_id, file_path, refresh);
-			//返回的线程保存到返回值中
-			if (result.first == DownloadStatus::MultiThread)
-			{
-				//将下载线程压入线程池中
-				ThreadVector.push_back(result.second);
-			}
+
 			//中文名
-			size_t name_cn_start = html.find("ass=\"l\">", src_end);
+			size_t name_cn_start = html.find("ass=\"l\">", href_end);
 			size_t name_cn_end = html.find("</a>", name_cn_start + 8);
 			name_cn = html.substr(name_cn_start + 8, name_cn_end - name_cn_start - 8);
+
+			//由于有没有图片的风险，因此将判断放在中文名之后
+			//图片下载地址
+			size_t src_start = html.find("src=\"/", href_end);
+			//可以真的没有图片
+			if (src_start  < name_cn_start) {
+				size_t src_end = html.find("\"", src_start + 5);
+				std::string pre_url = html.substr(src_start + 5, src_end - src_start - 5);
+				std::string pic_subject_id = subject_id;
+				if (pre_url[1] == 'i'&&pre_url[2] == 'm') {
+					//img/no_icon
+					pre_url = "//bgm.tv" + pre_url;
+					pic_subject_id = "no_icon";
+				}
+				else {
+					//将图片大小换成l类型
+					temp = pre_url.find("/s/");
+					pre_url[temp + 1] = 'm';
+				}
+				pic_url = "http:" + pre_url;
+				//#ifndef NDEBUG
+				//			{
+				//				bangumi::string debug_msg;
+				//				debug_msg << "图片下载地址 " << pic_url;
+				//				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-TAG-PIC-DOWNLOAD", debug_msg);
+				//			}
+				//#endif
+				//开始下载图片
+				//下载图片
+				auto result = PicDownload(http_client, pic_url, TAG_PIC_PATH, pic_subject_id, file_path, refresh);
+				//返回的线程保存到返回值中
+				if (result.first == DownloadStatus::MultiThread)
+				{
+					//将下载线程压入线程池中
+					ThreadVector.push_back(result.second);
+				}
+			}
+			else {
+				//直接使用404图片
+				auto result = PicDownload(http_client, "", TAG_PIC_PATH, subject_id, file_path, refresh);
+				//返回的线程保存到返回值中
+				//if (result.first == DownloadStatus::MultiThread)
+				//{
+				//	//将下载线程压入线程池中
+				//	ThreadVector.push_back(result.second);
+				//}
+			}
+
 			//原名(可能没有)
 			name = "";
 			size_t name_start = html.find("ass=\"grey\">", name_cn_end);

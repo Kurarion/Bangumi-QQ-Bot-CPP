@@ -44,9 +44,10 @@ private:
 			max_list = pt.get<unsigned int>("BOT.Max_List", 31);
 			owner_qq = pt.get<std::string>("BOT.Owner_QQ");
 			redirect_url = pt.get<std::string>("INI.Redirect_URL");
-			card_image_url = pt.get<std::string>("INI.Card_Image_URL");
+			card_image_url = pt.get<std::string>("INI.Card_Image_URL", "https://pariya.cc/res/welcome.jpg");
 			server_port_num = pt.get<unsigned int>("INI.Server_Port_Num", 3333);
 			not_found_pic_path = pt.get<std::string>("INI.Not_Found_Pic_Path", "Cache\\404.png");
+			not_found_ava_path = pt.get<std::string>("INI.Not_Found_Ava_Path", "Cache\\404_ava.png");
 			//由于酪Q发送图片,其图片文件必须在data/image内部,因此注释以下语句
 			//cache_path = pt.get<std::string>("BOT.Cache_Path", ini_include_path + Bangumi_cache_name);
 			cache_path =  Bangumi_cache_name;
@@ -62,7 +63,13 @@ private:
 		}
 
 	}
-
+	//创建目录[经测试无用]
+	//void CheckAccess(const std::string& path) {
+	//	
+	//	if (0!=::_access(path.c_str(), 0)) {
+	//		::_mkdir(path.c_str());
+	//	}
+	//}
 
 public:
 
@@ -100,6 +107,7 @@ public:
 	int max_time_work_num;
 	BangumiBotVaribel() = default;
 	std::string not_found_pic_path;
+	std::string not_found_ava_path;
 
 	//初始化
 	void Init(const char *path) {
@@ -168,6 +176,7 @@ public:
 			>> "Cur_Thread_Pool_Num: " << curr_thread_size
 			//>> "Card_Image_URL: " << card_image_url
 			>> "Not_Found_Pic_Path: " << not_found_pic_path
+			>> "Not_Found_Ava_Path: " << not_found_ava_path
 			>> "Server_Port_Num: " << server_port_num
 			>> "Use_Single_Thread: " << (use_single_thread ? "Yes" : "No");
 
@@ -206,7 +215,7 @@ public:
 static BangumiBotVaribel bgm;
 //global variable 
 //存放Subject以及User的Map
-
+//TODO:完成两个map的增减时的条件(最大容量,替换算法)
 static std::map<size_t, bangumi::BangumiSubject> BGMSubject;
 static std::map<size_t, bangumi::BangumiUser> BGMUser;
 

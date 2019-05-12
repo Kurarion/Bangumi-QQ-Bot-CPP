@@ -30,7 +30,6 @@ void show_error(MYSQL *mysql)
 inline void InitSQL() {
 
 }
-
 //封装了原本的c版本Res
 class BGMSQLResult {
 	friend class SQLPool;
@@ -145,7 +144,21 @@ private:
 #endif
 		
 	}
-
+	//设置查询语句
+	//void SetQuery(std::string i_query) {
+	//	query = i_query;
+	//}
+	//执行当前查询语句
+	//void ExecQuery() {
+	//	//
+	//	ClearResult();
+	//	//
+	//	IfBreakReconnect();
+	//	//query
+	//	mysql_real_query(mysql, query.c_str(), query.length());
+	//	//save result
+	//	result = mysql_store_result(mysql);
+	//}
 	//执行参数查询语句
 	unsigned long ExecQuery(const std::string& i_query, MYSQL_RES* &o_result) {
 		bFree = false;
@@ -221,7 +234,10 @@ private:
 		return true;
 		//
 	}
-
+	//取得上次query的结果
+	//MYSQL_RES* GetResult() {
+	//	return result;
+	//}
 	//清空result 标记free
 	void SetFree() {
 		//delete current result

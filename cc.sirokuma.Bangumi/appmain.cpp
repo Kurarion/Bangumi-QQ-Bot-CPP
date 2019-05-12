@@ -96,7 +96,6 @@ CQEVENT(int32_t, __eventPrivateMsg, 24)(int32_t subType, int32_t msgId, int64_t 
 	//如果要回复消息，请调用酷Q方法发送，并且这里 return EVENT_BLOCK - 截断本条消息，不再继续处理  注意：应用优先级设置为"最高"(10000)时，不得使用本返回值
 	//如果不回复消息，交由之后的应用/过滤器处理，这里 return EVENT_IGNORE - 忽略本条消息
 
-
 	auto verify = VerifyMsg(msg[0], msg[1], msg);
 	if (verify.first)//验证过滤
 	{
@@ -179,7 +178,12 @@ CQEVENT(int32_t, __eventSystem_GroupMemberDecrease, 32)(int32_t subType, int32_t
 CQEVENT(int32_t, __eventSystem_GroupMemberIncrease, 32)(int32_t subType, int32_t sendTime, int64_t fromGroup, int64_t fromQQ, int64_t beingOperateQQ) {
 	bangumi::string message;
 	//message << "[CQ:at,qq={" << beingOperateQQ << "}]";
-	message << "欢迎加入本群~";
+	if (beingOperateQQ != CQ_getLoginQQ(ac)) {
+		message << "欢迎加入本群~";
+	}
+	else {
+		message << "欢迎使用~\n使用指南：https://bangumi.irisu.cc/";
+	}
 	SendMsg.at(BgmRetType::Group)(ac, fromGroup, message);
 	return EVENT_BLOCK;
 	//return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数

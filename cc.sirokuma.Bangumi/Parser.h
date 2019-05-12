@@ -1,9 +1,11 @@
 #include "Functions.h"
-
+//需要本地的时间
+#include "boost/date_time/posix_time/posix_time.hpp"
 #ifndef BANGUMI_PARSER_H
 #define BANGUMI_PARSER_H
-
-
+//模板函数的显式声明/暂时不用,当前只有在本文件中使用过模板函数
+//extern template void bangumi::BGMCode::Match(const std::unordered_set<char>&, std::set<size_t>&);
+//extern template void bangumi::BGMCode::Match(const std::unordered_set<string>&, std::map<size_t, std::string>&);
 
 //const map<>
 inline std::pair<bool,bool> VerifyMsg(const char &first, const char &second, const char *&origin) {
@@ -85,6 +87,121 @@ inline std::pair<unsigned,std::string> AnalyseTimeWork(const char *msg) {
 	//最后返回countdown
 	return {countdown,msg};
 }
+//向数据库中更新指令使用情况
+void UpdateCodeType(std::set<BgmCode>&pool,int64_t qq) {
+	if (pool.empty()){
+		//如果池为空，直接返回
+		return;
+	}
+	//当前时间
+	boost::posix_time::ptime currentTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::hours(8);
+	boost::gregorian::date current_date = currentTime.date();
+	std::string current_date_str(boost::gregorian::to_iso_extended_string(current_date));
+	//查询语句
+	bangumi::string query;
+	query << "INSERT INTO bgm_users(user_id, user_qq, user_bangumi, user_access_token, user_refresh_token) "
+		<< "VALUE(NULL, " << qq << ", 0, '', '') ON DUPLICATE KEY UPDATE ";
+//便捷宏
+#define IF_QUERY(name)\
+name<<"=IF(BgmCode_Last_Date<'"<<current_date_str<<"',0,"<<name<<"),"
+
+	query << IF_QUERY("TBgmCode_subject")
+		<< IF_QUERY("TBgmCode_search")
+		<< IF_QUERY("TBgmCode_subject")
+		<< IF_QUERY("TBgmCode_user")
+		<< IF_QUERY("TBgmCode_up")
+		<< IF_QUERY("TBgmCode_reg")
+		<< IF_QUERY("TBgmCode_help")
+		<< IF_QUERY("TBgmCode_tag")
+		<< IF_QUERY("TBgmCode_statis")
+		<< IF_QUERY("TBgmCode_unknow");
+	for (auto& type:pool)
+	{
+		switch (type)
+		{
+		case BgmCode::Subject:
+			query << "BgmCode_subject = BgmCode_subject+1,";
+			query << "TBgmCode_subject = TBgmCode_subject+1,";
+			break;
+		case BgmCode::Search:
+			query << "BgmCode_search = BgmCode_search+1,";
+			query << "TBgmCode_search = TBgmCode_search+1,";
+			break;
+		case BgmCode::User:
+			query << "BgmCode_user = BgmCode_user+1,";
+			query << "TBgmCode_user = TBgmCode_user+1,";
+			break;
+		//case BgmCode::List:
+		//	break;
+		//case BgmCode::BGM:
+		//	break;
+		//case BgmCode::DMHY:
+		//	break;
+		//case BgmCode::MOE:
+		//	break;
+		case BgmCode::Up:
+			query << "BgmCode_up = BgmCode_up+1,";
+			query << "TBgmCode_up = TBgmCode_up+1,";
+			break;
+		case BgmCode::Collect:
+			query << "BgmCode_collect = BgmCode_collect+1,";
+			query << "TBgmCode_collect = TBgmCode_collect+1,";
+			break;
+		//case BgmCode::Conf:
+		//	break;
+		case BgmCode::Reg:
+			query << "BgmCode_reg = BgmCode_reg+1,";
+			query << "TBgmCode_reg = TBgmCode_reg+1,";
+			break;
+		case BgmCode::Help:
+			query << "BgmCode_help = BgmCode_help+1,";
+			query << "TBgmCode_help = TBgmCode_help+1,";
+			break;
+		case BgmCode::Tag:
+			query << "BgmCode_tag = BgmCode_tag+1,";
+			query << "TBgmCode_tag = TBgmCode_tag+1,";
+			break;
+		case BgmCode::Statis:
+			query << "BgmCode_statis = BgmCode_statis+1,";
+			query << "TBgmCode_statis = TBgmCode_statis+1,";
+			break;
+		case BgmCode::Unknow:
+			query << "BgmCode_unknow = BgmCode_unknow+1,";
+			query << "TBgmCode_unknow = TBgmCode_unknow+1,";
+			break;
+		default:
+			break;
+		}
+	}
+	//最后加上更新日期,使用东八区的时间
+	
+	std::string curr_time = boost::posix_time::to_iso_extended_string(currentTime);
+	curr_time[curr_time.find_first_of('T')] = ' ';
+
+	query << "BgmCode_Last_Date = '"<< curr_time <<"'";
+	//最后执行SQL查询
+	auto affect_rows_num = sql_pool.ExecQueryNoRes(query);
+	try
+	{
+		SQLCheckResult(affect_rows_num);
+	}
+	catch (boost::system::system_error& e)
+	{
+
+		{
+			bangumi::string debug_msg;
+			debug_msg << "更新指令使用情况失败:"
+				<< std::to_string(affect_rows_num)
+				>> e.what();
+
+			CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-UpdateCodeType", debug_msg);
+		}
+
+	}
+
+	
+	
+}
 inline void Parsing(int32_t subType, int32_t msgId, int64_t fromQQ, const char *msg, bool refresh) {
 	//本次处理的命令池list
 	std::list<bangumi::Code> code_pool;
@@ -111,6 +228,8 @@ inline void Parsing(int32_t subType, int32_t msgId, int64_t fromQQ, const char *
 
 	}
 
+	//处理code_type,记录各种命令的使用次数
+	UpdateCodeType(code_type,fromQQ);
 
 }
 inline void ParsingM(int32_t subType, int32_t msgId, int64_t fromDiscussGroup, BgmRetType DiscussOrGroup, int64_t fromQQ, const char *msg, bool refresh) {
@@ -137,7 +256,8 @@ inline void ParsingM(int32_t subType, int32_t msgId, int64_t fromDiscussGroup, B
 
 	}
 
-
+	//处理code_type,记录各种命令的使用次数
+	UpdateCodeType(code_type, fromQQ);
 
 }
 
