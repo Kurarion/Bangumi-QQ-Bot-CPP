@@ -2100,8 +2100,21 @@ if (complex_param.add_role){\
 		res1 >>"未收录角色...";\
 	/*res2 << roles.second;*/ \
 } \
-if (complex_param.add_air_status)\
-	res3<< Resolve::ResolveSubjectCollection(html, subject_id, refresh).Get();\
+if (complex_param.add_air_status){\
+	auto& resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, refresh);\
+	res3<< resolved_subject.Get();\
+	/*关联用户信息 */\
+	auto verify_result = VerifyToken(param);\
+	size_t &user_id = verify_result.first;\
+	std::string &access_token = verify_result.second.first;\
+	std::string &refresh_token = verify_result.second.second;\
+	if (!access_token.empty()) {\
+		/*如果有此注册用户*/\
+		/*加上进度信息*/\
+		res3 << GetUserSubjectProgress(subject_id, resolved_subject.GetEpsCount(), user_id,\
+			param.qq, access_token, refresh_token, refresh).first;\
+	}\
+}\
 if (complex_param.add_staff)\
 	res2<< Resolve::ResolveStaff(html);\
 if (!res.empty())\

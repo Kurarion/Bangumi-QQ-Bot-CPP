@@ -107,7 +107,7 @@ name<<"=IF(BgmCode_Last_Date<'"<<current_date_str<<"',0,"<<name<<"),"
 
 	query << IF_QUERY("TBgmCode_subject")
 		<< IF_QUERY("TBgmCode_search")
-		<< IF_QUERY("TBgmCode_subject")
+		<< IF_QUERY("TBgmCode_collect")
 		<< IF_QUERY("TBgmCode_user")
 		<< IF_QUERY("TBgmCode_up")
 		<< IF_QUERY("TBgmCode_reg")
