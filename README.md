@@ -10,7 +10,7 @@ Bangumi娘的使用指南
 
 GitHub说明文档: <a href="bangumi.md">Bangumi娘使用指南</a>
 
-网页说明文档: <a href="http://bangumi.irisu.cc/" target="_blank">Bangumi娘的食用指南</a>
+网页说明文档: <a href="https://bangumi.irisu.cc/" target="_blank">Bangumi娘的食用指南</a>
 
 ### Bangumi娘
 
