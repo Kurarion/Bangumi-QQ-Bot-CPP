@@ -1849,7 +1849,49 @@ namespace Resolve {
 	}
 
 	//解析Staff
-	inline bangumi::string ResolveStaff(const std::string &raw_html) {
+	inline bangumi::string ResolveStaff(const std::string &raw_html, size_t subject_id, bool refresh = false) {
+		//查找封面
+		//图片
+		size_t info_start = raw_html.find("\"bangumiInfo\"", 800);
+		if (info_start == std::string::npos) {
+			//一般是无法打开html 502
+			return "";
+		}
+		size_t infobox_end = raw_html.find("id=\"infobox\"", info_start);
+		std::string info_str = raw_html.substr(info_start + 13, infobox_end - info_start - 13);
+
+		//
+		size_t pic_start = info_str.find("href=\"");
+		std::string file_path;
+		//PIC图片下载线程
+		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+		if (pic_start != std::string::npos) {
+			//存在图片
+			size_t pic_end = info_str.find("\"", pic_start + 6);
+			std::string pic_url = "http:" + info_str.substr(pic_start + 6, pic_end - pic_start - 6);
+
+			//图片名字 (就是subject_id)
+			std::string pic_save_name = std::to_string(subject_id);
+
+			//下载图片
+			auto result = PicDownload(http_client, pic_url, SUBJECT_PIC_PATH, pic_save_name, file_path, refresh);
+
+			//返回的线程保存到返回值中
+			if (result.first == DownloadStatus::MultiThread)
+			{
+				//将下载线程压入线程池中
+				ThreadVector.push_back(result.second);
+			}
+		}
+		else {
+			//使用缺省图片
+			//下载图片
+			auto result = PicDownload(http_client, "", SUBJECT_PIC_PATH, "", file_path, refresh);
+		}
+
+		//图片OVER=====
+
+
 		//查找Staff的开头
 		size_t staff_start = raw_html.find("id=\"infobox\"", 800);
 		//可能有意外问题

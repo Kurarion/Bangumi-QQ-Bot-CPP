@@ -2116,7 +2116,7 @@ if (complex_param.add_air_status){\
 	}\
 }\
 if (complex_param.add_staff)\
-	res2<< Resolve::ResolveStaff(html);\
+	res2<< Resolve::ResolveStaff(html,subject_id,refresh);\
 if (!res.empty())\
 	DEFAULT_SEND(type, res);\
 if (!res1.empty())\
