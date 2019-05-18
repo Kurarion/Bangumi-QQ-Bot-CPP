@@ -46,7 +46,8 @@ namespace bangumi_bot_errors {
 		subject_collect_failed = 991,
 		you_need_bind_your_bgm_id = 990,
 		maybe_301_maybe_limit = 899,
-		update_with_the_same_eps = 898
+		update_with_the_same_eps = 898,
+		net_error = 897
 	};
 
 	class bot_errors_category
@@ -182,6 +183,9 @@ namespace bangumi_bot_errors {
 				break;
 			case bangumi_bot_errors::update_with_the_same_eps:
 				return "更新失败: 请确保与上次更新不同...";
+				break;
+			case bangumi_bot_errors::net_error:
+				return "访问失败...";
 				break;
 			default:
 				return "未知的错误...";

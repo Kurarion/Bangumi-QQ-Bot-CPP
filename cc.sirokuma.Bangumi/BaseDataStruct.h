@@ -390,9 +390,9 @@ namespace bangumi {
 						//}
 						//if (!decode_found)
 						//字符串参数,仅仅在个别的命令中有用
-						//if (instruct_need_str.find(instruct_name) != instruct_need_str.cend()) {
-						//	unparameters_str.insert(para);
-						//}
+						if (instruct_need_str.count(code_type) != 0) {
+							unparameters_str.insert(para);
+						}
 					}
 				}
 

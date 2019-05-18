@@ -2,8 +2,8 @@
 //#include "Http.h"
 //#include "Database.h"
 #include "Init.h"
+#include "boost/date_time/posix_time/posix_time.hpp"
 #include <iostream>
-
 
 
 namespace Resolve {
@@ -300,10 +300,10 @@ namespace Resolve {
 	size_t
 		Resolve_Auth_Status(std::string json) {
 		//{
-		//	"access_token": "f1b2xxxxxxxxf9ac6de6b",
-		//		"client_id" : "bgm10xxxxxx9805b",
-		//		"user_id" : 42xxxx,
-		//		"expires" : 155xxxx41,
+		//	"access_token": "f1b237ae52xxxxxxxx2a42f9ac6de6b",
+		//		"client_id" : "bgm1xxxxxxxxx9805b",
+		//		"user_id" : 42xxxx7,
+		//		"expires" : 155xxx941,
 		//		"scope" : null
 		//}
 		//{
@@ -470,7 +470,7 @@ namespace Resolve {
 		//		}
 		//}
 		//{
-		//	"request": "/collection/21811?access_token=088e77fbxxxxxxx7b06c33a45d",
+		//	"request": "/collection/21811?access_token=088e77fb1xxxxxxxxxxxxc7b06c33a45d",
 		//		"code" : 400,
 		//		"error" : "40001 Error: Nothing found with that ID"
 		//}
@@ -1510,8 +1510,8 @@ namespace Resolve {
 			size_t detail_end = html.find("</span></div></div>", detail_start);
 			detail_chapter_html = html.substr(detail_start + 21, detail_end - detail_start - 21);
 		}
-		if (chapter_start != std::string::npos) {
-
+		if (chapter_start != std::string::npos ) {
+			
 			size_t chapter_end = html.find("</ul>", chapter_start);
 			std::string chapter = html.substr(chapter_start + 10, chapter_end - chapter_start - 10);
 			//检查是否有SP
@@ -1535,7 +1535,7 @@ namespace Resolve {
 			//记录放送状态的标志
 			int ep_state;
 			//循环处理章节
-			while (ep_status != std::string::npos&& eps_num < MAX_SUBJECT_COLLECTION_EPS) {
+			while (ep_status!= std::string::npos&& eps_num< MAX_SUBJECT_COLLECTION_EPS){
 				++eps_num;
 				//
 				//title
@@ -1544,7 +1544,7 @@ namespace Resolve {
 				//ep name
 				ep_name = chapter.substr(ep_title_start + 7, ep_title_end - ep_title_start - 7);
 				//判断放送状态
-				if (chapter[ep_status + 5] == 'A') {
+				if (chapter[ep_status+5]=='A'){
 					//说明是epBtnAir
 					if (have_sp&&ep_status > sp_pos) {
 						//说明是aired的sp
@@ -1575,14 +1575,14 @@ namespace Resolve {
 					//确定此ep的info编号
 					detail_ep_info_start = chapter.find("rginfo_", ep_title_end);
 					detail_ep_info_end = chapter.find("\"", detail_ep_info_start + 7);
-					detail_ep_info = chapter.substr(detail_ep_info_start, detail_ep_info_end - detail_ep_info_start);
+					detail_ep_info = chapter.substr(detail_ep_info_start, detail_ep_info_end- detail_ep_info_start);
 					//确定此ep的info信息
 					info_content_start = detail_chapter_html.find(detail_ep_info);
-					if (info_content_start != std::string::npos) {
+					if (info_content_start!=std::string::npos){
 						//如果存在
 						bool save = false;
 						//<hr结束
-						for (int i = 0;; ++i) {
+						for (int i = 0;;++i) {
 							if (detail_chapter_html[info_content_start + i] == '>')
 							{
 								save = true;
@@ -1632,7 +1632,7 @@ namespace Resolve {
 								//如果不在<>内则直接保存
 								info_content += detail_chapter_html[info_content_start + i];
 							}
-
+							
 						}
 					}
 					else {
@@ -1888,7 +1888,7 @@ namespace Resolve {
 			//下载图片
 			auto result = PicDownload(http_client, "", SUBJECT_PIC_PATH, "", file_path, refresh);
 		}
-
+		
 		//图片OVER=====
 
 
@@ -1909,6 +1909,8 @@ namespace Resolve {
 		bool drop = false;
 		//返回的结果
 		bangumi::string result;
+		//首先插入封面
+		result<<"[CQ:image,file=" << file_path << "]\n";
 		//循环处理第一行
 		while (getline(output, line_str)) {
 			//先验
@@ -1941,5 +1943,377 @@ namespace Resolve {
 		}
 
 		return result;
+	}
+
+	//解析RSS
+	inline std::vector<bangumi::string> ResolveRSS(std::string &xml, BgmCode rss_type,int max_num,bangumi::string pre_str="", bool refresh = false) {
+		//一条消息最多的条目数
+#define RSS_ONE_MESSAGE_NUM 5
+#define RSS_ALL_NUM 10
+		//返回的结果
+		//bangumi::string ret;
+		std::vector<bangumi::string> ret;
+		//首先填充一个
+		ret.emplace_back(bangumi::string());
+		//为其添加前缀字符
+		ret[0] << pre_str;
+		//处理xml为完整的xml
+		try {
+			if (xml.rfind("</rss>") == std::string::npos) {
+				size_t last_item = xml.rfind("<item>");
+				size_t over_last_item = xml.rfind("</item>");
+				if (over_last_item > last_item) {
+					last_item = over_last_item + 7;
+				}
+				//xml = xml.substr(0, last_item);
+				xml.erase(last_item);
+				xml += "</channel></rss>";
+			}
+		}
+		catch(std::exception&e){
+			ret[0] << "访问失败...";
+			return ret;
+		}
+
+		//窄字符
+		boost::property_tree::ptree pt;
+		std::istringstream input(xml);
+		try {
+			boost::property_tree::read_xml(input, pt);
+		}
+		catch (std::exception&e) {
+			ret[0] << "访问失败...";
+			return ret;
+		}
+		//日期的处理
+		//std::string strDateTime = "Fri, 17 May 2019 00:30:27 GMT";
+		//"Fri, 17 May 2019 09:40:26 +0800"
+		std::string date_format;
+		switch (rss_type)
+		{
+		case BgmCode::DMHY:
+			date_format = "%a, %d %b %Y %H:%M:%S +0800";
+			break;
+		case BgmCode::MOE:
+			date_format = "%a, %d %b %Y %H:%M:%S GMT";
+			break;
+		default:
+			break;
+		}
+		//所有下载图片的URL
+		//主要用于防重复下载
+		std::set<std::string> pic_dl_urls;
+		//url对应path
+		std::map<std::string, std::string> url2path;
+		//PIC图片下载线程
+		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+		//开始解析
+		switch (rss_type)
+		{
+
+		case BgmCode::DMHY:
+		{
+			try
+			{
+				//直接赋值channel节点
+				pt = pt.get_child("rss").get_child("channel");
+				//编号
+				int num = 1;
+				int num_in_mssage = 1;
+				//遍历item
+				for (ptree::assoc_iterator iter2 = pt.find("item"); iter2 != pt.not_found(); ++iter2)
+				{
+
+					if (num == max_num + 1) {
+						//到达用户需要
+						break;
+					}
+					if (num_in_mssage == RSS_ONE_MESSAGE_NUM + 1) {
+						//单条消息上限
+						//填充一个string
+						ret.emplace_back(bangumi::string());
+						//重置
+						num_in_mssage = 1;
+					}
+					if(num == RSS_ALL_NUM + 1) {
+						//上限后直接
+						break;
+					}
+					//标题
+					std::string title = iter2->second.get<std::string>("title").data();
+					//描述
+					std::string description = iter2->second.get<std::string>("description").data();
+					//图片网址
+					std::string pic_url;
+					//
+					std::string pic_file_path = bgm.not_found_pic_path;
+					//从描述中查找第一个图片
+					size_t pic_src = description.find(".gif\"");
+					size_t pic_src_start;
+					if (pic_src != std::string::npos) {
+
+					}
+					else if (pic_src = description.find(".jpg\""), pic_src != std::string::npos) {
+
+					}
+					else if (pic_src = description.find(".png\""), pic_src != std::string::npos) {
+
+					}
+					if (pic_src != std::string::npos) {
+						//向前找到起始src
+						pic_src_start = description.rfind("src=\"http", pic_src);
+						if (pic_src_start != std::string::npos) {
+							pic_url = description.substr(pic_src_start + 5, pic_src + 4 - pic_src_start - 5);
+						}
+						//
+						if (!pic_url.empty()) {
+							if (pic_dl_urls.count(pic_url)==0) {
+								//不存在
+								pic_dl_urls.emplace(pic_url);
+								//如果图片存在的话，进行下载操作
+								auto result = HTTPSPicDownload(http_client, pic_url, OTHER_PIC_PATH, pic_file_path, refresh);
+								//保存对应
+								url2path.emplace(make_pair(pic_url, pic_file_path));
+								//返回的线程保存到返回值中
+								if (result.first == DownloadStatus::MultiThread)
+								{
+									//将下载线程压入线程池中
+									ThreadVector.push_back(result.second);
+								}
+							}
+							else {
+								try {
+									pic_file_path = url2path.at(pic_url);
+								}
+								catch (std::exception&) {}
+								
+							}
+						}
+					}
+					//网址
+					std::string link = iter2->second.get<std::string>("link").data();
+					//发布日期
+					std::string pubDate = iter2->second.get<std::string>("pubDate").data();
+					//创建一个DATE类
+					//std::string strDateTime = "Fri, 17 May 2019 00:30:27 +0800";
+					boost::posix_time::ptime pub_time;
+					std::stringstream ss(pubDate);
+					boost::posix_time::time_input_facet* input_facet = new boost::posix_time::time_input_facet(date_format);
+					ss.imbue(std::locale(ss.getloc(), input_facet));
+					ss >> pub_time;
+					std::string pubDate_ = boost::posix_time::to_iso_extended_string(pub_time);
+					pubDate_[pubDate_.find_first_of('T')] = ' ';
+					//发布人
+					std::string author = iter2->second.get<std::string>("author").data();
+					//发布类别
+					std::string category = iter2->second.get<std::string>("category").data();
+					//BT地址
+					std::string bt_url = iter2->second.find("enclosure")->second.get<std::string>("<xmlattr>.url");
+					//去除附加参数
+					size_t extra = bt_url.find_first_of('&');
+					if(extra!=std::string::npos)
+						bt_url.erase(extra);
+					//std::cout << title << description << link << pubDate;
+					//std::cout << "\n================\n";
+					//std::cout << bt_url;
+					//std::cout << "\n================\n";
+					//boost::this_thread::sleep(boost::posix_time::seconds(6));
+
+					ret[ret.size()-1] << "----------------"
+						>> "[CQ:image,file=" << pic_file_path << ']'
+						>> "---编号[ " << num << " ]---"
+						>> title
+						>> "URL:" >> link
+						>> "-----"
+						>> "发布时间: " << pubDate_
+						>> "种子链接:" >> bt_url
+						>> "-----"
+						>> "发布人: [ " << author << " ]"
+						>> "资源分类: [" << category << "]\n";
+						
+					++num_in_mssage;
+					++num;
+				}
+			}
+			catch (std::exception& e)
+			{
+				//不存在此节点
+				//自动忽略
+				//std::cout << e.what();
+				ret[0] << "暂无资源...";
+				return ret;
+			}
+		}
+			break;
+		case BgmCode::MOE:
+		{
+			try
+			{
+				//直接赋值channel节点
+				pt = pt.get_child("rss").get_child("channel");
+				//编号
+				int num = 1;
+				int num_in_mssage = 1;
+				//遍历item
+				for (ptree::assoc_iterator iter2 = pt.find("item"); iter2 != pt.not_found(); ++iter2)
+				{
+#ifndef NDEBUG
+					{
+						bangumi::string debug_msg;
+						debug_msg << "当前处理: " << num;
+						CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-RSS-Resolve", debug_msg);
+					}
+#endif
+					if (num == max_num + 1) {
+						//到达用户需要
+						break;
+					}
+					if (num_in_mssage == RSS_ONE_MESSAGE_NUM + 1) {
+						//单条消息上限
+						//填充一个string
+						ret.emplace_back(bangumi::string());
+						//重置
+						num_in_mssage = 1;
+					}
+					if (num == RSS_ALL_NUM + 1) {
+						//上限后直接
+						break;
+					}
+					//标题
+					std::string title = iter2->second.get<std::string>("title").data();
+					//描述
+					std::string description = iter2->second.get<std::string>("description").data();
+					//图片网址
+					std::string pic_url;
+					//默认404
+					std::string pic_file_path = bgm.not_found_pic_path;
+					//从描述中查找第一个图片
+					size_t pic_src = description.find(".gif\"");
+					size_t pic_src_start;
+					if (pic_src != std::string::npos) {
+
+					}else if (pic_src = description.find(".jpg\""), pic_src != std::string::npos){
+
+					}
+					else if (pic_src = description.find(".png\""), pic_src != std::string::npos) {
+
+					}
+					if (pic_src != std::string::npos) {
+						//向前找到起始src
+						pic_src_start = description.rfind("src=\"http", pic_src);
+						if (pic_src_start != std::string::npos) {
+							pic_url = description.substr(pic_src_start + 5, pic_src + 4 - pic_src_start - 5);
+						}
+						if (!pic_url.empty()) {
+							if (pic_dl_urls.count(pic_url) == 0) {
+								//不存在
+								pic_dl_urls.emplace(pic_url);
+								//如果图片存在的话，进行下载操作
+								auto result = HTTPSPicDownload(http_client, pic_url, OTHER_PIC_PATH, pic_file_path, refresh);
+								//保存对应
+								url2path.emplace(make_pair(pic_url, pic_file_path));
+								//返回的线程保存到返回值中
+								if (result.first == DownloadStatus::MultiThread)
+								{
+									//将下载线程压入线程池中
+									ThreadVector.push_back(result.second);
+								}
+							}
+							else {
+								try {
+									pic_file_path = url2path.at(pic_url);
+								}
+								catch (std::exception&) {}
+
+							}
+						}
+					}
+
+					//网址
+					std::string link = iter2->second.get<std::string>("link").data();
+					//发布日期
+					std::string pubDate = iter2->second.get<std::string>("pubDate").data();
+					//创建一个DATE类
+					//std::string strDateTime = "Fri, 17 May 2019 00:30:27 GMT";
+					boost::posix_time::ptime pub_time;
+					std::stringstream ss(pubDate);
+					boost::posix_time::time_input_facet* input_facet = new boost::posix_time::time_input_facet(date_format);
+					ss.imbue(std::locale(ss.getloc(), input_facet));
+					ss >> pub_time;
+					//delete input_facet;
+					//原为格林时间
+					//使用东八区
+					pub_time += boost::posix_time::hours(8);
+					std::string pubDate_ = boost::posix_time::to_iso_extended_string(pub_time);
+					pubDate_[pubDate_.find_first_of('T')] = ' ';
+					//bt链接
+					std::string bt_url = iter2->second.find("enclosure")->second.get<std::string>("<xmlattr>.url");
+					//进行URLENCODE
+					std::string encode_url = url_encode(bt_url);
+					//std::cout << encode_url;
+
+
+					//消息拼接
+					ret[ret.size() - 1] << "----------------"
+						>> "[CQ:image,file=" << pic_file_path << ']'
+						>> "---编号[ " << num << " ]---"
+						>> title
+						>> "URL:" >> link
+						>> "-----"
+						>> "发布时间: " << pubDate_
+						>> "种子链接:" >> encode_url << '\n';
+
+					++num;
+				}
+			}
+			catch (std::exception& e)
+			{
+				//不存在此节点
+				//自动忽略
+				//std::cout << e.what();
+				ret[0] << "暂无资源...";
+				return ret;
+			}
+		}
+			break;
+		default:
+			break;
+		}
+#ifndef NDEBUG
+		{
+			bangumi::string debug_msg;
+			debug_msg << "HTTPS处理图片开始" << "[" << ThreadVector.size() << "]";
+			CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-RSS-Resolve", debug_msg);
+		}
+#endif
+		//等待图片下载完成
+		for (auto &t : ThreadVector) {
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << "图片完结+1";
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-RSS-Resolve", debug_msg);
+			}
+#endif
+			if (t != nullptr&&t->joinable())
+				t->join();
+		}
+#ifndef NDEBUG
+		{
+			bangumi::string debug_msg;
+			debug_msg << "HTTPS处理图片完结";
+			CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-RSS-Resolve", debug_msg);
+		}
+#endif
+		//如果不为空
+		for (auto& str : ret) {
+			if (!str.empty()) {
+				str[str.length() - 1] = ' ';
+			}
+		}
+		//释放资源
+		//delete input_facet;
+		//返回
+		return ret;
 	}
 }

@@ -387,6 +387,17 @@ namespace bangumi {
 
 		return std::move(html);
 	}
+	//同步Https下载一个HTML页面
+	std::string GetHttpsHtml(std::string host,std::string uri) {
+
+		std::string request = "GET " + uri + " HTTP/1.1\r\n"
+			"Host: " +host+ "\r\n" "\r\n";
+
+		//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
+		std::string html = code_converter.Conv(http_client.SyncHTTPSRequest(host,request));
+
+		return std::move(html);
+	}
 	//end of bangumi
 }
 
@@ -660,6 +671,38 @@ param.find_first_of(c1)!=npos
 				if (code == BgmCode::Tag) {
 					ret.tag_keyword = pre_param;
 				}
+				//Rss API
+				if (code == BgmCode::RSS) {
+					//
+					auto sharp_res = PARA_Resolve_Sharp(pre_param, code);
+					if (sharp_res.id != 0) {
+						//说明正确解析了
+						id = sharp_res.id;
+					}
+					else {
+						//尝试使用%解析
+						auto percent_res = PARA_Resolve_Percent(pre_param, code);
+						if (percent_res.id != 0) {
+							//说明正确解析了
+							id = percent_res.id;
+							//因为percent不会和/冲突,因此继续前进
+						}
+						else {
+							//否则直接给予赋值
+							////首先替换+至空格//无需多此一举
+							//auto replace_plus_pos = pre_param.find_last_of('+');
+							////复制str变量
+							//std::string after_replace_str = pre_param;
+							//while (replace_plus_pos != std::string::npos) {
+							//	after_replace_str[replace_plus_pos] = ' ';
+							//	replace_plus_pos = after_replace_str.find_last_of('+', replace_plus_pos);
+							//}
+							ret.rss_keyword = pre_param;
+						}
+					}
+					
+
+				}
 				
 			}
 		}
@@ -788,6 +831,89 @@ param.find(s1)!=npos||param.find(s2)!=npos
 		case BgmCode::DMHY:
 			break;
 		case BgmCode::MOE:
+			break;
+		case BgmCode::RSS:
+		{
+			//话数与最大个数的连接符
+			auto delim = param.find_first_of('/');
+			//第一个参数
+			std::string first_param;
+			if (delim != npos)
+				first_param = param.substr(0, delim);
+			else
+				first_param = param;
+			//第二个参数(只取最大个数)
+			std::string second_param;
+			if (delim != npos)
+				second_param = param.substr(delim + 1);
+			//处理搜索的话数
+			if (!first_param.empty()) {
+				//=====原Update中的识别=====	
+				size_t plus_pos = first_param.find_first_of('+');
+				size_t sub_pos = first_param.find_first_of('-');
+				//是否是+号 否则-号
+				bool isPlus = false;
+				//首个可识别符号的位置
+				size_t end_pos = sub_pos;
+				//判断
+				if (plus_pos < sub_pos) {
+					end_pos = plus_pos;
+					isPlus = true;
+				}
+				//不包括符号的字符串
+				std::string param_without_sign;
+				if (end_pos != std::string::npos) {
+					param_without_sign = first_param.substr(0, end_pos);
+				}
+				else {
+					param_without_sign = first_param;
+				}
+				//对符号的处理,如果有
+				if (end_pos != std::string::npos) {
+					try {
+
+						ret.update_eps_shift = std::stoi(first_param.substr(end_pos + 1));
+						if (!isPlus) {
+							//减的偏移
+							ret.update_eps_shift = -ret.update_eps_shift;
+						}
+
+					}
+					catch (std::exception&) {
+						//转换失败,直接继续
+						//也可能是内存访问冲突,越界
+					}
+				}
+				//对无符号的str处理
+				if (param_without_sign.find("air") != npos) {
+					ret.update_air = true;
+				}
+				else if (param_without_sign.find("fin") != npos) {
+					ret.update_fin = true;
+				}
+				else {
+					//可能是数字
+					try {
+						ret.update_watched_eps = std::stoi(param_without_sign);
+					}
+					catch (std::invalid_argument&) {
+						//否则设置什么也不干:这里是默认不加话数
+						//ret.update_watched_eps = 1;
+					}
+
+				}
+				//=====原Update中的识别 Over=====
+			}
+			//处理最大的个数
+			if (!second_param.empty()) {
+				try {
+					ret.rss_max_items = std::stoi(second_param);
+				}
+				catch (std::invalid_argument&) {
+					//不做什么
+				}
+			}
+		}
 			break;
 		case BgmCode::Up:
 		{
@@ -1092,7 +1218,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 	}
 	//解析#参数
 	inline ComplexParam PARA_Resolve_Sharp(const std::string& str, BgmCode code) {
-		if (code == BgmCode::Up || code == BgmCode::Subject || code == BgmCode::Collect) {
+		if (code == BgmCode::Up || code == BgmCode::Subject || code == BgmCode::Collect ||code == BgmCode::RSS) {
 			//SELECT * FROM bgm_subjects WHERE CONCAT(name_cn,name) LIKE CONCAT('%ク%') ORDER BY subject_id DESC
 			//类似于这样的SQL搜索
 			//单线程SQL
@@ -1249,7 +1375,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 	}
 	//解析%参数
 	inline ComplexParam PARA_Resolve_Percent(const std::string& str, BgmCode code) {
-		if (code == BgmCode::Up || code == BgmCode::Subject || code == BgmCode::Collect) {
+		if (code == BgmCode::Up || code == BgmCode::Subject || code == BgmCode::Collect||code == BgmCode::RSS) {
 			size_t percent_pos = str.find_first_of('%');
 			//如果没有找到%直接返回0
 			if (percent_pos == std::string::npos) {
@@ -1595,12 +1721,66 @@ param.find(s1)!=npos||param.find(s2)!=npos
 		}
 	}
 
+	//用于解析RSS的参数封装
+	inline ComplexParam ResolveRSSPara(const std::string& str) {
+		BgmCode code = BgmCode::RSS;
+		try {
+			//只有'/'的解析
+			return PARA_Resolve_Virgule(str, code);
+		}
+		catch (boost::system::system_error&) {
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << "PARA_Resolve_Virgule 失败";
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-ResolveRSSPara-Virgule", debug_msg);
+			}
+#endif		
+			//构建结果对象
+			//返回的结果
+			//返回使用#解析
+			//return PARA_Resolve_Sharp(str, code);
+			//最后交给#和%
+			auto sharp_res = PARA_Resolve_Sharp(str, code);
+			if (sharp_res.id != 0) {
+				return sharp_res;
+			}
+			else {
+				auto percent_res = PARA_Resolve_Percent(str, code);
+				if (sharp_res.id !=0){
+					return percent_res;
+				}
+				else {
+					//否则直接给予赋值
+					//首先替换+至空格//不用多此一举,最后的Get还需要用+代替空格
+					//auto replace_plus_pos = str.find_last_of('+');
+					////复制str变量
+					//std::string after_replace_str = str;
+					//while (replace_plus_pos != std::string::npos) {
+					//	after_replace_str[replace_plus_pos] = ' ';
+					//	replace_plus_pos = after_replace_str.find_last_of('+', replace_plus_pos);
+					//}
+					ComplexParam ret;
+					ret.rss_keyword = str;
+					return ret;
+				}
+			}
+			//都不能解析
+			//最后直接抛出异常 不解析此参数
+			//throw e;
+		}
+
+	}
+
 	//Bot: 读取Bangumi娘的配置信息
 	inline void BOT_Read_Ini(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
+	
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
-			}
+
+
+	}
 	//Bot: Help信息
 	inline void BOT_Help(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
 		
@@ -3726,5 +3906,367 @@ if (!res3.empty())\
 		}
 	}
 
+	//RSS
+	inline void BGM_RSS(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str, BgmCode rss_type) {
+		//只取HTML的放送状态即可（有名字与原名），以及ep
+		//例子:dmhy 一拳超人+6/5  (以“一拳超人 6”为关键字，最新结果5个)
+		//例子:moe 
+
+
+		//bangumi::string ret("<Tag>");
+		//ret >> "ID:\n";
+		//for (const auto &i : parameters_id)
+		//	ret << i << " ";
+		//ret >> "STR:\n";
+		//std::string name;
+		//for (const auto &i : parameters_str)
+		//	ret << i << " ";
+
+		//DEFAULT_SEND(param.type, ret);
+
+		//构建一个复杂参数类的Vector
+		std::vector<ComplexParam> paramters;
+		//last_subject_id
+		size_t sql_last_subject_id = 0;
+		//排除空语句
+		if (parameters_str.empty() && parameters_id.empty()) {
+			//Last判断
+			try {
+				sql_last_subject_id = GetLastSubjectID(param.qq);
+				if (sql_last_subject_id != 0) {
+					paramters.emplace_back(sql_last_subject_id);
+				}
+				else {
+					return;
+				}
+			}
+			catch (boost::system::system_error& e) {
+				//LastSubjectGet失败
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "GetLastSubjectFailed!"
+						>> e.what();
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-RSS-API", debug_msg);
+				}
+#endif	
+				return;
+			}
+		}
+		//压入解析参数(id)
+		for (const auto& i : parameters_id) {
+			paramters.emplace_back(i);
+		}
+		//判断是否已经sql查询过last_subject了
+		bool has_sql_last_subject = false;
+		//压入解析参数(str)
+		for (const auto& i : parameters_str) {
+			try {
+				auto temp = ResolveRSSPara(i);
+				//先判断是否使用Last Subject
+				if (temp.use_last_subject_id) {
+					if (!has_sql_last_subject) {
+						//标记已经sql过了last Subject
+						has_sql_last_subject = true;
+						//sql last subject
+						sql_last_subject_id = GetLastSubjectID(param.qq);
+					}
+
+					temp.id = sql_last_subject_id;
+				}
+				//压入paramters
+				paramters.emplace_back(temp);
+			}
+			catch (boost::system::system_error&) {
+;
+			}
+		}
+
+		//==========Main Func=============
+		//对每一个识别的ID进行main func
+		for (auto& complex_param : paramters) {
+			//基础的常用赋值
+			const auto& subject_id = complex_param.id;
+			//无效的ID
+			if (subject_id == 0&& complex_param.rss_keyword.empty()) {
+				bangumi::string error_msg = boost::system::system_error(bangumi_bot_errors::empty_subject).what();
+				error_msg << "[" << subject_id << "]";
+				//发送回复
+				DEFAULT_SEND(param.type, error_msg);
+				//continue
+				continue;
+			}
+
+
+
+			//使用的RSS源
+			bangumi::string rss_host;
+			bangumi::string rss_uri;
+			//要回复的消息前缀
+			bangumi::string pre_ret;
+
+			switch (rss_type)
+			{
+			case BgmCode::MOE:
+			{
+				rss_host << "bangumi.moe";
+				rss_uri << "/rss/search/";
+				pre_ret << "资源来源: [ 萌番组 ]"
+					"\n关键字: ";
+			}
+				break;
+			case BgmCode::DMHY:
+			{
+				rss_host << "share.dmhy.org";
+				rss_uri << "/topics/rss/rss.xml?keyword=";
+				pre_ret << "资源来源: [ 动漫花园 ]"
+					"\n关键字: ";
+			}
+				break;
+			default:
+				break;
+			}
+			//https://share.dmhy.org/topics/rss/rss.xml
+			//https://share.dmhy.org/topics/rss/rss.xml?keyword=123
+			//https://bangumi.moe/rss/search/123
+			//首先使用单线程下载页面
+
+
+			try
+			{
+				bangumi::string keyword;
+				//如果需要html的放送状态请求
+				if (complex_param.rss_keyword.empty()) {
+					//从HTML解析需要的信息: 作品名,总集数,图片,当前放送的话数等
+					std::string html = bangumi::GetSubjectHtml(subject_id);
+					BangumiSubjectCollection subject_data = Resolve::ResolveSubjectCollection(html, subject_id, param.extra.refresh);
+					if (!subject_data.Valid()) {
+						//说明 这个条目是不对非会员开放的
+						throw boost::system::system_error(bangumi_bot_errors::maybe_301_maybe_limit);
+					}
+
+					//将要更新的进度
+					float to_rss_eps = 0;
+					//=========计算进度==========
+					if (complex_param.update_air) {
+						if (subject_data.GetEpsAiredCount() != 0) {
+							//已放送的
+							try {
+								//取ep.XX
+								to_rss_eps = std::stof(subject_data.air_eps[subject_data.GetEpsAiredCount() - 1].substr(3));
+							}
+							catch (std::exception&e) {
+								//使用eps总集 不包括SP
+								to_rss_eps = subject_data.GetEpsAiredCount();
+							}
+						}
+					}
+					else if (complex_param.update_fin) {
+
+						if (subject_data.GetEpsUnAiredCount() != 0) {
+							//说明有未放送的
+							try {
+								//取ep.XX
+								to_rss_eps = std::stof(subject_data.unair_eps[subject_data.GetEpsUnAiredCount() - 1].substr(3));
+							}
+							catch (std::exception&e) {
+								//使用eps总集 不包括SP
+								to_rss_eps = subject_data.GetEpsCount();
+							}
+						}
+						else {
+							//说明已经放送完毕
+							try {
+								//取ep.XX
+								to_rss_eps = std::stof(subject_data.air_eps[subject_data.GetEpsAiredCount() - 1].substr(3));
+							}
+							catch (std::exception&e) {
+								//使用eps总集 不包括SP
+								to_rss_eps = subject_data.GetEpsCount();
+							}
+						}
+
+					}
+					else if (complex_param.update_watched_eps != 0) {
+
+						//使用内置的进度参数
+						to_rss_eps = complex_param.update_watched_eps;
+					}
+					else {
+						//否则什么也不加
+
+					}
+					//最后加上偏移
+					to_rss_eps = (int)(to_rss_eps + .6) + complex_param.update_eps_shift;
+
+					//给uri赋值
+					if (!complex_param.rss_keyword.empty()) {
+						//如果这个关键字不为空就直接使用这个
+						keyword << complex_param.rss_keyword;
+					}
+					else {
+						//否则使用html解析后的name
+						if (!(subject_data.name_cn.empty())) {
+							std::string temp(subject_data.name_cn);
+							////转换空格到+
+							//size_t blank_site = temp.find_first_of(' ');
+							//while (blank_site!=std::string::npos)
+							//{
+							//	temp[blank_site] = '+';
+							//	blank_site = temp.find_first_of(' ', blank_site);
+							//}
+							//直接请求空格以前的关键字
+							size_t blank_site = temp.find_first_of(' ');
+							if (blank_site != std::string::npos)
+							{
+								temp.erase(blank_site);
+							}
+							//只适用于中文的处理
+							std::string temp_(temp);
+							if (temp_.size() > 4 * 2) {
+								//4个字以上
+								temp = "";
+								//取前4个字
+								for (int i = 0; i < 8; ++i) {
+									if (temp_[i] < 0)
+									{
+										temp += temp_[i];
+										continue;
+									}
+									else {
+										break;
+									}
+								}
+								//可能出现其他问题就还原
+								if (temp.empty())
+								{
+									temp = temp_;
+								}
+
+							}
+							keyword << temp;
+						}
+						else {
+							std::string temp(subject_data.name);
+							//转换空格到+
+							//size_t blank_site = temp.find_first_of(' ');
+							//while (blank_site != std::string::npos)
+							//{
+							//	temp[blank_site] = '+';
+							//	blank_site = temp.find_first_of(' ', blank_site);
+							//}
+							//直接请求空格以前的关键字
+							size_t blank_site = temp.find_first_of(' ');
+							if (blank_site != std::string::npos)
+							{
+								temp.erase(blank_site);
+							}
+							keyword << temp;
+						}
+
+					}
+					//之后加上话数
+					if ((int)to_rss_eps != 0) {
+
+						keyword << '+' << (int)(to_rss_eps);
+						//dmhy的搜索问题使用｜增加关键字
+						if (to_rss_eps < 10)
+						{
+							keyword << "|0" << std::to_string((int)(to_rss_eps));
+						}
+					}
+				}
+				else {
+					int to_rss_eps = 0;
+					if (complex_param.update_watched_eps != 0) {
+
+						//使用内置的进度参数
+						to_rss_eps = complex_param.update_watched_eps;
+					}
+					else {
+						//否则什么也不加
+
+					}
+					//最后加上偏移
+					to_rss_eps = (int)(to_rss_eps + .6) + complex_param.update_eps_shift;
+
+					//给uri赋值
+					keyword << complex_param.rss_keyword;
+					//之后加上话数
+					if (to_rss_eps != 0) {
+						keyword << '+' << std::to_string(to_rss_eps);
+						//dmhy的搜索问题使用｜增加关键字
+						if (to_rss_eps<10)
+						{
+							keyword << "|0" << std::to_string(to_rss_eps);
+						}
+					}
+						
+				}
+
+				//最大的条目数
+				int max_items = complex_param.rss_max_items;
+				//替换+到空格
+				size_t plus_site = keyword.find_first_of('+');
+				while (plus_site!=std::string::npos)
+				{
+					keyword[plus_site] = ' ';
+					plus_site = keyword.find_first_of('+', plus_site+1);
+				}
+				rss_uri << code_encoder.Conv(keyword);
+				//前缀消息
+				pre_ret << "[ " << keyword << " ]\n\n";
+
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "请求的RSS为: " << rss_host << rss_uri;
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-RSS", debug_msg);
+				}
+#endif
+
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "请求的rss_html为: "
+						>> "uri" << url_encode(rss_uri);
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-RSS", debug_msg);
+				}
+#endif
+				//读取HTML页面
+				std::string rss_html = GetHttpsHtml(rss_host, url_encode(rss_uri));
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "请求的rss_html为: " << rss_html.size()
+						>> "uri" << code_encoder.Conv(rss_uri);
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-RSS", debug_msg);
+				}
+#endif
+				//解析HTML
+				auto ret_vec = Resolve::ResolveRSS(rss_html,rss_type, complex_param.rss_max_items, pre_ret, param.extra.refresh);
+				//消息数组
+				for (auto& ret : ret_vec){
+					//回复消息
+					DEFAULT_SEND(param.type, ret);
+				}
+				
+			}
+			catch (const boost::system::system_error&e)
+			{
+				//回复消息
+				DEFAULT_SEND(param.type, e.what());
+				//continue;
+			}
+		
+		}
+		
+
+
+
+
+
+		
+	}
 }
 #endif

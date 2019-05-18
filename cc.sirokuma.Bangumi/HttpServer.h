@@ -40,30 +40,7 @@ std::string EncryptState(const int64_t &qq) {
 	result += table.at(qq_str[4]);
 	return std::move(result);
 }
-//https://stackoverflow.com/questions/154536/encode-decode-urls-in-c
-//urlencode
-std::string url_encode(const std::string &value) {
-	std::ostringstream escaped;
-	escaped.fill('0');
-	escaped << std::hex;
 
-	for (std::string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) {
-		std::string::value_type c = (*i);
-
-		// Keep alphanumeric and other accepted characters intact
-		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-			escaped << c;
-			continue;
-		}
-
-		// Any other characters are percent-encoded
-		escaped << std::uppercase;
-		escaped << '%' << std::setw(2) << int((unsigned char)c);
-		escaped << std::nouppercase;
-	}
-
-	return escaped.str();
-}
 //获得定向网址
 std::string GetRedirectUrl(int64_t qq) {
 	std::string unqq = EncryptQQ(qq);
@@ -352,7 +329,7 @@ private:
 				"Content-Type: application/x-www-form-urlencoded\r\n");
 			header << "Content-Length: " << content.length() << "\r\n";
 
-			
+
 
 			//创建一个请求
 			std::shared_ptr<HTTPRequest> request_one =

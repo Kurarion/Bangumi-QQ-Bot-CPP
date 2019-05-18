@@ -39,6 +39,8 @@ const static std::unordered_map<std::string, BgmCode> instruct
 	{ "help", BgmCode::Help },
 	{ "用户", BgmCode::User },
 	{ "user", BgmCode::User },
+	{ "moe", BgmCode::MOE },
+	{ "dmhy", BgmCode::DMHY },
 	{ "标签", BgmCode::Tag},
 	{ "tag", BgmCode::Tag },
 	{ "搜索", BgmCode::Search },
@@ -63,8 +65,8 @@ const static std::unordered_set<char> para_link{ ' '/*,'+','/'*//*,',','.' */};
 //************
 //不需要size_t类型的参数的命令
 const static std::set<BgmCode> instruct_no_need_int{ BgmCode::User,BgmCode::Tag, BgmCode::Search,BgmCode::Statis/*,"!"*/ };
-//需要string类型参数的命令（暂时不用）
-//const static std::set<BgmCode> instruct_need_str{ BgmCode::Collect };
+//需要string类型参数的命令
+const static std::set<BgmCode> instruct_need_str{ BgmCode::DMHY,BgmCode::MOE };
 //可能使用Last Subject的命令（暂时不用）
 //const static std::set<std::string> instruct_may_use_last{ Default_Key,"acg", "co", "up", "++" };
 //可能使用复杂参数的命令
@@ -81,7 +83,9 @@ const static std::map<BgmCode, std::function<void (const bangumi::BGMCodeParam &
 	{ BgmCode::Up, std::cref(bangumi::BGM_API_Update) },
 	{ BgmCode::Conf, std::cref(bangumi::BOT_Read_Ini) },
 	{ BgmCode::Reg, std::cref(bangumi::BGM_API_Auth) },
-	{ BgmCode::Subject, std::cref(bangumi::BGM_API_Subject) }
+	{ BgmCode::Subject, std::cref(bangumi::BGM_API_Subject) },
+	{ BgmCode::DMHY, std::bind(bangumi::BGM_RSS,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,BgmCode::DMHY) },
+	{ BgmCode::MOE, std::bind(bangumi::BGM_RSS,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,BgmCode::MOE) }
 };
 //参数对应的解析函数
 const static std::map<std::string, std::function<bangumi::ComplexParam(const std::string&, BgmCode)>>paramter_func_map

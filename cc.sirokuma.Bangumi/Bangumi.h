@@ -33,6 +33,7 @@ enum class BgmCode {
 	Help,
 	Tag,
 	Statis,
+	RSS,
 	Unknow
 };
 //转码类
@@ -828,6 +829,10 @@ if(var.compare(var2)!=0)\
 		std::string tag_keyword;
 		std::string tag_airtime;
 		int tag_page = 0;
+
+		//RSS用
+		std::string rss_keyword;
+		int rss_max_items = 5;
 	};
 	//消息回复简单结构体
 	struct BGMRetParam {
@@ -936,7 +941,8 @@ if(var.compare(var2)!=0)\
 	extern void BGM_API_Search(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
 	//Tag
 	extern void BGM_API_Tag(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
-
+	//RSS
+	extern void BGM_RSS(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&, BgmCode);
 }
 
 

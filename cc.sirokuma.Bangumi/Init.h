@@ -10,6 +10,10 @@
 //bangumi-bot init
 
 
+
+
+
+
 //global variable 
 //Http
 //TODO:完成Client的超时暂时关闭功能(使用asio的计时器)
@@ -70,7 +74,7 @@ inline bangumi::BangumiUser& BangumiAddUser(size_t &user_id, std::string &url,
 	std::string &user_name, std::string &nick_name,
 	std::string &ava_file, std::string &sign/*, bool refresh = false*/) {
 
-	
+
 		{
 			//没有命中,直接构造
 #ifndef NDEBUG
@@ -247,7 +251,7 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 ) {
 
 
-	
+
 	{
 		//没有命中,直接构造
 #ifndef NDEBUG
@@ -411,7 +415,30 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 
 }
 
+//https://stackoverflow.com/questions/154536/encode-decode-urls-in-c
+//urlencode
+std::string url_encode(const std::string &value) {
+	std::ostringstream escaped;
+	escaped.fill('0');
+	escaped << std::hex;
 
+	for (std::string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) {
+		std::string::value_type c = (*i);
+
+		// Keep alphanumeric and other accepted characters intact
+		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || c == ':' || c == '/' || c == '?' || c == '=') {
+			escaped << c;
+			continue;
+		}
+
+		// Any other characters are percent-encoded
+		escaped << std::uppercase;
+		escaped << '%' << std::setw(2) << int((unsigned char)c);
+		escaped << std::nouppercase;
+	}
+
+	return escaped.str();
+}
 
 
 #endif
