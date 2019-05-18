@@ -20,6 +20,7 @@ Bangumi娘QQ号: 272242684
 
 ### Build with:
 + Boost 1.68
++ OpenSSL 1.1.1
 + MariaDB-Connector-C 3.0.7
 + libiconv&emsp;[github: <a href="https://github.com/kiyolee/libiconv-win-build" target="_blank">kiyolee/libiconv-win-build</a>]
 + CoolQ C++ SDK&emsp;[github: <a href="https://github.com/CoolQ/cqsdk-vc" target="_blank">CoolQ/cqsdk-vc</a>]
@@ -49,7 +50,8 @@ Bangumi娘QQ号: 272242684
     │          ├─Character			//存放角色的图片
     │          ├─Subject			//存放条目的封面
     │          ├─Tag			//存放条目的Tag压缩封面
-    │          └─User			//存放用户头像
+    │          ├─User			//存放用户头像
+    │          └─Other                      //存放其他图片
     └─Redirect_URL
             bangumi.php  			//绑定功能需要的回调页面
 
