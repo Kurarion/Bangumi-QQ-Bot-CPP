@@ -1601,6 +1601,38 @@ namespace Resolve {
 								if (detail_chapter_html[info_content_start + i + 1] == 'h')
 								{
 									//说明是<hr
+									//加讨论
+									save = false;
+									++i;
+									while (true) {
+										++i;
+										//</s结束
+										if (detail_chapter_html[info_content_start + i] == '>')
+										{
+											while (detail_chapter_html[info_content_start + i + 1] == ' ') {
+												//排除掉空格
+												++i;
+											}
+											save = true;
+											continue;
+										}
+										if (detail_chapter_html[info_content_start + i] == '<')
+										{
+											if (detail_chapter_html[info_content_start + i + 1] == '/'&&
+												detail_chapter_html[info_content_start + i + 2] == 's') {
+												//直接break
+												break;
+											}
+											//其他情况直接false save
+											save = false;
+											continue;
+										}
+										if (save) {
+											//如果不在<>内则直接保存
+											info_content += detail_chapter_html[info_content_start + i];
+										}
+
+									}
 									//保存数据
 									switch (ep_state)
 									{

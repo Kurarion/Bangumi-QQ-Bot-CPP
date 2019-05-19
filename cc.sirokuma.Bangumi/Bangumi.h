@@ -545,13 +545,14 @@ if(var.compare(var2)!=0)\
 			STRRET("", name_cn);
 			ret >> "< " << name << " >";
 			if (GetEpsCount() == 0) {
-				ret >> "未收录章节信息...";
+				ret >> "● 未收录章节信息...";
 			}
 			else {
 				ret >> "放送状态:  " << GetEpsAiredCount() << '/' << GetEpsCount();
 				if (GetEpsAiredCount() != 0) {
 					const int output_num = 3;
-					ret >> "已放送TV:";
+					ret >> "-----------"
+						>> "已放送TV:";
 					int n = GetEpsAiredCount();
 					//从低到高输出
 					int start_pos = n - output_num;
@@ -559,33 +560,72 @@ if(var.compare(var2)!=0)\
 						start_pos = 0;
 					for (int i = start_pos; i < n; ++i) {
 
-						ret >> "  " << air_eps[i];
-						ret >> "  [" << air_eps_info[i] << ']';
+						ret >> "● " << air_eps[i];
+						//额外信息
+						ret >> ">>";
+						for (auto&c : air_eps_info[i]) {
+							if (c == ' ') {
+								ret >> ">>";
+							}
+							else {
+								ret << c;
+							}
+						}
 					}
 				}
 				if (GetEpsUnAiredCount() != 0) {
 					const int output_num = 2;
-					ret >> "未放送TV:";
+					ret >> "-----------"
+						>> "未放送TV:";
 					int n = GetEpsUnAiredCount() < output_num ? GetEpsAiredCount() : output_num;
 					for (int i = 0; i < n; ++i) {
-						ret >> "  " << unair_eps[i];
-						ret >> "  [" << unair_eps_info[i] << ']';
+						ret >> "● " << unair_eps[i];
+						//额外信息
+						ret >> ">>";
+						for (auto&c : unair_eps_info[i]) {
+							if (c == ' ') {
+								ret >> ">>";
+							}
+							else {
+								ret << c;
+							}
+						}
 					}
 				}
 				if (GetSPEpsAiredCount() != 0) {
-					ret >> "已放送SP:";
+					ret >> "-----------"
+						>> "已放送SP:";
 					int n = GetSPEpsAiredCount();
 					for (int i = 0; i < n; ++i) {
-						ret >> "  " << sp_air_eps[i];
-						ret >> "  [" << sp_air_eps_info[i] << ']';
+						ret >> "● " << sp_air_eps[i];
+						//额外信息
+						ret >> ">>";
+						for (auto&c : sp_air_eps_info[i]) {
+							if (c == ' ') {
+								ret >> ">>";
+							}
+							else {
+								ret << c;
+							}
+						}
 					}
 				}
 				if (GetSPEpsUnAiredCount() != 0) {
-					ret >> "未放送SP:";
+					ret >> "-----------"
+						>> "未放送SP:";
 					int n = GetSPEpsUnAiredCount();
 					for (int i = 0; i < n; ++i) {
-						ret >> "  " << sp_unair_eps[i];
-						ret >> "  [" << sp_unair_eps_info[i] << ']';
+						ret >> "● " << sp_unair_eps[i];
+						//额外信息
+						ret >> ">>";
+						for (auto&c : sp_unair_eps_info[i]) {
+							if (c == ' ') {
+								ret >> ">>";
+							}
+							else {
+								ret << c;
+							}
+						}
 					}
 				}
 

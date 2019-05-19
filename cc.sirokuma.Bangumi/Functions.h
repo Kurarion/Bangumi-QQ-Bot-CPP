@@ -1940,20 +1940,20 @@ param.find(s1)!=npos||param.find(s2)!=npos
 
 				//回复消息拼接
 				msg << "[CQ:image,file=" << image_file << "]"
-					>> "QQ: " << user_qq << " x BGM: " << bangumi_id << "  [" << user_id << ']'
+					>> "QQ: " << user_qq << " x BGM: " << bangumi_id //<< "  [" << user_id << ']'
 					>> "今日使用： " << today_times << "    总计使用： " << all_times
-					>> "------------"
-					>> "条目指令：" << (fmt%today_type[0] % all_type[0]).str()
-					<< "搜索指令：" << (fmt%today_type[1] % all_type[1]).str()
-					>> "用户指令：" << (fmt%today_type[2] % all_type[2]).str()
-					<< "更新指令：" << (fmt%today_type[3] % all_type[3]).str()
-					>> "收藏指令：" << (fmt%today_type[4] % all_type[4]).str()
-					<< "绑定指令：" << (fmt%today_type[5] % all_type[5]).str()
-					>> "帮助指令：" << (fmt%today_type[6] % all_type[6]).str()
-					<< "标签指令：" << (fmt%today_type[7] % all_type[7]).str()
-					>> "统计指令：" << (fmt%today_type[8] % all_type[8]).str()
-					<< "未知指令：" << (fmt%today_type[9] % all_type[9]).str()
-					>> "------------";
+					>> "-----------"
+					>> "条目：" << (fmt%today_type[0] % all_type[0]).str()
+					<< "搜索：" << (fmt%today_type[1] % all_type[1]).str()
+					>> "用户：" << (fmt%today_type[2] % all_type[2]).str()
+					<< "更新：" << (fmt%today_type[3] % all_type[3]).str()
+					>> "收藏：" << (fmt%today_type[4] % all_type[4]).str()
+					<< "绑定：" << (fmt%today_type[5] % all_type[5]).str()
+					>> "帮助：" << (fmt%today_type[6] % all_type[6]).str()
+					<< "标签：" << (fmt%today_type[7] % all_type[7]).str()
+					>> "统计：" << (fmt%today_type[8] % all_type[8]).str()
+					<< "未知：" << (fmt%today_type[9] % all_type[9]).str()
+					>> "-----------";
 			}
 				break;
 			case StatisParam::default:
@@ -1991,19 +1991,19 @@ param.find(s1)!=npos||param.find(s2)!=npos
 					//回复消息拼接
 					msg >> "____<" << (i + 1) << ">____"
 						>> "[CQ:image,file=" << image_file << "]"
-						>> "QQ: " << user_qq << " x BGM: " << bangumi_id << "  [" << user_id << ']'
-						>> "今日使用： "<<today_times<<"    总计使用： "<<all_times
-						>> "------------"
-						>> "条目指令：" << (fmt%today_type[0] % all_type[0]).str()
-						<< "搜索指令：" << (fmt%today_type[1] % all_type[1]).str()
-						>> "用户指令：" << (fmt%today_type[2] % all_type[2]).str()
-						<< "更新指令：" << (fmt%today_type[3] % all_type[3]).str()
-						>> "收藏指令：" << (fmt%today_type[4] % all_type[4]).str()
-						<< "绑定指令：" << (fmt%today_type[5] % all_type[5]).str()
-						>> "帮助指令：" << (fmt%today_type[6] % all_type[6]).str()
-						<< "标签指令：" << (fmt%today_type[7] % all_type[7]).str()
-						>> "统计指令：" << (fmt%today_type[8] % all_type[8]).str()
-						<< "未知指令：" << (fmt%today_type[9] % all_type[9]).str()
+						>> "QQ: " << user_qq << " x BGM: " << bangumi_id //<< "  [" << user_id << ']'
+						>> "今日使用： " << today_times << "    总计使用： " << all_times
+						>> "-----------"
+						>> "条目：" << (fmt%today_type[0] % all_type[0]).str()
+						<< "搜索：" << (fmt%today_type[1] % all_type[1]).str()
+						>> "用户：" << (fmt%today_type[2] % all_type[2]).str()
+						<< "更新：" << (fmt%today_type[3] % all_type[3]).str()
+						>> "收藏：" << (fmt%today_type[4] % all_type[4]).str()
+						<< "绑定：" << (fmt%today_type[5] % all_type[5]).str()
+						>> "帮助：" << (fmt%today_type[6] % all_type[6]).str()
+						<< "标签：" << (fmt%today_type[7] % all_type[7]).str()
+						>> "统计：" << (fmt%today_type[8] % all_type[8]).str()
+						<< "未知：" << (fmt%today_type[9] % all_type[9]).str()
 						//>> "------------"
 						>> "============";
 
