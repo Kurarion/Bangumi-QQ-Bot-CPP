@@ -2016,14 +2016,17 @@ namespace Resolve {
 			try
 			{
 				//直接赋值channel节点
-				pt = pt.get_child("rss").get_child("channel");
+				pt = pt.get_child("rss.channel");
 				//编号
 				int num = 1;
 				int num_in_mssage = 1;
 				//遍历item
 				for (ptree::assoc_iterator iter2 = pt.find("item"); iter2 != pt.not_found(); ++iter2)
 				{
-
+					if (iter2->first != "item") {
+						//如果此节点并非一个item节点
+						break;
+					}
 					if (num == max_num + 1) {
 						//到达用户需要
 						break;
@@ -2035,7 +2038,7 @@ namespace Resolve {
 						//重置
 						num_in_mssage = 1;
 					}
-					if(num == RSS_ALL_NUM + 1) {
+					if (num == RSS_ALL_NUM + 1) {
 						//上限后直接
 						break;
 					}
@@ -2067,7 +2070,7 @@ namespace Resolve {
 						}
 						//
 						if (!pic_url.empty()) {
-							if (pic_dl_urls.count(pic_url)==0) {
+							if (pic_dl_urls.count(pic_url) == 0) {
 								//不存在
 								pic_dl_urls.emplace(pic_url);
 								//如果图片存在的话，进行下载操作
@@ -2086,7 +2089,7 @@ namespace Resolve {
 									pic_file_path = url2path.at(pic_url);
 								}
 								catch (std::exception&) {}
-								
+
 							}
 						}
 					}
@@ -2111,7 +2114,7 @@ namespace Resolve {
 					std::string bt_url = iter2->second.find("enclosure")->second.get<std::string>("<xmlattr>.url");
 					//去除附加参数
 					size_t extra = bt_url.find_first_of('&');
-					if(extra!=std::string::npos)
+					if (extra != std::string::npos)
 						bt_url.erase(extra);
 					//std::cout << title << description << link << pubDate;
 					//std::cout << "\n================\n";
@@ -2119,7 +2122,7 @@ namespace Resolve {
 					//std::cout << "\n================\n";
 					//boost::this_thread::sleep(boost::posix_time::seconds(6));
 
-					ret[ret.size()-1] << "----------------"
+					ret[ret.size() - 1] << "----------------"
 						>> "[CQ:image,file=" << pic_file_path << ']'
 						>> "---编号[ " << num << " ]---"
 						>> title
@@ -2130,9 +2133,15 @@ namespace Resolve {
 						>> "-----"
 						>> "发布人: [ " << author << " ]"
 						>> "资源分类: [" << category << "]\n";
-						
+
 					++num_in_mssage;
 					++num;
+				}
+				if (num == 1) {
+					//如果没有正确处理一个
+					//抛出一个异常
+					ret[0] << "暂无资源...";
+					return ret;
 				}
 			}
 			catch (std::exception& e)
@@ -2140,17 +2149,17 @@ namespace Resolve {
 				//不存在此节点
 				//自动忽略
 				//std::cout << e.what();
-				ret[0] << "暂无资源...";
+				ret[0] << "...";
 				return ret;
 			}
 		}
-			break;
+		break;
 		case BgmCode::MOE:
 		{
 			try
 			{
 				//直接赋值channel节点
-				pt = pt.get_child("rss").get_child("channel");
+				pt = pt.get_child("rss.channel");
 				//编号
 				int num = 1;
 				int num_in_mssage = 1;
@@ -2164,6 +2173,10 @@ namespace Resolve {
 						CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-RSS-Resolve", debug_msg);
 					}
 #endif
+					if (iter2->first != "item") {
+						//如果此节点并非一个item节点
+						break;
+					}
 					if (num == max_num + 1) {
 						//到达用户需要
 						break;
@@ -2192,7 +2205,8 @@ namespace Resolve {
 					size_t pic_src_start;
 					if (pic_src != std::string::npos) {
 
-					}else if (pic_src = description.find(".jpg\""), pic_src != std::string::npos){
+					}
+					else if (pic_src = description.find(".jpg\""), pic_src != std::string::npos) {
 
 					}
 					else if (pic_src = description.find(".png\""), pic_src != std::string::npos) {
@@ -2265,13 +2279,19 @@ namespace Resolve {
 
 					++num;
 				}
-			}
+				if (num == 1) {
+					//如果没有正确处理一个
+					//抛出一个异常
+					ret[0] << "暂无资源...";
+					return ret;
+				}
+		}
 			catch (std::exception& e)
 			{
 				//不存在此节点
 				//自动忽略
 				//std::cout << e.what();
-				ret[0] << "暂无资源...";
+				ret[0] << "...";
 				return ret;
 			}
 		}
