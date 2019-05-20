@@ -1103,7 +1103,7 @@ public:
 	}
 	//同步的SSL，即HTTPS请求(会抛出异常)
 	std::string SyncHTTPSRequest(std::string host, std::string request, bool GetAll = false) {
-#define STRING_MAX_SIZE 150000
+#define STRING_MAX_SIZE 200000
 		//
 		asio::ssl::context ctx(asio::ssl::context::sslv23);
 		ctx.set_default_verify_paths();
@@ -1155,11 +1155,57 @@ public:
 			asio::streambuf buff;
 			size_t n = asio::read_until(ssl_socket, buff, "\r\n");
 			std::string pre_str(asio::buffers_begin(buff.data()), asio::buffers_end(buff.data()));
+			//首先检查是否是重定向
+			if (pre_str.find("1.1 30") != std::string::npos) {
+				//重定向
+				//清除缓冲buff状态行内容
+				buff.consume(n);
+				//一般此时已经读取完了头部
+				size_t loc_site = pre_str.find("Location:");
+				if (loc_site!=std::string::npos)
+				{
+					//换行的位置
+					size_t re_site = pre_str.find("\r\n", loc_site);
+					//
+					std::string new_url;
+					//添加标志
+					new_url = "30X";
+					//添加redirect url
+					new_url += pre_str.substr(loc_site + 9, re_site - loc_site - 9);
+#ifndef NDEBUG
+					{
+						bangumi::string debug_msg;
+						debug_msg << "https-302: " << new_url;
+						CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SyncHTTPSRequest", debug_msg);
+					}
+#endif	
+					//
+					return new_url;
+				}
+				else {
+					//最后关闭发送连接
+					boost::system::error_code ec;
+					ssl_socket.shutdown(ec); // Shutdown SSL.
+											 // Shut down the socket.
+					ssl_socket.lowest_layer().shutdown(
+						boost::asio::ip::tcp::socket::shutdown_both, ec);
+					ssl_socket.lowest_layer().close(ec);
+					return "";
+				}
+			}
 			//非200则有问题
 			if (pre_str.find("1.1 200 ") == std::string::npos) {
-				//301重定向问题
+				//
+				//最后关闭发送连接
+				boost::system::error_code ec;
+				ssl_socket.shutdown(ec); // Shutdown SSL.
+										 // Shut down the socket.
+				ssl_socket.lowest_layer().shutdown(
+					boost::asio::ip::tcp::socket::shutdown_both, ec);
+				ssl_socket.lowest_layer().close(ec);
 				return "";
 			}
+
 			//清除缓冲buff状态行内容
 			buff.consume(n);
 			//读取完头部
@@ -1205,54 +1251,123 @@ public:
 				size_t send_chunk_size = 0;
 				getline(input, chunk_size);
 				//只读取固定长度的xml文件，最后处理补充完整xml
-				size_t nn;
-				//对16进制的chunk_size处理
-				try {
-					send_chunk_size = stoi(chunk_size, 0, 16);
-#ifndef NDEBUG
-					{
-						bangumi::string debug_msg;
-						debug_msg << "https-Chunk-SIZE-SUCCESS: " << send_chunk_size;
-						CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SyncHTTPSRequest", debug_msg);
-					}
-#endif	
-
-				}
-				catch (std::exception&e) {
-#ifndef NDEBUG
-					{
-						bangumi::string debug_msg;
-						debug_msg << "https-Chunk-SIZE-FAILED: " << e.what();
-						CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SyncHTTPSRequest", debug_msg);
-					}
-#endif	
-					//说明没意义了
-					throw boost::system::system_error(bangumi_bot_errors::net_error);
-				}
+				size_t nn = 0;
 				if (GetAll) {
 					nn = boost::asio::read_until(ssl_socket, buff, "\r\n0\r\n");
 
 				}
 				else
 				{
-					//需要读取的大小
-					size_t need_transfer_size = STRING_MAX_SIZE;
+					//暂时无法解决读取指定大小的问题
+					//nn = boost::asio::read_until(ssl_socket, buff, "\r\n0\r\n");
 					//对16进制的chunk_size处理
+					try {
+						send_chunk_size = stoi(chunk_size, 0, 16);
+#ifndef NDEBUG
+						{
+							bangumi::string debug_msg;
+							debug_msg << "https-Chunk-SIZE-SUCCESS: " << send_chunk_size;
+							CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SyncHTTPSRequest", debug_msg);
+						}
+#endif	
+						//得到了本次chunk包的大小
+						//nn = send_chunk_size;
+						bangumi::string chunk_content = "";
+						size_t to_get_length = send_chunk_size - buff.size();
+						while (chunk_content.size() < STRING_MAX_SIZE) {
+							
+							if (to_get_length < 0) {
+								//一次超界
+								//直接读取完
+								nn = boost::asio::read_until(ssl_socket, buff, "\r\n0\r\n");
+								GetAll = true;
+								break;
+							}
+							nn = boost::asio::read(ssl_socket, buff, asio::transfer_exactly(to_get_length));
+							//为content赋值
+							chunk_content << std::string(boost::asio::buffers_begin(buff.data()),
+								boost::asio::buffers_end(buff.data()));
+							//std::cout << content << std::endl;
 
+							buff.consume(chunk_content.size());
+							//std::cout << "\n=====================\n";
+							//std::cout <<
+							//	std::string(boost::asio::buffers_begin(buff.data()),
+							//		boost::asio::buffers_end(buff.data())) << std::endl;
+							//读取\r\n
+							nn = boost::asio::read(ssl_socket, buff, asio::transfer_exactly(3));
+							//nn += boost::asio::read_until(ssl_socket, buff, "\r\n");
+							//std::cout <<"====\n"<<
+							//	std::string(boost::asio::buffers_begin(buff.data()),
+							//		boost::asio::buffers_end(buff.data()))<<"\n====" << std::endl;
+							std::getline(input, chunk_size);//第一个\r\n
+							std::string first;
+							std::getline(input, first);
+							if (first == "0") {
+								//说明是\r\n0
+								//此时已经完成了全部的读取
+								//直接返回结果
+								//读取完
+								nn = boost::asio::read(ssl_socket, buff, asio::transfer_exactly(2));
+#ifndef NDEBUG
+								{
+									bangumi::string debug_msg;
+									debug_msg << "https-Chunk-SIZE: " << 0;
+									CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SyncHTTPSRequest", debug_msg);
+								}
+#endif	
+								break;
+							}
+							//继续读取
+							nn = boost::asio::read(ssl_socket, buff, asio::transfer_exactly(7));
+							//std::cout << "====\n" <<
+							//	std::string(boost::asio::buffers_begin(buff.data()),
+							//		boost::asio::buffers_end(buff.data())) << "\n====" << std::endl;
+							//清除eof置位
+							input.clear();
+							//读取后半字符
+							std::getline(input, chunk_size);
+							chunk_size = first + chunk_size;
+							send_chunk_size = stoi(chunk_size, 0, 16);
+#ifndef NDEBUG
+							{
+								bangumi::string debug_msg;
+								debug_msg << "https-Chunk-SIZE: " << send_chunk_size;
+								CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SyncHTTPSRequest", debug_msg);
+							}
+#endif	
+							//继续处理
+							to_get_length = send_chunk_size - buff.size();
+						}
+						return chunk_content;
+						
+
+					}
+					catch (std::exception&e) {
+#ifndef NDEBUG
+						{
+							bangumi::string debug_msg;
+							debug_msg << "https-Chunk-SIZE-FAILED: " << e.what();
+							CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SyncHTTPSRequest", debug_msg);
+						}
+#endif	
+						//说明没意义了
+						throw boost::system::system_error(bangumi_bot_errors::net_error);
+					}
 					//如果正常转换后
 					//接下来比较
-					if (send_chunk_size < need_transfer_size + 200)
-					{
-						//如果小于或在这个值附近的话
-						//直接读取完全部
-						nn = boost::asio::read_until(ssl_socket, buff, "\r\n0\r\n");
+					//if (send_chunk_size < need_transfer_size + 200)
+					//{
+					//	//如果小于或在这个值附近的话
+					//	//直接读取完全部
+					//	nn = boost::asio::read_until(ssl_socket, buff, "\r\n0\r\n");
 
-					}
-					else {
-						//否则原计划
-						nn = boost::asio::read(ssl_socket, buff, boost::asio::transfer_exactly(need_transfer_size));
+					//}
+					//else {
+					//	//否则原计划
+					//	nn = boost::asio::read(ssl_socket, buff, boost::asio::transfer_exactly(need_transfer_size));
 
-					}
+					//}
 
 
 				}
@@ -1883,7 +1998,7 @@ std::pair<DownloadStatus, std::shared_ptr<boost::thread>> PicDownload
 
 //https版图片下载
 std::pair<DownloadStatus, std::shared_ptr<boost::thread>> HTTPSPicDownload
-(HTTPClient& http_client, std::string http_url, std::string save_path, std::string &file_path, bool refresh = false) {
+(HTTPClient& http_client, std::string http_url, std::string save_path, std::string &file_path, bool refresh = false, bool force_single_thread = false) {
 	if (http_url.empty()) {
 		//说明此图片不存在，null
 		//使用默认的404图片
@@ -1981,10 +2096,10 @@ std::pair<DownloadStatus, std::shared_ptr<boost::thread>> HTTPSPicDownload
 		"GET " + uri + " HTTP/1.1\r\n"
 		"Host: " + host + "\r\n" "\r\n";
 	//创建一个新的进程
-	if (bgm.CheckThreadSize()) {
+	if (!force_single_thread&&bgm.CheckThreadSize()) {
 		//有空闲可用的进程
 		std::shared_ptr<boost::thread> download_thread
-		(new boost::thread([&http_client, host, uri, request, absolute_dir_path, save_name, is_ssl]() {
+		(new boost::thread([&http_client, host, uri, request, absolute_dir_path, save_name, is_ssl, save_path ,refresh]() {
 #ifndef NDEBUG
 			{
 				std::ostringstream oss;
@@ -2025,17 +2140,28 @@ std::pair<DownloadStatus, std::shared_ptr<boost::thread>> HTTPSPicDownload
 					}
 #endif
 					std::string file = http_client.SyncHTTPSRequest(host, request, true);
-					//因此此处使用二进制写入图片
-					/*boost::filesystem*/std::ofstream fstream(absolute_dir_path + save_name, std::ios::binary);
-					fstream << file;
-					fstream.close();
-#ifndef NDEBUG
-					{
-						bangumi::string debug_msg;
-						debug_msg << "HTTPS(OK): " << save_name;
-						CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SSLPIC-DOWNLOAD", debug_msg);
+					if (file[0] == '3' && file[1] == '0' && file[2] == 'X') {
+						//说明重定向
+						//这里假设重定向不会改变图片的名字
+						std::string file_path;
+						//这里应该强制单线程
+						HTTPSPicDownload
+						(http_client, file.substr(3), save_path, file_path, refresh, true);
 					}
+					else {
+						//因此此处使用二进制写入图片
+						/*boost::filesystem*/std::ofstream fstream(absolute_dir_path + save_name, std::ios::binary);
+						fstream << file;
+						fstream.close();
+#ifndef NDEBUG
+						{
+							bangumi::string debug_msg;
+							debug_msg << "HTTPS(OK): " << save_name;
+							CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SSLPIC-DOWNLOAD", debug_msg);
+						}
 #endif
+					}
+
 				}
 
 			}
@@ -2065,14 +2191,35 @@ std::pair<DownloadStatus, std::shared_ptr<boost::thread>> HTTPSPicDownload
 			if (!is_ssl) {
 				//此处使用同步HTTP请求来处理
 				http_client.SyncHTTPRequest(host, request, absolute_dir_path, save_name);
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "S-HTTP(OK): " << save_name;
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SSLPIC-DOWNLOAD", debug_msg);
+				}
+#endif
 			}
 			else {
 				//使用HTTPS
 				std::string file = http_client.SyncHTTPSRequest(host, request, true);
-				//因此此处使用二进制写入图片
-				/*boost::filesystem*/std::ofstream fstream(absolute_dir_path + save_name, std::ios::binary);
-				fstream << file;
-				fstream.close();
+				if (file[0] == '3' && file[1] == '0' && file[2] == 'X') {
+					//说明重定向
+					return HTTPSPicDownload
+					(http_client, file.substr(3), save_path, file_path, refresh);
+				}
+				else {
+					//因此此处使用二进制写入图片
+					/*boost::filesystem*/std::ofstream fstream(absolute_dir_path + save_name, std::ios::binary);
+					fstream << file;
+					fstream.close();
+				}
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "SHTTPS(OK): " << save_name;
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-SSLPIC-DOWNLOAD", debug_msg);
+				}
+#endif
 			}
 		}
 		catch (boost::system::system_error& e) {
