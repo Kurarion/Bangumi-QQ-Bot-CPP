@@ -1842,7 +1842,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 			//msg << "今日使用排行：";
 			query << "SELECT user_id,user_qq,user_bangumi,"
 				<< "BgmCode_subject,BgmCode_search,BgmCode_user,BgmCode_up,BgmCode_collect,BgmCode_reg,BgmCode_help,BgmCode_tag,BgmCode_statis,BgmCode_unknow,"
-				<< "TBgmCode_subject,TBgmCode_search,TBgmCode_user,TBgmCode_up,TBgmCode_collect,TBgmCode_reg,TBgmCode_help,TBgmCode_tag,TBgmCode_statis,TBgmCode_unknow "
+				<< "TBgmCode_subject,TBgmCode_search,TBgmCode_user,TBgmCode_up,TBgmCode_collect,TBgmCode_reg,TBgmCode_help,TBgmCode_tag,TBgmCode_statis,TBgmCode_unknow,dmhy_open "
 				<< "FROM bgm_users "
 				<< "WHERE user_qq="
 				<< param.qq;
@@ -1937,9 +1937,47 @@ param.find(s1)!=npos||param.find(s2)!=npos
 				}
 				//format
 				boost::format fmt("%5d/%-5d");
+				//进行权限的授予
+				if (bangumi_id[0] != '0' && result[23][0] == '0') {
+					//尚无权限
+					try {
+						int i1 = std::stoi(all_type[0]);
+						int i2 = std::stoi(all_type[3]);
+						int i3 = std::stoi(all_type[4]);
+						int all_exp = i1 + i2 * 5 + i3 * 3;
 
+						if (all_exp > 199) {
+							//授权
+							query << "UPDATE bgm_users SET "
+								<< "dmhy_open=1"
+								<< " WHERE user_qq=" << param.qq;
+							//影响的行数
+							unsigned long affect_rows_num = sql_pool.ExecQueryNoRes(query);
+							try
+							{
+								SQLCheckResult(affect_rows_num);
+								//说明正常
+								//发送消息
+								char msg[] = { -56,-88,-49,-34,85,80,126,10,-46,-47,-67,-30,-53,-8,100,109,104,121,44,109,111,
+									101,-42,-72,-63,-18,126 };
+								DEFAULT_SEND(param.type, msg);
+							}
+							catch (boost::system::system_error& e)
+							{
+								//未知情况
+							}
+						}
+						else
+						{
+							msg << "[EXP: " << all_exp << "/200]";
+						}
+					}
+					catch (std::exception&) {
+						//直接无视
+					}
+				}
 				//回复消息拼接
-				msg << "[CQ:image,file=" << image_file << "]"
+				msg >> "[CQ:image,file=" << image_file << "]"
 					>> "QQ: " << user_qq << " x BGM: " << bangumi_id //<< "  [" << user_id << ']'
 					>> "今日使用： " << today_times << "    总计使用： " << all_times
 					>> "-----------"
@@ -3952,6 +3990,47 @@ if (!res3.empty())\
 #endif	
 				return;
 			}
+		}
+		//检查权限
+		bangumi::string query;
+		query << "SELECT dmhy_open "
+			<< "FROM bgm_users "
+			<< "WHERE user_qq="
+			<< param.qq;
+		//查询结果
+		BGMSQLResult result;
+		//影响的行数
+		unsigned long affect_rows_num = sql_pool.ExecQuery(query, result);
+		try
+		{
+			SQLCheckResult(affect_rows_num);
+		}
+		catch (boost::system::system_error& e)
+		{
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << "SQL查询失败:"
+					<< std::to_string(affect_rows_num)
+					>> e.what();
+
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-BOT-Statis", debug_msg);
+			}
+#endif	
+			return;
+		}
+		if (affect_rows_num > 0) {
+			//检查权限
+			if (result[0][0]=='0')
+			{
+				//发送回复
+				DEFAULT_SEND(param.type, "...");
+				return;
+			}
+		}
+		else
+		{
+			return;
 		}
 		//压入解析参数(id)
 		for (const auto& i : parameters_id) {

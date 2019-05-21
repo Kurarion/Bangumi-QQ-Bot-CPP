@@ -607,6 +607,7 @@ namespace Resolve {
 	//解析Search
 	std::pair<std::vector<std::shared_ptr<boost::thread>>, bangumi::string>
 		Resolve_Search(std::string json, bool refresh) {
+#define API_SEARCH_MAX_NUM 10
 		try
 		{
 			if (json.find("<!DOCTYPE") != std::string::npos) {
@@ -657,6 +658,10 @@ namespace Resolve {
 			int subject_pos = 0;
 			for (; pos != list.end(); ++pos)
 			{
+				if (subject_pos >= API_SEARCH_MAX_NUM) {
+					//限制最大结果数
+					break;
+				}
 				//使用局部变量
 				auto &pt = pos->second;
 				//json 的 Subject数组解析
