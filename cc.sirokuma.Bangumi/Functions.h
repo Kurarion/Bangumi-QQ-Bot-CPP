@@ -207,32 +207,38 @@ namespace bangumi {
 			if (focus_verify) {
 
 				//暂时想不到哪里需要,先暂存
-				if (false) {
-					//==检查有效性
-					//xxx内容
-					bangumi::string content;
-					content << "access_token=" << result[1];
-
-					//post中的www编码其实是为了防止URI过长而将参数放在了content中,POST时一定不能忘记使用Content-Length指定大小
-					//否则会出现不能正常读取参数的问题
-					bangumi::string header("Cache-Control: no-cache\r\n"
-						"Content-Type: application/x-www-form-urlencoded\r\n");
-					header << "Content-Length: " << content.length() << "\r\n";
-
-					std::string request = "POST "  "/oauth/token_status"  " HTTP/1.1\r\n"
-						"Host: " "bgm.tv" "\r\n" + header + "\r\n" + content;
-
-					std::string json = http_client.SyncBGMHTTPRequest(request);
-#ifndef NDEBUG
-					{
-						bangumi::string debug_msg;
-						debug_msg << "收到响应的Json"
-							>> json.c_str();
-						CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-VerifyToken", debug_msg);
-					}
-#endif
-					size_t status_bangumi_id = Resolve::Resolve_Auth_Status(json);
-				}
+//				if (false) {
+//					//==检查有效性
+//					//xxx内容
+//					bangumi::string content;
+//					content << "access_token=" << result[1];
+//
+//					//post中的www编码其实是为了防止URI过长而将参数放在了content中,POST时一定不能忘记使用Content-Length指定大小
+//					//否则会出现不能正常读取参数的问题
+//					bangumi::string header("Cache-Control: no-cache\r\n"
+//						"Content-Type: application/x-www-form-urlencoded\r\n");
+//					header << "Content-Length: " << content.length() << "\r\n";
+//
+//					std::string request = "POST "  "/oauth/token_status"  " HTTP/1.1\r\n"
+//						"Host: " "bgm.tv" "\r\n" + header + "\r\n" + content;
+//					try {
+//						std::string json = http_client.SyncBGMHTTPRequest(request);
+//#ifndef NDEBUG
+//						{
+//							bangumi::string debug_msg;
+//							debug_msg << "收到响应的Json"
+//								>> json.c_str();
+//							CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-VerifyToken", debug_msg);
+//						}
+//#endif
+//						size_t status_bangumi_id = Resolve::Resolve_Auth_Status(json);
+//					}
+//					catch (boost::system::system_error&) {
+//						//重新验证出现问题
+//
+//					}
+//
+//				}
 
 				//一定会refresh
 				size_t status_bangumi_id = 0;
@@ -242,10 +248,15 @@ namespace bangumi {
 				if (status_bangumi_id == 0) {
 					//说明已经失效
 					//重新Refresh
+					try {
+						auto auth = RefreshToken(result[2], param.qq);
 
-					auto auth = RefreshToken(result[2], param.qq);
-
-					return{ sql_bangumi_id_num,{auth.access_token,auth.refresh_token } };
+						return{ sql_bangumi_id_num,{auth.access_token,auth.refresh_token } };
+					}
+					catch (boost::system::system_error&) {
+						//重新验证失败
+						return{ sql_bangumi_id_num,{ "","" } };
+					}
 				}
 				if (std::to_string(status_bangumi_id) != sql_bangumi_id) {
 					//说明两者不一致
@@ -293,8 +304,8 @@ namespace bangumi {
 
 		std::string request = "GET " + uri + " HTTP/1.1\r\n"
 			"Host: " "api.bgm.tv" "\r\n" "\r\n";
-
-		std::string json = http_client.SyncBGMHTTPRequest(request);
+		try {
+			std::string json = http_client.SyncBGMHTTPRequest(request);
 #ifndef NDEBUG
 		{
 			bangumi::string debug_msg;
@@ -303,7 +314,7 @@ namespace bangumi {
 			CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-GetUserSubjectProgress", debug_msg);
 		}
 #endif
-		try {
+
 			auto resolve_result = Resolve::Resolve_User_Process(json, refresh);
 
 			//返回的变量
@@ -341,9 +352,16 @@ namespace bangumi {
 			}
 			else if (e.code() == boost::system::system_error(bangumi_bot_errors::access_token_invalid).code()) {
 				if (!final_time) {
-					auto auth = RefreshToken(refresh_token, qq);
-					return GetUserSubjectProgress(subject_id, eps, user_id, qq,
-						auth.access_token, auth.refresh_token, refresh, true);
+					try {
+
+						auto auth = RefreshToken(refresh_token, qq);
+						return GetUserSubjectProgress(subject_id, eps, user_id, qq,
+							auth.access_token, auth.refresh_token, refresh, true);
+					}
+					catch (boost::system::system_error&) {
+						//直接返回
+						return{ "",bangumi::BangumiUser() };
+					}
 				}
 				else {
 #ifndef NDEBUG
@@ -381,22 +399,32 @@ namespace bangumi {
 
 		std::string request = "GET " + uri + " HTTP/1.1\r\n"
 			"Host: " "bgm.tv" "\r\n" "\r\n";
+		try {
+			//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
+			std::string html = code_converter.Conv(http_client.SyncBGMHTTPRequest(request));
 
-		//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
-		std::string html = code_converter.Conv(http_client.SyncBGMHTTPRequest(request));
+			return std::move(html);
+		}
+		catch (boost::system::system_error&) {
+			return "";
+		}
 
-		return std::move(html);
 	}
 	//同步Https下载一个HTML页面
 	std::string GetHttpsHtml(std::string host,std::string uri) {
 
 		std::string request = "GET " + uri + " HTTP/1.1\r\n"
 			"Host: " +host+ "\r\n" "\r\n";
+		try {
+			//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
+			std::string html = code_converter.Conv(http_client.SyncHTTPSRequest(host, request));
 
-		//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
-		std::string html = code_converter.Conv(http_client.SyncHTTPSRequest(host,request));
+			return std::move(html);
+		}
+		catch (boost::system::system_error&) {
+			return "";
+		}
 
-		return std::move(html);
 	}
 	//end of bangumi
 }
@@ -640,11 +668,13 @@ param.find_first_of(c1)!=npos
 				if (code == BgmCode::Search) {
 					//如果是一个Search的命令
 					PARA_Resolve_Search_KeyWord(pre_param);
+					ret.str = pre_param;
 				}
 				else {
-					//否则暂时原封不动赋值
+					//否则什么也不做
+					//
 				}
-				ret.str = pre_param;
+				
 				//SubjectAPI
 				if (code == BgmCode::Subject||code == BgmCode::Collect||code == BgmCode::Up) {
 					//使用了其他解析
@@ -713,6 +743,7 @@ param.find_first_of(c1)!=npos
 
 		//后面的参数
 		std::string param = str.substr(delim + 1, str.length() - delim - 1);
+		std::string orign_param(param);
 		//将参数转换为小写
 		std::transform(param.begin(), param.end(), param.begin(), ::tolower);
 		//便捷宏
@@ -1077,7 +1108,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 			//第三个参数
 			std::string third_param;
 			if (delim2 != npos)
-				third_param = param.substr(delim2 + 1);
+				third_param = orign_param.substr(delim2 + 1);
 			//字符串,并且如果有的话,否则默认
 			if (!third_param.empty() && delim2 + 1 < param.length()) {
 				ret.collection_comment = third_param;
@@ -1169,7 +1200,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 			//第三个参数
 			std::string third_param;
 			if (delim2 != npos)
-				third_param = param.substr(delim2 + 1);
+				third_param = orign_param.substr(delim2 + 1);
 			//字符串,并且如果有的话,否则默认
 			if (!third_param.empty() && delim2 + 1 < param.length()) {
 				ret.collection_comment = third_param;
@@ -1488,10 +1519,11 @@ param.find(s1)!=npos||param.find(s2)!=npos
 					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-HTTP", debug_msg);
 				}
 #endif
-				//单线程请求
-				std::string json = http_client.SyncBGMHTTPRequest(request);
-				//解析
 				try {
+					//单线程请求
+					std::string json = http_client.SyncBGMHTTPRequest(request);
+					//解析
+				
 #ifndef NDEBUG
 					{
 						bangumi::string debug_msg;
@@ -1774,10 +1806,8 @@ param.find(s1)!=npos||param.find(s2)!=npos
 
 	//Bot: 读取Bangumi娘的配置信息
 	inline void BOT_Read_Ini(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
-	
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
-
 
 
 	}
@@ -1937,44 +1967,14 @@ param.find(s1)!=npos||param.find(s2)!=npos
 				}
 				//format
 				boost::format fmt("%5d/%-5d");
-				//进行权限的授予
-				if (bangumi_id[0] != '0' && result[23][0] == '0') {
+				//进行权限检测
+				if (bangumi_id[0] != '0' && result[23][0] == '9') {
+					//通过考核的玩家
+					msg << "<BGMer>";
+				}
+				else {
 					//尚无权限
-					try {
-						int i1 = std::stoi(all_type[0]);
-						int i2 = std::stoi(all_type[3]);
-						int i3 = std::stoi(all_type[4]);
-						int all_exp = i1 + i2 * 5 + i3 * 3;
-
-						if (all_exp > 199) {
-							//授权
-							query << "UPDATE bgm_users SET "
-								<< "dmhy_open=1"
-								<< " WHERE user_qq=" << param.qq;
-							//影响的行数
-							unsigned long affect_rows_num = sql_pool.ExecQueryNoRes(query);
-							try
-							{
-								SQLCheckResult(affect_rows_num);
-								//说明正常
-								//发送消息
-								char msg[] = { -56,-88,-49,-34,85,80,126,10,-46,-47,-67,-30,-53,-8,100,109,104,121,44,109,111,
-									101,-42,-72,-63,-18,126 };
-								DEFAULT_SEND(param.type, msg);
-							}
-							catch (boost::system::system_error& e)
-							{
-								//未知情况
-							}
-						}
-						else
-						{
-							msg << "[EXP: " << all_exp << "/200]";
-						}
-					}
-					catch (std::exception&) {
-						//直接无视
-					}
+					msg << "-----------";
 				}
 				//回复消息拼接
 				msg >> "[CQ:image,file=" << image_file << "]"
@@ -2030,7 +2030,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 					msg >> "____<" << (i + 1) << ">____"
 						>> "[CQ:image,file=" << image_file << "]"
 						>> "QQ: " << user_qq << " x BGM: " << bangumi_id //<< "  [" << user_id << ']'
-						>> "今日使用： " << today_times << "    总计使用： " << all_times
+						>> "今日使用： "<<today_times<<"    总计使用： "<<all_times
 						>> "-----------"
 						>> "条目：" << (fmt%today_type[0] % all_type[0]).str()
 						<< "搜索：" << (fmt%today_type[1] % all_type[1]).str()
@@ -4021,10 +4021,19 @@ if (!res3.empty())\
 		}
 		if (affect_rows_num > 0) {
 			//检查权限
-			if (result[0][0]=='0')
+			if (result[0][0] == '0')
 			{
 				//发送回复
-				DEFAULT_SEND(param.type, "...");
+				DEFAULT_SEND(param.type, "请尝试@我或喊[\"BGM娘\"/\"Bgm娘\"]来接受我的考核~");
+				return;
+			}
+			else if (result[0][0] == '9') {
+				//什么也不做
+				//进行后续的处理
+			}
+			else {
+				//发送回复
+				DEFAULT_SEND(param.type, "考核仍在进行中~");
 				return;
 			}
 		}

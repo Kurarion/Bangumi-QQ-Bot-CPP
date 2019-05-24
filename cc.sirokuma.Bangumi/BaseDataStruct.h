@@ -269,6 +269,17 @@ namespace bangumi {
 			if (code_type != BgmCode::Unknow)
 				instruct_func_map.at(code_type)(param, unparameters_id, unparameters_str);
 		}
+
+		//返回Code的类型
+		BgmCode GetType() {
+			return code_type;
+		}
+		std::set<size_t>& GetIDParam() {
+			return unparameters_id;
+		}
+		std::set<std::string>& GetSTRParam() {
+			return unparameters_str;
+		}
 	private:
 		const size_t beg;
 		const size_t end;

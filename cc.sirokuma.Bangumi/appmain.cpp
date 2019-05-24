@@ -95,7 +95,23 @@ CQEVENT(int32_t, __eventPrivateMsg, 24)(int32_t subType, int32_t msgId, int64_t 
 
 	//如果要回复消息，请调用酷Q方法发送，并且这里 return EVENT_BLOCK - 截断本条消息，不再继续处理  注意：应用优先级设置为"最高"(10000)时，不得使用本返回值
 	//如果不回复消息，交由之后的应用/过滤器处理，这里 return EVENT_IGNORE - 忽略本条消息
-
+	//if (msg[0] == 'w') {
+	//	
+	//	CQ_sendPrivateMsg(ac, 597320012, bgm.GetConf());
+	//}
+//#ifndef NDEBUG
+//	CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot", msg);
+//	std::ofstream input("D:\\Program\\酷Q Pro\\han.txt");
+//	//input.open("D:\\Program\\酷Q Pro\\han.txt");
+//	input << msg;
+//	input.close();
+//#endif
+	//进行@等验证
+	std::string msg_str(msg);
+	if (ParsingAt(msg_str, 0, fromQQ, BgmRetType::Private)) {
+		return EVENT_BLOCK;
+	}
+	//否则仍为原来的进度
 	auto verify = VerifyMsg(msg[0], msg[1], msg);
 	if (verify.first)//验证过滤
 	{
@@ -115,6 +131,12 @@ CQEVENT(int32_t, __eventPrivateMsg, 24)(int32_t subType, int32_t msgId, int64_t 
 CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fromGroup, int64_t fromQQ, const char *fromAnonymous, const char *msg, int32_t font) {
 
 	//return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数
+	//进行@等验证
+	std::string msg_str(msg);
+	if (ParsingAt(msg_str, fromGroup, fromQQ, BgmRetType::Group)) {
+		return EVENT_BLOCK;
+	}
+	//否则仍为原来的进度
 	auto verify = VerifyMsg(msg[0], msg[1], msg);
 	if (verify.first)//验证过滤
 	{
@@ -134,6 +156,12 @@ CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fr
 CQEVENT(int32_t, __eventDiscussMsg, 32)(int32_t subType, int32_t msgId, int64_t fromDiscuss, int64_t fromQQ, const char *msg, int32_t font) {
 
 	//return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数
+	//进行@等验证
+	std::string msg_str(msg);
+	if (ParsingAt(msg_str, fromDiscuss, fromQQ, BgmRetType::Discuss)) {
+		return EVENT_BLOCK;
+	}
+	//否则仍为原来的进度
 	auto verify = VerifyMsg(msg[0], msg[1], msg);
 	if (verify.first)//验证过滤
 	{

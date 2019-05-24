@@ -329,7 +329,7 @@ private:
 				"Content-Type: application/x-www-form-urlencoded\r\n");
 			header << "Content-Length: " << content.length() << "\r\n";
 
-
+			
 
 			//创建一个请求
 			std::shared_ptr<HTTPRequest> request_one =
@@ -421,7 +421,7 @@ private:
 					//query << "insert into bgm_users(user_qq,user_bangumi,user_access_token,user_refresh_token)"
 					//	<< "values(" << std::to_string(param.qq) << ", " << std::to_string(auth.user_id)
 					//	<< ", " << auth.access_token << ", " << auth.refresh_token << ")";
-					//INSERT INTO bgm_users VALUES(NULL,123456789,12332,"d22a58aacee7925860014521b37a8cf78aa4afd9","f606d13c8493ca12f256fb8a43c54f36b2edd666",0,0,NULL,'1000-01-01 00:00:00',0)
+					//INSERT INTO bgm_users VALUES(NULL,123456789,12332,"d22a58aacxxxxxxxxxxxcf78aa4afd9","f606d13c8xxxxxxxxxxx43c54f36b2edd666",0,0,NULL,'1000-01-01 00:00:00',0)
 					if (registed) {
 						//再次注册
 						query << "UPDATE bgm_users SET "

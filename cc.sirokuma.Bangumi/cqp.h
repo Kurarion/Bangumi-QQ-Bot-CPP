@@ -240,12 +240,16 @@ CQAPI(const char *) CQ_getCookies(int32_t AuthCode);
 * 取CsrfToken 慎用, 此接口需要严格授权
 */
 CQAPI(int32_t) CQ_getCsrfToken(int32_t AuthCode);
-
+#ifndef TEST_BANGUMI
 /*
 * 取登录QQ
 */
 CQAPI(int64_t) CQ_getLoginQQ(int32_t AuthCode);
-
+#else
+int64_t CQ_getLoginQQ(int32_t AuthCode) {
+	return 123456;
+}
+#endif
 /*
 * 取登录QQ昵称
 */

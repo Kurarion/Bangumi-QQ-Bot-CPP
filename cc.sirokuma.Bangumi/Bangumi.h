@@ -227,8 +227,8 @@ namespace bangumi {
 		}
 		// /操作符
 		//隐式类型转换
-		operator const char*() {
-			return (static_cast<std::string*>(this))->c_str();
+		operator const char*() const {
+			return this->c_str();
 		}
 
 
@@ -407,6 +407,13 @@ if(var.compare(var2)!=0)\
 			EXRET("放送星期:  ", Bangumi_Weekday[air_weekday], air_weekday);
 				//>> "放送星期:  " << Bangumi_Weekday[air_weekday]
 			ret >> "类型:  " << Bangumi_Type[type] << "    ID:  " << subject_id;
+			////这里处理一下summary中的\n
+			//size_t temp = summary.find("\r\n");
+			//while (temp!=std::string::npos) {
+			//	summary[temp] = ' ';
+			//	summary[temp+1] = ' ';
+			//	temp = summary.find("\r\n", temp + 2);
+			//}
 			STRRET("简介: ", UTF82GBK(summary));
 				//>> "简介: " << summary
 			ret >> ""
@@ -562,13 +569,15 @@ if(var.compare(var2)!=0)\
 
 						ret >> "● " << air_eps[i];
 						//额外信息
-						ret >> ">>";
-						for (auto&c : air_eps_info[i]) {
-							if (c == ' ') {
-								ret >> ">>";
-							}
-							else {
-								ret << c;
+						if (air_eps_info.size() == air_eps.size()) {
+							ret >> ">>";
+							for (auto&c : air_eps_info[i]) {
+								if (c == ' ') {
+									ret >> ">>";
+								}
+								else {
+									ret << c;
+								}
 							}
 						}
 					}
@@ -581,49 +590,61 @@ if(var.compare(var2)!=0)\
 					for (int i = 0; i < n; ++i) {
 						ret >> "● " << unair_eps[i];
 						//额外信息
-						ret >> ">>";
-						for (auto&c : unair_eps_info[i]) {
-							if (c == ' ') {
-								ret >> ">>";
-							}
-							else {
-								ret << c;
+						if (unair_eps_info.size() == unair_eps.size()) {
+							ret >> ">>";
+							for (auto&c : unair_eps_info[i]) {
+								if (c == ' ') {
+									ret >> ">>";
+								}
+								else {
+									ret << c;
+								}
 							}
 						}
 					}
 				}
 				if (GetSPEpsAiredCount() != 0) {
+					const int output_num = 3;
 					ret >> "-----------"
 						>> "已放送SP:";
 					int n = GetSPEpsAiredCount();
-					for (int i = 0; i < n; ++i) {
+					//从低到高输出
+					int start_pos = n - output_num;
+					if (start_pos < 0)
+						start_pos = 0;
+					for (int i = start_pos; i < n; ++i) {
 						ret >> "● " << sp_air_eps[i];
-						//额外信息
-						ret >> ">>";
-						for (auto&c : sp_air_eps_info[i]) {
-							if (c == ' ') {
-								ret >> ">>";
-							}
-							else {
-								ret << c;
+						if (sp_air_eps_info.size() == sp_air_eps.size()) {
+							//额外信息
+							ret >> ">>";
+							for (auto&c : sp_air_eps_info[i]) {
+								if (c == ' ') {
+									ret >> ">>";
+								}
+								else {
+									ret << c;
+								}
 							}
 						}
 					}
 				}
 				if (GetSPEpsUnAiredCount() != 0) {
+					const int output_num = 2;
 					ret >> "-----------"
 						>> "未放送SP:";
-					int n = GetSPEpsUnAiredCount();
+					int n = GetSPEpsUnAiredCount() < output_num ? GetSPEpsUnAiredCount() : output_num;
 					for (int i = 0; i < n; ++i) {
 						ret >> "● " << sp_unair_eps[i];
 						//额外信息
-						ret >> ">>";
-						for (auto&c : sp_unair_eps_info[i]) {
-							if (c == ' ') {
-								ret >> ">>";
-							}
-							else {
-								ret << c;
+						if (sp_unair_eps_info.size() == sp_unair_eps.size()) {
+							ret >> ">>";
+							for (auto&c : sp_unair_eps_info[i]) {
+								if (c == ' ') {
+									ret >> ">>";
+								}
+								else {
+									ret << c;
+								}
 							}
 						}
 					}
@@ -826,7 +847,30 @@ if(var.compare(var2)!=0)\
 			:id(0),
 			collection_status("do")
 		{}
-
+		bool operator==(const ComplexParam& c) {
+			return id == c.id
+				&& str == c.str
+				&& use_last_subject_id == c.use_last_subject_id
+				&& single == c.single
+				&& add_tag == c.add_tag
+				&& add_role == c.add_role
+				&& add_comment == c.add_comment
+				&& add_air_status == c.add_air_status
+				&& add_staff == c.add_staff
+				&& search_type == c.search_type
+				&& search_start_pos == c.search_start_pos
+				&& search_max_num == c.search_max_num
+				&& collection_status == c.collection_status
+				&& collection_rating == c.collection_rating
+				&& collection_comment == c.collection_comment
+				&& update_watched_eps == c.update_watched_eps
+				&& update_eps_shift == c.update_eps_shift
+				&& update_air == c.update_air
+				&& update_fin == c.update_fin
+				&& tag_keyword == c.tag_keyword
+				&& tag_airtime == c.tag_airtime
+				&& tag_page == c.tag_page;
+		}
 		size_t id;
 		std::string str;
 		//Subject用

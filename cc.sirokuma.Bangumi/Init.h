@@ -13,7 +13,6 @@
 
 
 
-
 //global variable 
 //Http
 //TODO:完成Client的超时暂时关闭功能(使用asio的计时器)
@@ -30,7 +29,26 @@ void HTTPRequest::RemoveSelf() {
 
 //数字简单替换加密
 const boost::bimap<char, char> num_bimap;
-
+//@me
+static std::string at_me_cq;//在Init中初始化
+static const std::string at_me_1 = "BGM娘";
+static const std::string at_me_2 = "Bgm娘";
+static const bangumi::string test_passed = "恭喜通过全部考核！\n已解锁 dmhy 和 moe 指令~";
+static const bangumi::string error_answer = "不对哦~\n重复一下问题：\n";
+static const bangumi::string right_answer = "Bingo！\n接着下一个问题：\n";
+static const bangumi::string question[] =
+{
+	"请@或喊[Bgm娘]并回复\"OK\"来接受我的考核吧~",
+	"[1]如何使用帮助功能？(提示：帮助指令为help)",
+	"[2]如何使用标签查询查找标签为\"原创\"的2018年10月番的第二页的结果？",
+	"[3]如果想要进行自身使用统计并强制缓存刷新式查询Bangumi ID为 1 和 92981 的用户应当如何输入指令？",
+	"[4]如果想要查询动画《一拳超人》的第二季的信息的放送状态与标签应当如何使用一个指令和一个参数完成？\n（注意：禁止使用上一次查询条目的空缺参数）",
+	"[5]如果想要搜索关键字为\"英雄\"全部类型的从第3个条目开始的3个条目应当如何使用一个指令和一个参数完成？",
+	"[6]如果想要更新上次使用的条目进度为全部完成并只吐槽\"我不会\"应当如何使用一个指令和一个参数完成？",
+	"[7]如果想要更新数据库中关键字为\"Angel Beats\"的第二个条目的进度为当前放送进度的上一话应当如何使用一个指令和一个参数完成？",
+	"[8]如果想要收藏Bangumi中关键字为\"rewrite\"的游戏类型的第二个条目为玩过，评分9分并吐槽\"GoodJob\"应当如何使用一个指令和一个参数完成？"
+};
+static bangumi::ComplexParam standard_answer[9];
 //Bot初始化
 void Init() {
 	//CQ_getAppDirectory(ac)是酷Q提供的一个功能函数返回
@@ -53,7 +71,35 @@ void Init() {
 	x.insert({ '7','7' });
 	x.insert({ '8','8' });
 	x.insert({ '9','9' });
+
+	at_me_cq = "[CQ:at,qq=" + std::to_string(CQ_getLoginQQ(ac)) + "]";
 	
+	//问题答案的初始化
+	//2
+	standard_answer[2].tag_keyword = "原创";
+	standard_answer[2].tag_airtime = "2018-10";
+	standard_answer[2].tag_page = 2;
+	//4
+	standard_answer[4].id = 193619;
+	standard_answer[4].add_air_status = true;
+	standard_answer[4].add_tag = true;
+	standard_answer[4].single = true;
+	//5
+	standard_answer[5].search_max_num = 3;
+	standard_answer[5].search_start_pos = 2;
+	standard_answer[5].str = "英雄";
+	standard_answer[5].search_type = 0;
+	//6
+	standard_answer[6].use_last_subject_id = true;
+	standard_answer[6].collection_comment = "我不会";
+	standard_answer[6].update_fin = true;
+	//7
+	standard_answer[7].update_air = true;
+	standard_answer[7].update_eps_shift = -1;
+	//8
+	standard_answer[8].collection_status = "collect";
+	standard_answer[8].collection_rating = 9;
+	standard_answer[8].collection_comment = "GoodJob";
 }
 
 //一些FUNC用底层函数
@@ -251,7 +297,7 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 ) {
 
 
-
+	
 	{
 		//没有命中,直接构造
 #ifndef NDEBUG

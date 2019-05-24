@@ -48,6 +48,9 @@ private:
 			server_port_num = pt.get<unsigned int>("INI.Server_Port_Num", 3333);
 			not_found_pic_path = pt.get<std::string>("INI.Not_Found_Pic_Path", "Cache\\404.png");
 			not_found_ava_path = pt.get<std::string>("INI.Not_Found_Ava_Path", "Cache\\404_ava.png");
+			maru_answer = pt.get<std::string>("INI.Maru_Pic", "Cache\\maru.png");
+			batsu_answer = pt.get<std::string>("INI.Batsu_Pic", "Cache\\batsu.png");
+			goodjob_pic = pt.get<std::string>("INI.Good_Job_Pic", "Cache\\goodjob.png");
 			//由于酪Q发送图片,其图片文件必须在data/image内部,因此注释以下语句
 			//cache_path = pt.get<std::string>("BOT.Cache_Path", ini_include_path + Bangumi_cache_name);
 			cache_path =  Bangumi_cache_name;
@@ -108,6 +111,9 @@ public:
 	BangumiBotVaribel() = default;
 	std::string not_found_pic_path;
 	std::string not_found_ava_path;
+	std::string maru_answer;
+	std::string batsu_answer;
+	std::string goodjob_pic;
 
 	//初始化
 	void Init(const char *path) {

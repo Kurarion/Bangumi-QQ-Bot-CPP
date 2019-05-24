@@ -30,6 +30,26 @@ void show_error(MYSQL *mysql)
 inline void InitSQL() {
 
 }
+//由于不知mysql_free_result做了什么操作
+//暂时放弃再封装
+//SQL_RES的再封装
+//struct SQL_RESULT
+//{
+//	//析构函数
+//	~SQL_RESULT() {
+//		//mysql_free_result(mysql_res);
+//	}
+//	void Free() {
+//		mysql_free_result(mysql_res);
+//	}
+//	//隐式转换为 MYSQL_RES
+//	operator MYSQL_RES*() {
+//		return mysql_res;
+//	}
+//
+//	MYSQL_RES* mysql_res;
+//
+//};
 //封装了原本的c版本Res
 class BGMSQLResult {
 	friend class SQLPool;
@@ -278,40 +298,52 @@ public:
 	//执行参数查询语句
 	unsigned long ExecQuery(const std::string& i_query, MYSQL_RES* &o_result) {
 		//
-		std::shared_ptr<SQLConnection> current_con = SelectFreeCon();
-		//检测有效性
-		//if (!(*current_con)) {
-		//	return CON_FAILED;
-		//}
-		//
-		auto affect_num = current_con->ExecQuery(i_query, o_result);
-		//这里使用拷贝 因为在类中也可能delete result,同时使用free_result释放
-		//current_result = std::make_shared<MYSQL_RES>(*(current_con->GetResult()));
-		//Free Current_con
-		current_con->SetFree();
-		//返回受影响的行数
-		return affect_num;
-		//return current_result;
+		try {
+
+			std::shared_ptr<SQLConnection> current_con = SelectFreeCon();
+			//检测有效性
+			//if (!(*current_con)) {
+			//	return CON_FAILED;
+			//}
+			//
+			auto affect_num = current_con->ExecQuery(i_query, o_result);
+			//这里使用拷贝 因为在类中也可能delete result,同时使用free_result释放
+			//current_result = std::make_shared<MYSQL_RES>(*(current_con->GetResult()));
+			//Free Current_con
+			current_con->SetFree();
+			//返回受影响的行数
+			return affect_num;
+			//return current_result;
+
+		}
+		catch (std::exception&) {
+			return CON_FAILED;
+		}
 
 	}
 	unsigned long ExecQuery(const std::string& i_query, BGMSQLResult&o_result) {
-		//
-		std::shared_ptr<SQLConnection> current_con = SelectFreeCon();
-		//检测有效性
-		//if (!(*current_con)) {
-		//	return CON_FAILED;
-		//}
-		//
-		auto affect_num = current_con->ExecQuery(i_query, o_result());
-		//这里使用拷贝 因为在类中也可能delete result,同时使用free_result释放
-		//current_result = std::make_shared<MYSQL_RES>(*(current_con->GetResult()));
-		//Free Current_con
-		current_con->SetFree();
-		//更新BGMSQLResult中的Rows
-		o_result.RefreshRow();
-		//返回受影响的行数
-		return affect_num;
-		//return current_result;
+		try {
+			//
+			std::shared_ptr<SQLConnection> current_con = SelectFreeCon();
+			//检测有效性
+			//if (!(*current_con)) {
+			//	return CON_FAILED;
+			//}
+			//
+			auto affect_num = current_con->ExecQuery(i_query, o_result());
+			//这里使用拷贝 因为在类中也可能delete result,同时使用free_result释放
+			//current_result = std::make_shared<MYSQL_RES>(*(current_con->GetResult()));
+			//Free Current_con
+			current_con->SetFree();
+			//更新BGMSQLResult中的Rows
+			o_result.RefreshRow();
+			//返回受影响的行数
+			return affect_num;
+			//return current_result;
+		}
+		catch (std::exception&) {
+			return CON_FAILED;
+		}
 
 	}
 	//重载版本,执行参数查询语句,不需要结果版本,很少使用,需要结果检查操作的成功性

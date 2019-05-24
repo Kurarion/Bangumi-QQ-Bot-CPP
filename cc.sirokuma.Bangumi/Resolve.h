@@ -6,6 +6,7 @@
 #include <iostream>
 
 
+
 namespace Resolve {
 	//为了方便书写使用宏定义
 	//将wstring转换为string
@@ -300,10 +301,10 @@ namespace Resolve {
 	size_t
 		Resolve_Auth_Status(std::string json) {
 		//{
-		//	"access_token": "f1b237ae52xxxxxxxx2a42f9ac6de6b",
-		//		"client_id" : "bgm1xxxxxxxxx9805b",
-		//		"user_id" : 42xxxx7,
-		//		"expires" : 155xxx941,
+		//	"access_token": "f1b237ae52xxxxxxxxxxxxxxxf9ac6de6b",
+		//		"client_id" : "bgm10115xxxxxxxxxx9805b",
+		//		"user_id" : 423387,
+		//		"expires" : 1556354941,
 		//		"scope" : null
 		//}
 		//{
@@ -470,7 +471,7 @@ namespace Resolve {
 		//		}
 		//}
 		//{
-		//	"request": "/collection/21811?access_token=088e77fb1xxxxxxxxxxxxc7b06c33a45d",
+		//	"request": "/collection/21811?access_token=088e77fb19792exxxxxxxxxxxxxxxxxxxx45d",
 		//		"code" : 400,
 		//		"error" : "40001 Error: Nothing found with that ID"
 		//}
@@ -1163,642 +1164,357 @@ namespace Resolve {
 	inline bangumi::string ResolveSubjectTag(const std::string &html) {
 		bangumi::string ret("\n<-标签->:\n");
 		//直接从1000处搜索
-		size_t tag_start = html.find("class=\"subject_tag_section\">",1000);
-		//判断是否存在
-		if (tag_start == std::string::npos) {
-			ret = "未收录标签...";
-			return ret;
-		}
-		//因为只是最后检测,为了防止出界,先缩小最后的范围
-		size_t tag_end = html.find("</small></a></div>", tag_start) - 11;
-		size_t single_tag_start = tag_start;
-		size_t single_tag_end;
-		while (single_tag_start < tag_end) {
-			single_tag_start = html.find("<span>", single_tag_start) + 6;
-			single_tag_end = html.find("</span>", single_tag_start);
-			//插入Tag的名称
-			ret << html.substr(single_tag_start , single_tag_end - single_tag_start);
-			single_tag_start = html.find("\">", single_tag_end) + 2;
-			single_tag_end = html.find("</small>", single_tag_start);
-			//插入Tag的数量
-			ret <<'<'<<html.substr(single_tag_start , single_tag_end - single_tag_start)<<"> | ";
+		try {
+			size_t tag_start = html.find("class=\"subject_tag_section\">", 1000);
+			//判断是否存在
+			if (tag_start == std::string::npos) {
+				ret = "未收录标签...";
+				return ret;
+			}
+			//因为只是最后检测,为了防止出界,先缩小最后的范围
+			size_t tag_end = html.find("</small></a></div>", tag_start) - 11;
+			size_t single_tag_start = tag_start;
+			size_t single_tag_end;
+			while (single_tag_start < tag_end) {
+				single_tag_start = html.find("<span>", single_tag_start) + 6;
+				single_tag_end = html.find("</span>", single_tag_start);
+				//插入Tag的名称
+				ret << html.substr(single_tag_start, single_tag_end - single_tag_start);
+				single_tag_start = html.find("\">", single_tag_end) + 2;
+				single_tag_end = html.find("</small>", single_tag_start);
+				//插入Tag的数量
+				ret << '<' << html.substr(single_tag_start, single_tag_end - single_tag_start) << "> | ";
 
-			single_tag_start = single_tag_end;
-		}
-		ret.erase(ret.find_last_of('|'),1);
-		
+				single_tag_start = single_tag_end;
+			}
+			ret.erase(ret.find_last_of('|'), 1);
 
-		return std::move(ret);
+
+			return std::move(ret);
+		}
+		catch (const std::exception&)
+		{
+			return "访问失败...";
+		}
 	}
 
 	//解析Subject中的角色
 	inline std::pair<bangumi::string,bangumi::string> ResolveSubjectCharacter(const std::string &html, bool refresh = false) {
 		bangumi::string ret("\n<-角色->:\n");
-		//bangumi::string ret2;
-		//直接从1500处搜索
-		size_t character_start = html.find("class=\"subject_section clearit\">",1500);
-		//判断是否存在
-		if (character_start == std::string::npos) {
-			return{"",""};
-		}
-		//因为只是最后检测,为了防止出界,先缩小最后的范围
-		size_t character_end = html.find("class=\"more\">", character_start) - 11;
-		//默认开始位置
-		size_t single_character_start = character_start;
-		//结尾设置为第一个character开始位置
-		size_t single_character_end = html.find("title=\"", single_character_start) + 7;
-		size_t temp;
-		size_t pic_start;
-		size_t pic_end;
-		size_t job_start;
-		size_t job_end;
-		size_t cv_start;
-		size_t cv_end;
-		size_t pic_name_end;
-		//PIC图片下载线程
-		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
-		//分割成两个消息 防止过长无法发送
-		int num = 0;
-		const int ONE_MAX_NUM = 4;
-		while (single_character_end < character_end) {
-			++num;
-			//
-			single_character_start = single_character_end;
-			//其实就是下一个Character的开始
-			single_character_end = html.find("title=\"", single_character_start) + 7;
-			//
-			std::string name;
-			std::string pic_url;
-			std::string job_tip;
-			std::string cv;
-			std::string pic_save_name;
-			//PICDownload的文件保存位置
-			std::string file_path;
-			//name的结尾位置
-			temp = html.find("\"", single_character_start);
-			name = html.substr(single_character_start, temp - single_character_start);
-			//为了加快速度,直接加50的搜索进度
-			pic_start = html.find("url('//", temp + 50) + 7;
-			pic_end = html.find("')\"", pic_start);
-			pic_url = "http://"+html.substr(pic_start, pic_end - pic_start);
-			//找到文件名的开头
-			temp = pic_url.find_last_of('/') + 1;
-			//找到文件名结尾
-			pic_name_end = pic_url.find_last_of('.');
-			//图片名字
-			pic_save_name = pic_url.substr(temp, pic_name_end - temp );
-			//将图片大小换成m类型
-			temp = pic_url.find("/s/");
-			pic_url[temp + 1] = 'm';
-			//下载图片
+		try {
+			//bangumi::string ret2;
+			//直接从1500处搜索
+			size_t character_start = html.find("class=\"subject_section clearit\">", 1500);
+			//判断是否存在
+			if (character_start == std::string::npos) {
+				return{ "","" };
+			}
+			//因为只是最后检测,为了防止出界,先缩小最后的范围
+			size_t character_end = html.find("class=\"more\">", character_start) - 11;
+			//默认开始位置
+			size_t single_character_start = character_start;
+			//结尾设置为第一个character开始位置
+			size_t single_character_end = html.find("title=\"", single_character_start) + 7;
+			size_t temp;
+			size_t pic_start;
+			size_t pic_end;
+			size_t job_start;
+			size_t job_end;
+			size_t cv_start;
+			size_t cv_end;
+			size_t pic_name_end;
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+			//分割成两个消息 防止过长无法发送
+			int num = 0;
+			const int ONE_MAX_NUM = 4;
+			while (single_character_end < character_end) {
+				++num;
+				//
+				single_character_start = single_character_end;
+				//其实就是下一个Character的开始
+				single_character_end = html.find("title=\"", single_character_start) + 7;
+				//
+				std::string name;
+				std::string pic_url;
+				std::string job_tip;
+				std::string cv;
+				std::string pic_save_name;
+				//PICDownload的文件保存位置
+				std::string file_path;
+				//name的结尾位置
+				temp = html.find("\"", single_character_start);
+				name = html.substr(single_character_start, temp - single_character_start);
+				//为了加快速度,直接加50的搜索进度
+				pic_start = html.find("url('//", temp + 50) + 7;
+				pic_end = html.find("')\"", pic_start);
+				pic_url = "http://" + html.substr(pic_start, pic_end - pic_start);
+				//找到文件名的开头
+				temp = pic_url.find_last_of('/') + 1;
+				//找到文件名结尾
+				pic_name_end = pic_url.find_last_of('.');
+				//图片名字
+				pic_save_name = pic_url.substr(temp, pic_name_end - temp);
+				//将图片大小换成m类型
+				temp = pic_url.find("/s/");
+				pic_url[temp + 1] = 'm';
+				//下载图片
 #ifndef NDEBUG
-			{
-				bangumi::string debug_msg;
-				debug_msg << "这是次数开始 > " << num;
-				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-R-PIC-DOWNLOAD", debug_msg);
-			}
+				{
+					bangumi::string debug_msg;
+					debug_msg << "这是次数开始 > " << num;
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-R-PIC-DOWNLOAD", debug_msg);
+				}
 #endif
-			auto result = PicDownload(http_client, pic_url, CHARACTER_PIC_PATH, pic_save_name, file_path, refresh);
+				auto result = PicDownload(http_client, pic_url, CHARACTER_PIC_PATH, pic_save_name, file_path, refresh);
 #ifndef NDEBUG
-			{
-				bangumi::string debug_msg;
-				debug_msg << "这是次数结束 > " << num;
-				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-R-PIC-DOWNLOAD", debug_msg);;
-			}
+				{
+					bangumi::string debug_msg;
+					debug_msg << "这是次数结束 > " << num;
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-R-PIC-DOWNLOAD", debug_msg);;
+				}
 #endif
-			//返回的线程保存到返回值中
-			if (result.first == DownloadStatus::MultiThread)
-			{
-				//将下载线程压入线程池中
-				ThreadVector.push_back(result.second);
-			}
-			//演员位置
-			job_start = html.find("job_tip\">", pic_end + 10) + 9;
-			job_end = html.find("</s", job_start);
-			job_tip = html.substr(job_start, job_end - job_start);
-			//CV(可能没有)
-			cv = html.substr(job_end, single_character_end - job_end);
-			cv_start = cv.find("arring\">");
-			if (cv_start != std::string::npos) {
-				cv_end = cv.find("</a>", cv_start);
-				cv = cv.substr(cv_start + 8, cv_end - cv_start - 8);
-			}
-			else {
-				cv = "";
-			}
-			//ret回复
-			//if (num < ONE_MAX_NUM) {
+				//返回的线程保存到返回值中
+				if (result.first == DownloadStatus::MultiThread)
+				{
+					//将下载线程压入线程池中
+					ThreadVector.push_back(result.second);
+				}
+				//演员位置
+				job_start = html.find("job_tip\">", pic_end + 10) + 9;
+				job_end = html.find("</s", job_start);
+				job_tip = html.substr(job_start, job_end - job_start);
+				//CV(可能没有)
+				cv = html.substr(job_end, single_character_end - job_end);
+				cv_start = cv.find("arring\">");
+				if (cv_start != std::string::npos) {
+					cv_end = cv.find("</a>", cv_start);
+					cv = cv.substr(cv_start + 8, cv_end - cv_start - 8);
+				}
+				else {
+					cv = "";
+				}
+				//ret回复
+				//if (num < ONE_MAX_NUM) {
 				ret << "[CQ:image,file=" << std::move(file_path) << "]"
 					>> '[' << std::move(job_tip) << ']'
 					>> std::move(name);
 				if (!cv.empty())
 					ret >> "CV:  " << std::move(cv);
 				ret << "\n";
-			//}
-			//else {
-			//	ret2 << "[CQ:image,file=" << std::move(file_path) << "]"
-			//		>> '[' << std::move(job_tip) << ']'
-			//		>> std::move(name);
-			//	if (!cv.empty())
-			//		ret2 >> "CV:  " << std::move(cv);
-			//	ret2 << "\n";
-			//}
+				//}
+				//else {
+				//	ret2 << "[CQ:image,file=" << std::move(file_path) << "]"
+				//		>> '[' << std::move(job_tip) << ']'
+				//		>> std::move(name);
+				//	if (!cv.empty())
+				//		ret2 >> "CV:  " << std::move(cv);
+				//	ret2 << "\n";
+				//}
 
-	
-		}
-		//等待图片下载完成
-		for (auto &t : ThreadVector) {
-			if (t != nullptr&&t->joinable())
-				t->join();
-		}
 
-		return{ std::move(ret),"" };
+			}
+			//等待图片下载完成
+			for (auto &t : ThreadVector) {
+				if (t != nullptr&&t->joinable())
+					t->join();
+			}
+
+			return{ std::move(ret),"" };
+		}
+		catch (const std::exception&)
+		{
+			return{ "访问失败...","" };
+		}
 	}
 
 	//解析Subject中的吐槽
 	inline bangumi::string ResolveSubjectComment(const std::string &raw_html, bool refresh = false) {
 		bangumi::string ret("\n<-吐槽->:\n");
-		//直接从1500处搜索
-		size_t comment_start = raw_html.find("\"comment_box\"", 2500);
-		//判断是否存在,其实一定存在,实际上可能是会员才能看到的条目
-		if (comment_start == std::string::npos) {
-			ret = "\n未收录吐槽...\n";
-			return ret;
-		}
-		//因为只是最后检测,为了防止出界,先缩小最后的范围
-		size_t comment_end = raw_html.find("class=\"more\">", comment_start) - 11;
-		//直接
-		std::string html = raw_html.substr(comment_start, comment_end - comment_start);
-		//
-		//第一个开始位置
-		size_t single_comment_start = html.find("url('//") + 7;
-		//
-		//size_t single_comment_end ;
-		//变量
-		size_t temp;
-		//size_t pic_start;
-		size_t pic_end;
-		size_t name_start;
-		size_t name_end;
-		size_t time_start;
-		size_t time_end;
-		size_t content_start;
-		size_t content_end;
-		size_t pic_name_end;
-		//PIC图片下载线程
-		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
-
-		while ((single_comment_start-7) !=std::string::npos ) {
-			//临时变量
-			std::string name;
-			std::string pic_url;
-			std::string comment_time;
-			std::string comment;
-			char star = '0';
-			std::string pic_save_name;
-			//PICDownload的文件保存位置
-			std::string file_path;
-			//头像图片Start=====
-
-			//找到头像的结尾
-			pic_end = html.find("')\"", single_comment_start);
-			pic_url = "http://" + html.substr(single_comment_start, pic_end - single_comment_start);
-			//找到文件名的开头
-			temp = pic_url.find_last_of('/') + 1;
-			//找到文件名结尾
-			pic_name_end = pic_url.find_last_of('.');
-			//图片名字
-			pic_save_name = pic_url.substr(temp, pic_name_end - temp);
-			//将图片大小换成l类型
-			temp = pic_url.find("/s/");
-			pic_url[temp + 1] = 'l';
-			//下载图片
-			auto result = PicDownload(http_client, pic_url, USER_PIC_PATH, pic_save_name, file_path, refresh);
-			//返回的线程保存到返回值中
-			if (result.first == DownloadStatus::MultiThread)
-			{
-				//将下载线程压入线程池中
-				ThreadVector.push_back(result.second);
+		try {
+			//直接从1500处搜索
+			size_t comment_start = raw_html.find("\"comment_box\"", 2500);
+			//判断是否存在,其实一定存在,实际上可能是会员才能看到的条目
+			if (comment_start == std::string::npos) {
+				ret = "\n未收录吐槽...\n";
+				return ret;
 			}
-			//头像图片OVER=====
+			//因为只是最后检测,为了防止出界,先缩小最后的范围
+			size_t comment_end = raw_html.find("class=\"more\">", comment_start) - 11;
+			//直接
+			std::string html = raw_html.substr(comment_start, comment_end - comment_start);
+			//
+			//第一个开始位置
+			size_t single_comment_start = html.find("url('//") + 7;
+			//
+			//size_t single_comment_end ;
+			//变量
+			size_t temp;
+			//size_t pic_start;
+			size_t pic_end;
+			size_t name_start;
+			size_t name_end;
+			size_t time_start;
+			size_t time_end;
+			size_t content_start;
+			size_t content_end;
+			size_t pic_name_end;
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
 
-			//name===
-			name_start = html.find("class=\"l\">", pic_end) + 10;
-			name_end = html.find("</a>", name_start);
-			name = html.substr(name_start, name_end - name_start);
-			//name end===
+			while ((single_comment_start - 7) != std::string::npos) {
+				//临时变量
+				std::string name;
+				std::string pic_url;
+				std::string comment_time;
+				std::string comment;
+				char star = '0';
+				std::string pic_save_name;
+				//PICDownload的文件保存位置
+				std::string file_path;
+				//头像图片Start=====
 
-			//time===
-			time_start = html.find("=\"grey\">", name_end) + 8;
-			time_end = html.find("</smal", time_start);
-			comment_time = html.substr(time_start, time_end - time_start);
-			//time end===
+				//找到头像的结尾
+				pic_end = html.find("')\"", single_comment_start);
+				pic_url = "http://" + html.substr(single_comment_start, pic_end - single_comment_start);
+				//找到文件名的开头
+				temp = pic_url.find_last_of('/') + 1;
+				//找到文件名结尾
+				pic_name_end = pic_url.find_last_of('.');
+				//图片名字
+				pic_save_name = pic_url.substr(temp, pic_name_end - temp);
+				//将图片大小换成l类型
+				temp = pic_url.find("/s/");
+				pic_url[temp + 1] = 'l';
+				//下载图片
+				auto result = PicDownload(http_client, pic_url, USER_PIC_PATH, pic_save_name, file_path, refresh);
+				//返回的线程保存到返回值中
+				if (result.first == DownloadStatus::MultiThread)
+				{
+					//将下载线程压入线程池中
+					ThreadVector.push_back(result.second);
+				}
+				//头像图片OVER=====
 
-			//comment===
-			content_start = html.find("<p>", time_end) + 3;
-			content_end = html.find("</p>", content_start);
-			comment = html.substr(content_start, content_end - content_start);
-			//comment end===
+				//name===
+				name_start = html.find("class=\"l\">", pic_end) + 10;
+				name_end = html.find("</a>", name_start);
+				name = html.substr(name_start, name_end - name_start);
+				//name end===
 
-			//star===
-			temp = html.find("stars", time_end);
-			if (temp != std::string::npos&&temp<content_start) {
-				star = html[temp + 5];
+				//time===
+				time_start = html.find("=\"grey\">", name_end) + 8;
+				time_end = html.find("</smal", time_start);
+				comment_time = html.substr(time_start, time_end - time_start);
+				//time end===
+
+				//comment===
+				content_start = html.find("<p>", time_end) + 3;
+				content_end = html.find("</p>", content_start);
+				comment = html.substr(content_start, content_end - content_start);
+				//comment end===
+
+				//star===
+				temp = html.find("stars", time_end);
+				if (temp != std::string::npos&&temp < content_start) {
+					star = html[temp + 5];
+				}
+				//star end===
+
+				//下个头像URL
+				single_comment_start = html.find("url('//", single_comment_start) + 7;
+
+				//ret回复
+				ret << "[CQ:image,file=" << std::move(file_path) << "]"
+					>> std::move(name) << ' ' << std::move(comment_time);
+				if (star != '0') {
+					ret >> ">>评分: " << star;
+				}
+				ret >> ">>" << std::move(comment);
+
+				ret << "\n";
+
 			}
-			//star end===
-
-			//下个头像URL
-			single_comment_start = html.find("url('//", single_comment_start) + 7;
-
-			//ret回复
-			ret << "[CQ:image,file=" << std::move(file_path) << "]"
-				>> std::move(name) << ' ' << std::move(comment_time);
-			if (star != '0') {
-				ret >> ">>评分: " << star;
+			//等待图片下载完成
+			for (auto &t : ThreadVector) {
+				if (t != nullptr&&t->joinable())
+					t->join();
 			}
-			ret	>> ">>" << std::move(comment);
 
-			ret << "\n";
-
+			return std::move(ret);
 		}
-		//等待图片下载完成
-		for (auto &t : ThreadVector) {
-			if (t != nullptr&&t->joinable())
-				t->join();
+		catch (const std::exception&)
+		{
+			return "访问失败...";
 		}
-
-		return std::move(ret);
 	}
 
 	//解析Subject中的部分信息
 	inline bangumi::BangumiSubjectCollection ResolveSubjectCollection(const std::string &html, size_t subject_id, bool refresh = false) {
-#define  MAX_SUBJECT_COLLECTION_EPS 120
+#define  MAX_SUBJECT_COLLECTION_EPS 150
 		//返回的结果
+		//Debug
+		//{
+		//	std::ofstream text_input("html.txt");
+		//	text_input << html;
+		//	text_input.close();
+		//}
+		////
 		bangumi::BangumiSubjectCollection result;
 		result.subject_id = subject_id;
-		//直接从400处搜索
-		size_t main_start = html.find("id=\"main\"", 400);
-		//判断是否存在,其实一定存在,实际上可能是会员才能看到的条目
-		if (main_start == std::string::npos) {
-			result.valid = false;
-			return result;
-		}
-		//main之后是title
-		std::string name_cn;
-		size_t title_start = html.find("title=\"", main_start);
-		//如果存在
-		if (title_start != std::string::npos){
-			size_t title_end = html.find("\"", title_start + 7);
-			name_cn = html.substr(title_start + 7, title_end - title_start - 7);
-		}
-		result.name_cn = name_cn;
-
-		//中文名之后是原名
-		std::string name;
-		size_t name_start = html.find("viewed\">", main_start);
-		//如果存在
-		if (name_start != std::string::npos) {
-			size_t name_end = html.find("</a>", name_start);
-			name = html.substr(name_start + 8, name_end - name_start - 8);
-		}
-		result.name = name;
-
-		//图片
-		size_t info_start = html.find("\"bangumiInfo\"", main_start);
-		if (info_start == std::string::npos) {
-			result.valid = false;
-			return result;
-		}
-		size_t infobox_end = html.find("id=\"infobox\"", info_start);
-		std::string info_str = html.substr(info_start + 13, infobox_end - info_start - 13);
-
-		//
-		size_t pic_start = info_str.find("href=\"");
-		std::string file_path;
-		//PIC图片下载线程
-		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
-		if (pic_start != std::string::npos) {
-			//存在图片
-			size_t pic_end = info_str.find("\"", pic_start + 6);
-			std::string pic_url = "http:" + info_str.substr(pic_start + 6, pic_end - pic_start - 6);
-
-			//图片名字 (就是subject_id)
-			std::string pic_save_name = std::to_string(subject_id);
-
-			//下载图片
-			auto result = PicDownload(http_client, pic_url, SUBJECT_PIC_PATH, pic_save_name, file_path, refresh);
-
-			//返回的线程保存到返回值中
-			if (result.first == DownloadStatus::MultiThread)
-			{
-				//将下载线程压入线程池中
-				ThreadVector.push_back(result.second);
+		try {
+			//直接从400处搜索
+			size_t main_start = html.find("id=\"main\"", 400);
+			//判断是否存在,其实一定存在,实际上可能是会员才能看到的条目
+			if (main_start == std::string::npos) {
+				result.valid = false;
+				return result;
 			}
-		}
-		else {
-			//使用缺省图片
-			//下载图片
-			auto result = PicDownload(http_client, "", SUBJECT_PIC_PATH, "", file_path, refresh);
-		}
-		result.file_path = file_path;
-		//图片OVER=====
-
-
-		//章节
-		int eps_num = 1;
-		size_t chapter_start = html.find("prg_list\">", main_start);
-		//章节详细
-		size_t detail_start = html.find("subject_prg_content", chapter_start);
-		std::string detail_chapter_html;
-		//如果存在详细章节
-		if (detail_start != std::string::npos) {
-			size_t detail_end = html.find("</span></div></div>", detail_start);
-			detail_chapter_html = html.substr(detail_start + 21, detail_end - detail_start - 21);
-		}
-		if (chapter_start != std::string::npos ) {
-			
-			size_t chapter_end = html.find("</ul>", chapter_start);
-			std::string chapter = html.substr(chapter_start + 10, chapter_end - chapter_start - 10);
-			//检查是否有SP
-			bool have_sp = false;
-			size_t sp_pos = chapter.find("subtitle");
-			if (sp_pos != std::string::npos) {
-				//说明存在SP
-				have_sp = true;
+			//main之后是title
+			std::string name_cn;
+			size_t title_start = html.find("title=\"", main_start);
+			//如果存在
+			if (title_start != std::string::npos) {
+				size_t title_end = html.find("\"", title_start + 7);
+				name_cn = html.substr(title_start + 7, title_end - title_start - 7);
 			}
-			//循环处理每一个章节
-			size_t ep_status = chapter.find("epBtn");
-			size_t ep_title_start;
-			size_t ep_title_end;
-			size_t detail_ep_info_start;
-			size_t detail_ep_info_end;
-			std::string detail_ep_info;
-			size_t info_content_start;
-			//size_t info_content_end;
-			std::string info_content;
-			std::string ep_name;
-			//记录放送状态的标志
-			int ep_state;
-			//循环处理章节
-			while (ep_status!= std::string::npos&& eps_num< MAX_SUBJECT_COLLECTION_EPS){
-				++eps_num;
-				//
-				//title
-				ep_title_start = chapter.find("title=\"", ep_status);
-				ep_title_end = chapter.find("\"", ep_title_start + 7);
-				//ep name
-				ep_name = chapter.substr(ep_title_start + 7, ep_title_end - ep_title_start - 7);
-				//判断放送状态
-				if (chapter[ep_status+5]=='A'){
-					//说明是epBtnAir
-					if (have_sp&&ep_status > sp_pos) {
-						//说明是aired的sp
-						result.sp_air_eps.push_back(ep_name);
-						ep_state = 3;
-					}
-					else {
-						//说明是aired的tv
-						result.air_eps.push_back(ep_name);
-						ep_state = 1;
-					}
-				}
-				else {
-					//否则是epBtnNA
-					if (have_sp&&ep_status > sp_pos) {
-						//说明是unaired的sp
-						result.sp_unair_eps.push_back(ep_name);
-						ep_state = 4;
-					}
-					else {
-						//说明是unaired的tv
-						result.unair_eps.push_back(ep_name);
-						ep_state = 2;
-					}
-				}
-				//详细章节的判断
-				if (!detail_chapter_html.empty()) {
-					//确定此ep的info编号
-					detail_ep_info_start = chapter.find("rginfo_", ep_title_end);
-					detail_ep_info_end = chapter.find("\"", detail_ep_info_start + 7);
-					detail_ep_info = chapter.substr(detail_ep_info_start, detail_ep_info_end- detail_ep_info_start);
-					//确定此ep的info信息
-					info_content_start = detail_chapter_html.find(detail_ep_info);
-					if (info_content_start!=std::string::npos){
-						//如果存在
-						bool save = false;
-						//<hr结束
-						for (int i = 0;;++i) {
-							if (detail_chapter_html[info_content_start + i] == '>')
-							{
-								save = true;
-								continue;
-							}
-							if (detail_chapter_html[info_content_start + i] == '<')
-							{
-								if (detail_chapter_html[info_content_start + i + 1] == 'b')
-								{
-									//说明是<br
-									save = false;
-									++i;
-									info_content += ' ';
-									continue;
-								}
-								if (detail_chapter_html[info_content_start + i + 1] == 'h')
-								{
-									//说明是<hr
-									//加讨论
-									save = false;
-									++i;
-									while (true) {
-										++i;
-										//</s结束
-										if (detail_chapter_html[info_content_start + i] == '>')
-										{
-											while (detail_chapter_html[info_content_start + i + 1] == ' ') {
-												//排除掉空格
-												++i;
-											}
-											save = true;
-											continue;
-										}
-										if (detail_chapter_html[info_content_start + i] == '<')
-										{
-											if (detail_chapter_html[info_content_start + i + 1] == '/'&&
-												detail_chapter_html[info_content_start + i + 2] == 's') {
-												//直接break
-												break;
-											}
-											//其他情况直接false save
-											save = false;
-											continue;
-										}
-										if (save) {
-											//如果不在<>内则直接保存
-											info_content += detail_chapter_html[info_content_start + i];
-										}
+			result.name_cn = name_cn;
 
-									}
-									//保存数据
-									switch (ep_state)
-									{
-									case 1:
-										result.air_eps_info.push_back(info_content);
-										break;
-									case 2:
-										result.unair_eps_info.push_back(info_content);
-										break;
-									case 3:
-										result.sp_air_eps_info.push_back(info_content);
-										break;
-									case 4:
-										result.sp_unair_eps_info.push_back(info_content);
-										break;
-									default:
-										break;
-									}
-									//清空
-									info_content = "";
-									//结束
-									break;
-								}
-								//其他情况直接false save
-								save = false;
-								continue;
-							}
-							if (save) {
-								//如果不在<>内则直接保存
-								info_content += detail_chapter_html[info_content_start + i];
-							}
-							
-						}
-					}
-					else {
-						//几乎不可能的事情
-						//但还是填入一个空的数据 
-						info_content = "未知...";
-						//保存数据
-						switch (ep_state)
-						{
-						case 1:
-							result.air_eps_info.push_back(info_content);
-							break;
-						case 2:
-							result.unair_eps_info.push_back(info_content);
-							break;
-						case 3:
-							result.sp_air_eps_info.push_back(info_content);
-							break;
-						case 4:
-							result.sp_unair_eps_info.push_back(info_content);
-							break;
-						default:
-							break;
-						}
-					}
-
-				}
-				//下一个ep_status
-				ep_status = chapter.find("epBtn", ep_title_start);
-
+			//中文名之后是原名
+			std::string name;
+			size_t name_start = html.find("viewed\">", main_start);
+			//如果存在
+			if (name_start != std::string::npos) {
+				size_t name_end = html.find("</a>", name_start);
+				name = html.substr(name_start + 8, name_end - name_start - 8);
 			}
-			//更新一下数量
-			result.UpdateEpsCounts();
+			result.name = name;
 
-		}
+			//图片
+			size_t info_start = html.find("\"bangumiInfo\"", main_start);
+			if (info_start == std::string::npos) {
+				result.valid = false;
+				return result;
+			}
+			size_t infobox_end = html.find("id=\"infobox\"", info_start);
+			std::string info_str = html.substr(info_start + 13, infobox_end - info_start - 13);
 
-
-		//章节Over
-
-
-		//等待图片下载完成
-		for (auto &t : ThreadVector) {
-			if (t != nullptr&&t->joinable())
-				t->join();
-		}
-
-		return result;
-	}
-
-	//解析Tag信息
-	//只解析一页
-	inline bangumi::string ResolveTag(const std::string &raw_html, bool refresh = false) {
-#define BGMTagMaxPageNum = 2
-		//查找tag目录的开头
-		size_t section_start = raw_html.find("section", 1000);
-		//可能有意外问题
-		if (section_start == std::string::npos) {
-			//一般是无法打开html 502
-			return "";
-		}
-		//查找结尾
-		size_t section_end = raw_html.find("board", section_start);
-		//有效的html
-		std::string html = raw_html.substr(section_start, section_end - section_start);
-		//单个条目的起始位置
-		size_t subject_start = html.find("item_");
-		//
-		bangumi::string ret;
-		//
-		std::string subject_id;
-		std::string pic_url;
-		std::string file_path;
-		std::string name_cn;
-		std::string name;
-		std::string tips;
-		std::string rate;
-		std::string rate_num;
-		size_t temp;
-		//
-		//PIC图片下载线程
-		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
-		while (subject_start != std::string::npos) {
-			
-			//subject id
-			size_t href_end = html.find("\"", subject_start + 5);
-			
-			subject_id = html.substr(subject_start + 5, href_end - subject_start - 5);
-			//最后循环查找下一个item
-			//同时限定此条目的查找范围
-			subject_start = html.find("item_", subject_start + 10);
-				
 			//
-			//std::cout << html<<std::endl;
+			size_t pic_start = info_str.find("href=\"");
+			std::string file_path;
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+			if (pic_start != std::string::npos) {
+				//存在图片
+				size_t pic_end = info_str.find("\"", pic_start + 6);
+				std::string pic_url = "http:" + info_str.substr(pic_start + 6, pic_end - pic_start - 6);
 
+				//图片名字 (就是subject_id)
+				std::string pic_save_name = std::to_string(subject_id);
 
-			//中文名
-			size_t name_cn_start = html.find("ass=\"l\">", href_end);
-			size_t name_cn_end = html.find("</a>", name_cn_start + 8);
-			name_cn = html.substr(name_cn_start + 8, name_cn_end - name_cn_start - 8);
-
-			//由于有没有图片的风险，因此将判断放在中文名之后
-			//图片下载地址
-			size_t src_start = html.find("src=\"/", href_end);
-			//可以真的没有图片
-			if (src_start  < name_cn_start) {
-				size_t src_end = html.find("\"", src_start + 5);
-				std::string pre_url = html.substr(src_start + 5, src_end - src_start - 5);
-				std::string pic_subject_id = subject_id;
-				if (pre_url[1] == 'i'&&pre_url[2] == 'm') {
-					//img/no_icon
-					pre_url = "//bgm.tv" + pre_url;
-					pic_subject_id = "no_icon";
-				}
-				else {
-					//将图片大小换成l类型
-					temp = pre_url.find("/s/");
-					pre_url[temp + 1] = 'm';
-				}
-				pic_url = "http:" + pre_url;
-				//#ifndef NDEBUG
-				//			{
-				//				bangumi::string debug_msg;
-				//				debug_msg << "图片下载地址 " << pic_url;
-				//				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-TAG-PIC-DOWNLOAD", debug_msg);
-				//			}
-				//#endif
-				//开始下载图片
 				//下载图片
-				auto result = PicDownload(http_client, pic_url, TAG_PIC_PATH, pic_subject_id, file_path, refresh);
+				auto result = PicDownload(http_client, pic_url, SUBJECT_PIC_PATH, pic_save_name, file_path, refresh);
+
 				//返回的线程保存到返回值中
 				if (result.first == DownloadStatus::MultiThread)
 				{
@@ -1807,179 +1523,523 @@ namespace Resolve {
 				}
 			}
 			else {
-				//直接使用404图片
-				auto result = PicDownload(http_client, "", TAG_PIC_PATH, subject_id, file_path, refresh);
-				//返回的线程保存到返回值中
-				//if (result.first == DownloadStatus::MultiThread)
+				//使用缺省图片
+				//下载图片
+				auto result = PicDownload(http_client, "", SUBJECT_PIC_PATH, "", file_path, refresh);
+			}
+			result.file_path = file_path;
+			//图片OVER=====
+
+
+			//章节
+			int eps_num = 1;
+			size_t chapter_start = html.find("prg_list\">", main_start);
+			//章节详细
+			size_t detail_start = html.find("subject_prg_content", chapter_start);
+			std::string detail_chapter_html;
+			//如果存在详细章节
+			if (detail_start != std::string::npos) {
+				size_t detail_end = html.find("</span></div></div>", detail_start);
+				detail_chapter_html = html.substr(detail_start + 21, detail_end - detail_start - 21);
+			}
+			////Debug
+			//{
+			//	std::ofstream text_input("detail_chapter_html.txt");
+			//	text_input << detail_chapter_html;
+			//	text_input.close();
+			//}
+			if (chapter_start != std::string::npos) {
+
+				size_t chapter_end = html.find("</ul>", chapter_start);
+				std::string chapter = html.substr(chapter_start + 10, chapter_end - chapter_start - 10);
+				//Debug
 				//{
-				//	//将下载线程压入线程池中
-				//	ThreadVector.push_back(result.second);
+				//	std::ofstream text_input("chapter_html.txt");
+				//	text_input << chapter;
+				//	text_input.close();
 				//}
+				//检查是否有SP
+				bool have_sp = false;
+				size_t sp_pos = chapter.find("subtitle");
+				if (sp_pos != std::string::npos) {
+					//说明存在SP
+					have_sp = true;
+				}
+				//循环处理每一个章节
+				size_t ep_status = chapter.find("epBtn");
+				size_t ep_title_start;
+				size_t ep_title_end;
+				size_t detail_ep_info_start;
+				size_t detail_ep_info_end;
+				std::string detail_ep_info;
+				size_t info_content_start;
+				//size_t info_content_end;
+				std::string info_content;
+				std::string ep_name;
+				//记录放送状态的标志
+				int ep_state;
+				//循环处理章节
+				while (ep_status != std::string::npos&& eps_num < MAX_SUBJECT_COLLECTION_EPS) {
+					++eps_num;
+					//
+					//title
+					ep_title_start = chapter.find("title=\"", ep_status);
+					ep_title_end = chapter.find("\"", ep_title_start + 7);
+					//ep name
+					ep_name = chapter.substr(ep_title_start + 7, ep_title_end - ep_title_start - 7);
+					//判断放送状态
+					if (chapter[ep_status + 5] == 'A') {
+						//说明是epBtnAir
+						if (have_sp&&ep_status > sp_pos) {
+							//说明是aired的sp
+							result.sp_air_eps.push_back(ep_name);
+							ep_state = 3;
+						}
+						else {
+							//说明是aired的tv
+							result.air_eps.push_back(ep_name);
+							ep_state = 1;
+						}
+					}
+					else {
+						//否则是epBtnNA
+						if (have_sp&&ep_status > sp_pos) {
+							//说明是unaired的sp
+							result.sp_unair_eps.push_back(ep_name);
+							ep_state = 4;
+						}
+						else {
+							//说明是unaired的tv
+							result.unair_eps.push_back(ep_name);
+							ep_state = 2;
+						}
+					}
+					//详细章节的判断
+					if (!detail_chapter_html.empty()) {
+						//确定此ep的info编号
+						detail_ep_info_start = chapter.find("rginfo_", ep_title_end);
+						detail_ep_info_end = chapter.find("\"", detail_ep_info_start + 7);
+						detail_ep_info = chapter.substr(detail_ep_info_start, detail_ep_info_end - detail_ep_info_start);
+						//确定此ep的info信息
+						info_content_start = detail_chapter_html.find(detail_ep_info);
+						if (info_content_start != std::string::npos) {
+							//如果存在
+							bool save = false;
+							//<hr结束
+							for (int i = 0; info_content_start + i < detail_chapter_html.length(); ++i) {
+								if (detail_chapter_html[info_content_start + i] == '>')
+								{
+									save = true;
+									continue;
+								}
+								if (detail_chapter_html[info_content_start + i] == '<')
+								{
+									if (detail_chapter_html[info_content_start + i + 1] == 'b')
+									{
+										//说明是<br
+										save = false;
+										++i;
+										info_content += ' ';
+										continue;
+									}
+									if (detail_chapter_html[info_content_start + i + 1] == 'h')
+									{
+										//说明是<hr
+										//加讨论
+										save = false;
+										++i;
+										while (true) {
+											++i;
+											//</s结束
+											if (detail_chapter_html[info_content_start + i] == '>')
+											{
+												while (detail_chapter_html[info_content_start + i + 1] == ' ') {
+													//排除掉空格
+													++i;
+												}
+												save = true;
+												continue;
+											}
+											if (detail_chapter_html[info_content_start + i] == '<')
+											{
+												if (detail_chapter_html[info_content_start + i + 1] == '/'&&
+													detail_chapter_html[info_content_start + i + 2] == 's') {
+													//直接break
+													break;
+												}
+												//其他情况直接false save
+												save = false;
+												continue;
+											}
+											if (save) {
+												//如果不在<>内则直接保存
+												info_content += detail_chapter_html[info_content_start + i];
+											}
+
+										}
+										//保存数据
+										switch (ep_state)
+										{
+										case 1:
+											result.air_eps_info.push_back(info_content);
+											break;
+										case 2:
+											result.unair_eps_info.push_back(info_content);
+											break;
+										case 3:
+											result.sp_air_eps_info.push_back(info_content);
+											break;
+										case 4:
+											result.sp_unair_eps_info.push_back(info_content);
+											break;
+										default:
+											break;
+										}
+										//清空
+										info_content = "";
+										//结束
+										break;
+									}
+									//其他情况直接false save
+									save = false;
+									continue;
+								}
+								if (save) {
+									//如果不在<>内则直接保存
+									//首先排除字符中的空格
+									if (detail_chapter_html[info_content_start + i] != ' ')
+										info_content += detail_chapter_html[info_content_start + i];
+									else
+										info_content += '_';
+								}
+
+							}
+						}
+						else {
+							//几乎不可能的事情
+							//但还是填入一个空的数据 
+							info_content = "未知...";
+							//保存数据
+							switch (ep_state)
+							{
+							case 1:
+								result.air_eps_info.push_back(info_content);
+								break;
+							case 2:
+								result.unair_eps_info.push_back(info_content);
+								break;
+							case 3:
+								result.sp_air_eps_info.push_back(info_content);
+								break;
+							case 4:
+								result.sp_unair_eps_info.push_back(info_content);
+								break;
+							default:
+								break;
+							}
+						}
+
+					}
+					//下一个ep_status
+					ep_status = chapter.find("epBtn", ep_title_start);
+
+				}
+				//更新一下数量
+				result.UpdateEpsCounts();
+
 			}
 
-			//原名(可能没有)
-			name = "";
-			size_t name_start = html.find("ass=\"grey\">", name_cn_end);
-			if (name_start < subject_start) {
-				//在此条目的范围内有效
-				size_t name_end = html.find("</small>", name_start + 11);
-				name = html.substr(name_start + 11, name_end - name_start - 11);
-			}
-			
-			//info tips
-			size_t tips_start = html.find("tip\">", name_cn_end);
-			size_t tips_end = html.find("</p>", tips_start + 5);
-			tips = html.substr(tips_start + 5, tips_end - tips_start - 5);
-			//评分(可能没有)
-			rate = "";
-			size_t rate_start = html.find("fade\">", tips_end);
-			if (rate_start < subject_start) {
-				//在此条目的范围内有效
-				size_t rate_end = html.find("<", rate_start + 6);
-				rate = html.substr(rate_start + 6, rate_end - rate_start - 6);
-			}
-			//评分2(可能没有)
-			rate_num = "";
-			size_t rate2_start = html.find("tip_j\">", tips_end);
-			if (rate2_start < subject_start) {
-				//在此条目的范围内有效
-				size_t rate2_end = html.find("<", rate2_start + 7);
-				rate_num = html.substr(rate2_start + 7, rate2_end - rate2_start - 7);
-			}
+
+			//章节Over
 
 
-			//ret回复
-			ret << "[CQ:image,file=" << std::move(file_path) << "]"
-				>> "ID: " << subject_id
-				>> std::move(name_cn);
-			if (!name.empty()) {
-				ret << " <" << std::move(name) << ">";
+			//等待图片下载完成
+			for (auto &t : ThreadVector) {
+				if (t != nullptr&&t->joinable())
+					t->join();
 			}
 
-			if (!tips.empty()){
-				//tips自带\n
-				ret	<< tips;
-			}
-			if (!rate.empty()) {
-				ret >> "评分: " <<rate << " " << rate_num;
-			}
-			else if (!rate_num.empty()) {
-				ret >> rate_num;
-			}
-			ret << "\n";
-				
-
-			
 		}
+		catch (std::exception&) {
+			//
+		}
+		return result;
+	}
 
-		//等待图片下载完成
-		for (auto &t : ThreadVector) {
-			if (t != nullptr&&t->joinable())
-				t->join();
+	//解析Tag信息
+	//只解析一页
+	inline bangumi::string ResolveTag(const std::string &raw_html, bool refresh = false) {
+#define BGMTagMaxPageNum = 2
+		try {
+			//查找tag目录的开头
+			size_t section_start = raw_html.find("section", 1000);
+			//可能有意外问题
+			if (section_start == std::string::npos) {
+				//一般是无法打开html 502
+				return "";
+			}
+			//查找结尾
+			size_t section_end = raw_html.find("board", section_start);
+			//有效的html
+			std::string html = raw_html.substr(section_start, section_end - section_start);
+			//单个条目的起始位置
+			size_t subject_start = html.find("item_");
+			//
+			bangumi::string ret;
+			//
+			std::string subject_id;
+			std::string pic_url;
+			std::string file_path;
+			std::string name_cn;
+			std::string name;
+			std::string tips;
+			std::string rate;
+			std::string rate_num;
+			size_t temp;
+			//
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+			while (subject_start != std::string::npos) {
+
+				//subject id
+				size_t href_end = html.find("\"", subject_start + 5);
+
+				subject_id = html.substr(subject_start + 5, href_end - subject_start - 5);
+				//最后循环查找下一个item
+				//同时限定此条目的查找范围
+				subject_start = html.find("item_", subject_start + 10);
+
+				//
+				//std::cout << html<<std::endl;
+
+
+				//中文名
+				size_t name_cn_start = html.find("ass=\"l\">", href_end);
+				size_t name_cn_end = html.find("</a>", name_cn_start + 8);
+				name_cn = html.substr(name_cn_start + 8, name_cn_end - name_cn_start - 8);
+
+				//由于有没有图片的风险，因此将判断放在中文名之后
+				//图片下载地址
+				size_t src_start = html.find("src=\"/", href_end);
+				//可以真的没有图片
+				if (src_start < name_cn_start) {
+					size_t src_end = html.find("\"", src_start + 5);
+					std::string pre_url = html.substr(src_start + 5, src_end - src_start - 5);
+					std::string pic_subject_id = subject_id;
+					if (pre_url[1] == 'i'&&pre_url[2] == 'm') {
+						//img/no_icon
+						pre_url = "//bgm.tv" + pre_url;
+						pic_subject_id = "no_icon";
+					}
+					else {
+						//将图片大小换成l类型
+						temp = pre_url.find("/s/");
+						pre_url[temp + 1] = 'm';
+					}
+					pic_url = "http:" + pre_url;
+					//#ifndef NDEBUG
+					//			{
+					//				bangumi::string debug_msg;
+					//				debug_msg << "图片下载地址 " << pic_url;
+					//				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-TAG-PIC-DOWNLOAD", debug_msg);
+					//			}
+					//#endif
+					//开始下载图片
+					//下载图片
+					auto result = PicDownload(http_client, pic_url, TAG_PIC_PATH, pic_subject_id, file_path, refresh);
+					//返回的线程保存到返回值中
+					if (result.first == DownloadStatus::MultiThread)
+					{
+						//将下载线程压入线程池中
+						ThreadVector.push_back(result.second);
+					}
+				}
+				else {
+					//直接使用404图片
+					auto result = PicDownload(http_client, "", TAG_PIC_PATH, subject_id, file_path, refresh);
+					//返回的线程保存到返回值中
+					//if (result.first == DownloadStatus::MultiThread)
+					//{
+					//	//将下载线程压入线程池中
+					//	ThreadVector.push_back(result.second);
+					//}
+				}
+
+				//原名(可能没有)
+				name = "";
+				size_t name_start = html.find("ass=\"grey\">", name_cn_end);
+				if (name_start < subject_start) {
+					//在此条目的范围内有效
+					size_t name_end = html.find("</small>", name_start + 11);
+					name = html.substr(name_start + 11, name_end - name_start - 11);
+				}
+
+				//info tips
+				size_t tips_start = html.find("tip\">", name_cn_end);
+				size_t tips_end = html.find("</p>", tips_start + 5);
+				tips = html.substr(tips_start + 5, tips_end - tips_start - 5);
+				//评分(可能没有)
+				rate = "";
+				size_t rate_start = html.find("fade\">", tips_end);
+				if (rate_start < subject_start) {
+					//在此条目的范围内有效
+					size_t rate_end = html.find("<", rate_start + 6);
+					rate = html.substr(rate_start + 6, rate_end - rate_start - 6);
+				}
+				//评分2(可能没有)
+				rate_num = "";
+				size_t rate2_start = html.find("tip_j\">", tips_end);
+				if (rate2_start < subject_start) {
+					//在此条目的范围内有效
+					size_t rate2_end = html.find("<", rate2_start + 7);
+					rate_num = html.substr(rate2_start + 7, rate2_end - rate2_start - 7);
+				}
+
+
+				//ret回复
+				ret << "[CQ:image,file=" << std::move(file_path) << "]"
+					>> "ID: " << subject_id
+					>> std::move(name_cn);
+				if (!name.empty()) {
+					ret << " <" << std::move(name) << ">";
+				}
+
+				if (!tips.empty()) {
+					//tips自带\n
+					ret << tips;
+				}
+				if (!rate.empty()) {
+					ret >> "评分: " << rate << " " << rate_num;
+				}
+				else if (!rate_num.empty()) {
+					ret >> rate_num;
+				}
+				ret << "\n";
+
+
+
+			}
+
+			//等待图片下载完成
+			for (auto &t : ThreadVector) {
+				if (t != nullptr&&t->joinable())
+					t->join();
+			}
+			//如果不为空
+			if (!ret.empty()) {
+				ret[ret.length() - 1] = ' ';
+			}
+
+			return ret;
 		}
-		//如果不为空
-		if (!ret.empty()) {
-			ret[ret.length() - 1] = ' ';
+		catch (std::exception&) {
+			return "访问失败...";
 		}
-		
-		return ret;
 	}
 
 	//解析Staff
 	inline bangumi::string ResolveStaff(const std::string &raw_html, size_t subject_id, bool refresh = false) {
 		//查找封面
 		//图片
-		size_t info_start = raw_html.find("\"bangumiInfo\"", 800);
-		if (info_start == std::string::npos) {
-			//一般是无法打开html 502
-			return "";
-		}
-		size_t infobox_end = raw_html.find("id=\"infobox\"", info_start);
-		std::string info_str = raw_html.substr(info_start + 13, infobox_end - info_start - 13);
+		try {
 
-		//
-		size_t pic_start = info_str.find("href=\"");
-		std::string file_path;
-		//PIC图片下载线程
-		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
-		if (pic_start != std::string::npos) {
-			//存在图片
-			size_t pic_end = info_str.find("\"", pic_start + 6);
-			std::string pic_url = "http:" + info_str.substr(pic_start + 6, pic_end - pic_start - 6);
-
-			//图片名字 (就是subject_id)
-			std::string pic_save_name = std::to_string(subject_id);
-
-			//下载图片
-			auto result = PicDownload(http_client, pic_url, SUBJECT_PIC_PATH, pic_save_name, file_path, refresh);
-
-			//返回的线程保存到返回值中
-			if (result.first == DownloadStatus::MultiThread)
-			{
-				//将下载线程压入线程池中
-				ThreadVector.push_back(result.second);
+			size_t info_start = raw_html.find("\"bangumiInfo\"", 800);
+			if (info_start == std::string::npos) {
+				//一般是无法打开html 502
+				return "";
 			}
-		}
-		else {
-			//使用缺省图片
-			//下载图片
-			auto result = PicDownload(http_client, "", SUBJECT_PIC_PATH, "", file_path, refresh);
-		}
-		
-		//图片OVER=====
+			size_t infobox_end = raw_html.find("id=\"infobox\"", info_start);
+			std::string info_str = raw_html.substr(info_start + 13, infobox_end - info_start - 13);
 
+			//
+			size_t pic_start = info_str.find("href=\"");
+			std::string file_path;
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+			if (pic_start != std::string::npos) {
+				//存在图片
+				size_t pic_end = info_str.find("\"", pic_start + 6);
+				std::string pic_url = "http:" + info_str.substr(pic_start + 6, pic_end - pic_start - 6);
 
-		//查找Staff的开头
-		size_t staff_start = raw_html.find("id=\"infobox\"", 800);
-		//可能有意外问题
-		if (staff_start == std::string::npos) {
-			//一般是无法打开html 502
-			return "";
-		}
-		size_t staff_end = raw_html.find("</ul>", staff_start);
-		std::string staff_str = raw_html.substr(staff_start + 13, staff_end - staff_start - 13);
-		//std::cout << staff_str << std::endl;
-		//处理时需要的参数
-		std::istringstream output(staff_str);
-		std::string line_str;
-		//判断是否在<>内,<>内的消息不需要
-		bool drop = false;
-		//返回的结果
-		bangumi::string result;
-		//首先插入封面
-		result<<"[CQ:image,file=" << file_path << "]\n";
-		//循环处理第一行
-		while (getline(output, line_str)) {
-			//先验
-			if (line_str.empty()){
-				continue;
-			}
-			//循环处理
-			for (auto&c : line_str) {
-				if (c == '<'){
-					drop = true;
-					continue;
-				}
-				if (c == '>') {
-					drop = false;
-					continue;
-				}
-				if (drop){
-					continue;
-				}
-				else {
-					result << c;
+				//图片名字 (就是subject_id)
+				std::string pic_save_name = std::to_string(subject_id);
+
+				//下载图片
+				auto result = PicDownload(http_client, pic_url, SUBJECT_PIC_PATH, pic_save_name, file_path, refresh);
+
+				//返回的线程保存到返回值中
+				if (result.first == DownloadStatus::MultiThread)
+				{
+					//将下载线程压入线程池中
+					ThreadVector.push_back(result.second);
 				}
 			}
-			//换行
-			result << '\n';
-		}
-		if (!result.empty()) {
-			//去除最后的换行
-			result[result.length() - 1] = ' ';
-		}
+			else {
+				//使用缺省图片
+				//下载图片
+				auto result = PicDownload(http_client, "", SUBJECT_PIC_PATH, "", file_path, refresh);
+			}
 
-		return result;
+			//图片OVER=====
+
+
+			//查找Staff的开头
+			size_t staff_start = raw_html.find("id=\"infobox\"", 800);
+			//可能有意外问题
+			if (staff_start == std::string::npos) {
+				//一般是无法打开html 502
+				return "";
+			}
+			size_t staff_end = raw_html.find("</ul>", staff_start);
+			std::string staff_str = raw_html.substr(staff_start + 13, staff_end - staff_start - 13);
+			//std::cout << staff_str << std::endl;
+			//处理时需要的参数
+			std::istringstream output(staff_str);
+			std::string line_str;
+			//判断是否在<>内,<>内的消息不需要
+			bool drop = false;
+			//返回的结果
+			bangumi::string result;
+			//首先插入封面
+			result << "[CQ:image,file=" << file_path << "]\n";
+			//循环处理第一行
+			while (getline(output, line_str)) {
+				//先验
+				if (line_str.empty()) {
+					continue;
+				}
+				//循环处理
+				for (auto&c : line_str) {
+					if (c == '<') {
+						drop = true;
+						continue;
+					}
+					if (c == '>') {
+						drop = false;
+						continue;
+					}
+					if (drop) {
+						continue;
+					}
+					else {
+						result << c;
+					}
+				}
+				//换行
+				result << '\n';
+			}
+			if (!result.empty()) {
+				//去除最后的换行
+				result[result.length() - 1] = ' ';
+			}
+
+			return result;
+
+		}
+		catch (const std::exception&)
+		{
+			return "访问失败...";
+		}
 	}
 
 	//解析RSS
@@ -2075,7 +2135,7 @@ namespace Resolve {
 						//重置
 						num_in_mssage = 1;
 					}
-					if (num == RSS_ALL_NUM + 1) {
+					if(num == RSS_ALL_NUM + 1) {
 						//上限后直接
 						break;
 					}
@@ -2107,7 +2167,7 @@ namespace Resolve {
 						}
 						//
 						if (!pic_url.empty()) {
-							if (pic_dl_urls.count(pic_url) == 0) {
+							if (pic_dl_urls.count(pic_url)==0) {
 								//不存在
 								pic_dl_urls.emplace(pic_url);
 								//如果图片存在的话，进行下载操作
@@ -2126,7 +2186,7 @@ namespace Resolve {
 									pic_file_path = url2path.at(pic_url);
 								}
 								catch (std::exception&) {}
-
+								
 							}
 						}
 					}
@@ -2151,7 +2211,7 @@ namespace Resolve {
 					std::string bt_url = iter2->second.find("enclosure")->second.get<std::string>("<xmlattr>.url");
 					//去除附加参数
 					size_t extra = bt_url.find_first_of('&');
-					if (extra != std::string::npos)
+					if(extra!=std::string::npos)
 						bt_url.erase(extra);
 					//std::cout << title << description << link << pubDate;
 					//std::cout << "\n================\n";
@@ -2159,7 +2219,7 @@ namespace Resolve {
 					//std::cout << "\n================\n";
 					//boost::this_thread::sleep(boost::posix_time::seconds(6));
 
-					ret[ret.size() - 1] << "----------------"
+					ret[ret.size()-1] << "----------------"
 						>> "[CQ:image,file=" << pic_file_path << ']'
 						>> "---编号[ " << num << " ]---"
 						>> title
@@ -2170,7 +2230,7 @@ namespace Resolve {
 						>> "-----"
 						>> "发布人: [ " << author << " ]"
 						>> "资源分类: [" << category << "]\n";
-
+						
 					++num_in_mssage;
 					++num;
 				}
@@ -2190,7 +2250,7 @@ namespace Resolve {
 				return ret;
 			}
 		}
-		break;
+			break;
 		case BgmCode::MOE:
 		{
 			try
@@ -2242,8 +2302,7 @@ namespace Resolve {
 					size_t pic_src_start;
 					if (pic_src != std::string::npos) {
 
-					}
-					else if (pic_src = description.find(".jpg\""), pic_src != std::string::npos) {
+					}else if (pic_src = description.find(".jpg\""), pic_src != std::string::npos){
 
 					}
 					else if (pic_src = description.find(".png\""), pic_src != std::string::npos) {
@@ -2322,7 +2381,7 @@ namespace Resolve {
 					ret[0] << "暂无资源...";
 					return ret;
 				}
-		}
+			}
 			catch (std::exception& e)
 			{
 				//不存在此节点
