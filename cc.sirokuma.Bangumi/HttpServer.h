@@ -47,9 +47,9 @@ std::string GetRedirectUrl(int64_t qq) {
 	std::string state = EncryptState(qq);
 
 	//std::string redirect_url = bgm.redirect_url;
-	std::string redirect_url = bgm.redirect_url + "?nu=" + unqq + "&state=" + state;
-	//进行URL编码,否则会导致回调地址无法携带参数->? &
-	redirect_url = url_encode(redirect_url);
+	std::string redirect_url = bgm.redirect_url + "%3Fnu=" + unqq + "&state=" + state;
+	//进行URL编码,否则会导致回调地址无法携带参数->? 
+	//redirect_url = url_encode(redirect_url);
 	return std::move(redirect_url);
 }
 
