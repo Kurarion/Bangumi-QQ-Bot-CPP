@@ -364,6 +364,8 @@ private:
 					bool registed = false;
 					//绑定的是否是同一个ID
 					bool same_bgm_id = true;
+					//id=0
+					bool first_reg = true;
 
 					auto auth = Resolve::Resolve_Auth(json);
 					//检查是否存在已注册的QQ用户
@@ -387,12 +389,17 @@ private:
 							if (std::to_string(auth.user_id) != std::string(pre_result[2])) {
 								same_bgm_id = false;
 							}
-							//已注册的QQ提示消息
-							msg << "原[" << pre_result[0] << "]号契约"
-								<< ": QQ: " << pre_result[1]
-								<< " x Bangumi-ID: " << pre_result[2];
-							//注意最后再free,free以后rows也会失效
-							//mysql_free_result(pre_result);
+
+							if (pre_result[2][0] != '0') {
+								//不是首次注册
+								first_reg = false;
+								//已注册的QQ提示消息
+								msg << "原[" << pre_result[0] << "]号契约"
+									<< ": QQ: " << pre_result[1]
+									<< " x Bangumi-ID: " << pre_result[2];
+								//注意最后再free,free以后rows也会失效
+								//mysql_free_result(pre_result);
+							}
 						}
 
 					}
@@ -473,7 +480,7 @@ private:
 #endif
 						//mysql_free_result(result);
 						//成功的QQ消息构造
-						if (registed) {
+						if (registed&&!first_reg) {
 							//再次注册
 							if (same_bgm_id) {
 								//相同ID的刷新行为
