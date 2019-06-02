@@ -167,7 +167,7 @@ namespace bangumi_bot_errors {
 				return "\n\n<未收藏>";
 				break;
 			case bangumi_bot_errors::access_token_invalid:
-				return "用户授权失效...";
+				return "\n\n用户授权失效...";
 				break;
 			case bangumi_bot_errors::search_failed:
 				return "未找到相关条目...";
@@ -182,7 +182,7 @@ namespace bangumi_bot_errors {
 				return "此条目被重定向或当前无法访问...";
 				break;
 			case bangumi_bot_errors::update_with_the_same_eps:
-				return "更新失败: 请确保与上次更新不同...";
+				return "更新失败: 请确保与上次更新不同或授权失效...";
 				break;
 			case bangumi_bot_errors::net_error:
 				return "访问失败...";
@@ -247,4 +247,3 @@ namespace boost {
 		};
 	}
 }
-//定义之后可以通过自定的错误代码来完成对Boost::system::error_code的创建并被识别
