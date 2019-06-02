@@ -301,8 +301,8 @@ namespace Resolve {
 	size_t
 		Resolve_Auth_Status(std::string json) {
 		//{
-		//	"access_token": "f1b237ae52xxxxxxxxxxxxxxxf9ac6de6b",
-		//		"client_id" : "bgm10115xxxxxxxxxx9805b",
+		//	"access_token": "f1b237aexxxxxxxxxxx42f9ac6de6b",
+		//		"client_id" : "bgm101xxxxxxxxxxxxxx05b",
 		//		"user_id" : 423387,
 		//		"expires" : 1556354941,
 		//		"scope" : null
@@ -471,7 +471,7 @@ namespace Resolve {
 		//		}
 		//}
 		//{
-		//	"request": "/collection/21811?access_token=088e77fb19792exxxxxxxxxxxxxxxxxxxx45d",
+		//	"request": "/collection/21811?access_token=088e7xxxxxxxxxxxxxx6c33a45d",
 		//		"code" : 400,
 		//		"error" : "40001 Error: Nothing found with that ID"
 		//}
@@ -1242,6 +1242,8 @@ namespace Resolve {
 				std::string pic_save_name;
 				//PICDownload的文件保存位置
 				std::string file_path;
+				//url
+				size_t character_url_ex;
 				//name的结尾位置
 				temp = html.find("\"", single_character_start);
 				name = html.substr(single_character_start, temp - single_character_start);
@@ -1255,6 +1257,13 @@ namespace Resolve {
 				pic_name_end = pic_url.find_last_of('.');
 				//图片名字
 				pic_save_name = pic_url.substr(temp, pic_name_end - temp);
+				//Character的ID
+				try {
+					character_url_ex = std::stoul(pic_save_name);
+				}
+				catch (boost::system::system_error&) {
+					//忽略
+				}
 				//将图片大小换成m类型
 				temp = pic_url.find("/s/");
 				pic_url[temp + 1] = 'm';
@@ -1301,6 +1310,7 @@ namespace Resolve {
 					>> std::move(name);
 				if (!cv.empty())
 					ret >> "CV:  " << std::move(cv);
+				ret >> "角色主页: https://bgm.tv/character/" << character_url_ex;
 				ret << "\n";
 				//}
 				//else {
@@ -1319,7 +1329,10 @@ namespace Resolve {
 				if (t != nullptr&&t->joinable())
 					t->join();
 			}
-
+			//如果不为空
+			if (!ret.empty()) {
+				ret[ret.length() - 1] = ' ';
+			}
 			return{ std::move(ret),"" };
 		}
 		catch (const std::exception&)
@@ -2431,5 +2444,140 @@ namespace Resolve {
 		//delete input_facet;
 		//返回
 		return ret;
+	}
+
+	//解析关联条目
+	inline bangumi::string ResolveAttach(const std::string &raw_html, size_t subject_id, bool refresh = false) {
+		//查找封面
+		//图片
+		try {
+
+			size_t attach_start = raw_html.find("关联条目", 800);
+			if (attach_start == std::string::npos) {
+				//一般是无法打开html 502
+				return "";
+			}
+			size_t attach_end = raw_html.find("</li></ul>", attach_start);
+			std::string attach_str = raw_html.substr(attach_start + 9, attach_end - attach_start - 9);
+			//返回的结果
+			bangumi::string result;
+			result << "[条目: " << subject_id << "]";
+			result >> "<-关联条目->:\n";
+			//开始循环查找
+			//起始的位置
+			size_t one_start = attach_str.find("sub\">");
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+
+			while (one_start != std::string::npos) {
+				//直接加上字符数
+				one_start += 5;
+				//关联的名字
+				std::string attach_name;
+				//填充关联的名字
+				while (attach_str[one_start]!='<') {
+					attach_name += attach_str[one_start];
+					++one_start;
+				}
+				//查找图片的url
+				//
+				size_t pic_start = attach_str.find("url('", one_start);
+				//图片路径
+				std::string file_path;
+				//此subject_id
+				size_t this_subject_id;
+				//temp
+				size_t temp;
+				if (pic_start != std::string::npos) {
+					//图片名字 (就是subject_id)
+					std::string pic_save_name;
+					//存在图片
+					size_t pic_end = attach_str.find("'", pic_start + 5);
+					std::string pre_url = attach_str.substr(pic_start + 5, pic_end - pic_start - 5);
+					if (pre_url[1] == 'i'&&pre_url[2] == 'm') {
+						//img/no_icon
+						pre_url = "//bgm.tv" + pre_url;
+						//图片名字
+						pic_save_name = "no_icon";
+					}
+					else {
+						//将图片大小换成l类型
+						temp = pre_url.find("/m/");
+						pre_url[temp + 1] = 'l';
+						//获取图片中的名字
+						temp = pre_url.find_last_of('/');
+						this_subject_id = std::stoul(pre_url.substr(temp + 1));
+						//图片名字 (就是subject_id)
+						pic_save_name = std::to_string(this_subject_id);
+					}
+					std::string pic_url = "http:" + pre_url;
+
+
+					//下载图片
+					auto result = PicDownload(http_client, pic_url, SUBJECT_PIC_PATH, pic_save_name, file_path, refresh);
+
+					//返回的线程保存到返回值中
+					if (result.first == DownloadStatus::MultiThread)
+					{
+						//将下载线程压入线程池中
+						ThreadVector.push_back(result.second);
+					}
+				}
+				else {
+					//使用缺省图片
+					//下载图片
+					auto result = PicDownload(http_client, "", SUBJECT_PIC_PATH, "", file_path, refresh);
+				}
+				//图片OVER=====
+				//此关联条目的标题
+				size_t title_start;
+				title_start = attach_str.find("title\">", one_start);
+				//关联的标题
+				std::string attach_title;
+				if (title_start!=std::string::npos)
+				{
+					//如果存在
+					title_start += 7;
+					//填充关联的标题
+					while (attach_str[title_start] != '<') {
+						attach_title += attach_str[title_start];
+						++title_start;
+					}
+				}
+				//结果输出
+				//首先判断同一类
+				if (attach_name.empty())
+				{
+					//result >> '[' << attach_name << ']';
+					result >> "[CQ:image,file=" << file_path << "]";
+					result >> attach_title;
+					result >> "条目主页: https://bgm.tv/subject/" << this_subject_id;
+					result >> "--------";
+				}
+				else
+				{
+					result >> '[' << attach_name << ']';
+					result >> "[CQ:image,file=" << file_path << "]";
+					result >> attach_title;
+					result >> "条目主页: https://bgm.tv/subject/" << this_subject_id;
+					result >> "--------";
+				}
+				//继续查找下一个关联条目
+				one_start = attach_str.find("sub\">", one_start);
+			}
+
+			//等待图片下载完成
+			for (auto &t : ThreadVector) {
+				if (t != nullptr&&t->joinable())
+					t->join();
+			}
+
+			return result;
+
+		}
+		catch (const std::exception&)
+		{
+			return "访问失败...";
+		}
 	}
 }

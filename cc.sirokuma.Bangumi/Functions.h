@@ -589,6 +589,9 @@ param.find_first_of(c1)!=npos
 			if (HAVE('o')) {
 				ret.add_staff = true;
 			}
+			if (HAVE('a')) {
+				ret.add_attach = true;
+			}
 			break;
 		case BgmCode::Search:
 			break;
@@ -776,6 +779,9 @@ param.find(s1)!=npos||param.find(s2)!=npos
 			}
 			if (HAVE('o')) {
 				ret.add_staff = true;
+			}
+			if (HAVE('a')) {
+				ret.add_attach = true;
 			}
 			break;
 		case BgmCode::Search:
@@ -1809,7 +1815,6 @@ param.find(s1)!=npos||param.find(s2)!=npos
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
-
 	}
 	//Bot: Help信息
 	inline void BOT_Help(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
@@ -2294,7 +2299,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 				continue;
 			}
 			
-		}
+	}
 		//注意参数名
 #define ComplexParamRet(subject_id,complex_param,type,refresh)\
 std::string html = bangumi::GetSubjectHtml(subject_id);\
@@ -2302,6 +2307,7 @@ bangumi::string res;\
 bangumi::string res1;\
 bangumi::string res2;\
 bangumi::string res3;\
+bangumi::string res4;\
 if(complex_param.add_tag||complex_param.add_comment){\
 	res<<"[条目: "<<subject_id<<"]\n";\
 	if (complex_param.add_tag)\
@@ -2335,6 +2341,8 @@ if (complex_param.add_air_status){\
 }\
 if (complex_param.add_staff)\
 	res2<< Resolve::ResolveStaff(html,subject_id,refresh);\
+if (complex_param.add_attach)\
+	res4<< Resolve::ResolveAttach(html,subject_id,refresh);\
 if (!res.empty())\
 	DEFAULT_SEND(type, res);\
 if (!res1.empty())\
@@ -2342,7 +2350,9 @@ if (!res1.empty())\
 if (!res2.empty())\
 	DEFAULT_SEND(type, res2);\
 if (!res3.empty())\
-	DEFAULT_SEND(type, res3);
+	DEFAULT_SEND(type, res3);\
+if (!res4.empty())\
+	DEFAULT_SEND(type, res4);
 
 
 		//对每一个识别的ID进行main func
@@ -2365,7 +2375,7 @@ if (!res3.empty())\
 			//首先检查是否是single
 			if (complex_param.single) {
 				//======Complex_param=======
-				if (complex_param.add_air_status || complex_param.add_tag || complex_param.add_role || complex_param.add_comment || complex_param.add_staff) {
+				if (complex_param.NeedAdd()) {
 					ComplexParamRet(subject_id, complex_param, param.type, param.extra.refresh);
 #ifndef NDEBUG
 					{
@@ -2411,7 +2421,7 @@ if (!res3.empty())\
 #endif
 					DEFAULT_SEND(param.type, msg);
 					//======Complex_param=======
-					if (complex_param.add_air_status || complex_param.add_tag || complex_param.add_role || complex_param.add_comment || complex_param.add_staff) {
+					if (complex_param.NeedAdd()) {
 						ComplexParamRet(subject_id, complex_param, param.type, param.extra.refresh);
 
 					}
@@ -2491,7 +2501,7 @@ if (!res3.empty())\
 #endif
 					DEFAULT_SEND(param.type, msg);
 					//======Complex_param=======
-					if (complex_param.add_air_status || complex_param.add_tag || complex_param.add_role || complex_param.add_comment || complex_param.add_staff) {
+					if (complex_param.NeedAdd()) {
 						ComplexParamRet(subject_id, complex_param, param.type, param.extra.refresh);
 					}
 #ifndef NDEBUG
@@ -2590,7 +2600,7 @@ if (!res3.empty())\
 					//发送回复
 					DEFAULT_SEND(param.type, msg);
 					//======Complex_param=======
-					if (complex_param.add_air_status || complex_param.add_tag || complex_param.add_role || complex_param.add_comment || complex_param.add_staff) {
+					if (complex_param.NeedAdd()) {
 						ComplexParamRet(param.cur_id, complex_param, param.type, param.extra.refresh);
 
 					}

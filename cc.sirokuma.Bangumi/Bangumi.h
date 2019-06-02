@@ -882,8 +882,12 @@ if(var.compare(var2)!=0)\
 		bool add_comment = false;
 		bool add_air_status = false;
 		bool add_staff = false;
+		bool add_attach = false;
 		//就仅仅附加了角色时为真
 		//bool only_role = false;
+		bool NeedAdd() const{
+			return add_tag || add_role || add_comment || add_air_status || add_staff || add_attach;
+		}
 
 		//Search用
 		int search_type = 2;
