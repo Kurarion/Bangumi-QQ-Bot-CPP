@@ -94,8 +94,119 @@
 <li><strong>注意:</strong> 因为参数分割符包括<code>空格</code>，因此请务必注意一个参数中间不能出现空格。</li>
 <li><strong>注意:</strong> 所有的指令的识别是从<code>前缀(也就是分号冒号那些)</code>开始找到的第一个与已有的指令匹配的字符决定，也就是说你的参数与指令没有绝对的位置关系，但你的参数中可能包含指令的字符，这时你就需要先将你需要的指令的关键字尽量放在<code>前缀</code>后面。</li>
 <li><strong>注意:</strong> 一条指令只会将第一个出现的指令作为此指令的功能，也就是说一旦指令已经被识别出来，这条指令之后的参数中出现的指令关键字都会作为参数处理而不是指令。</li>
-<li>当前机器人使用的指令识别符有<code>user/用户(用户查询)</code>，<code>acg/条目/查询(条目查询)</code>，<code>?/？/搜索(条目搜索)</code>，<code>reg/绑定(用户绑定)</code>，<code>co/收藏(条目收藏)</code>，<code>up/++/更新(条目更新)</code>，<code>tag/标签（标签搜索）</code>和<code>rank/统计（统计使用情况）</code>，另外指令不分大小写，也就是说任意大小写都可以被识别。</li>
+<li>当前机器人使用的指令识别符有<code>user/用户(用户查询)</code>，<code>acg/条目/查询(条目查询)</code>，<code>?/？/搜索(条目搜索)</code>，<code>reg/绑定(用户绑定)</code>，<code>co/收藏(条目收藏)</code>，<code>up/++/更新(条目更新)</code>，<code>tag/标签（标签搜索）</code>
+和<code>rank/统计（统计使用情况）</code>，另外指令不分大小写，也就是说任意大小写都可以被识别。</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th>指令关键字</th>
+<th>指令含意</th>
+<th>参数[括号内可部分或全部缺省]</th>
+<th>参数举例</th>
+<th>高级参数举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"user" "用户"</td>
+<td>进行用户信息查询</td>
+<td>&lt;用户ID&gt;</td>
+<td>123</td>
+<td>无</td>
+</tr>
+<tr>
+<td>"&lt;空&gt;" "acg" "条目" "查询"</td>
+<td>进行条目信息查询</td>
+<td>&lt;条目ID&gt;(/&lt;条目额外信息标识符&gt;)</td>
+<td>22023</td>
+<td>22023/t</td>
+</tr>
+<tr>
+<td>"?" "？" "搜索"</td>
+<td>进行条目搜索</td>
+<td>&lt;搜索关键字&gt;(/&lt;条目类型&gt;/&lt;条目个数&gt;/&lt;起始条目下标&gt;)</td>
+<td>英雄</td>
+<td>英雄/x/8/2</td>
+</tr>
+<tr>
+<td>"reg" "绑定"</td>
+<td>将QQ号与Bangumi账号绑定</td>
+<td>无</td>
+<td>无</td>
+<td>无</td>
+</tr>
+<tr>
+<td>"co" "收藏"</td>
+<td>进行条目的收藏</td>
+<td>&lt;条目ID&gt;(/&lt;收藏类型&gt;/&lt;评分&gt;/&lt;吐槽&gt;)</td>
+<td>123456</td>
+<td>123456/fin/8/制作精良</td>
+</tr>
+<tr>
+<td>"up" "++" "更新"</td>
+<td>进行条目的更新</td>
+<td>&lt;条目ID&gt;(/&lt;要更新的进度&gt;)</td>
+<td>21435</td>
+<td>21435/air</td>
+</tr>
+<tr>
+<td>"tag" "标签"</td>
+<td>此指定标签的条目搜索</td>
+<td>(&lt;标签关键字&gt;)(/&lt;放送季度&gt;/&lt;页码&gt;)</td>
+<td>原创动画作品</td>
+<td>原创动画作品/2019-01/2</td>
+</tr>
+<tr>
+<td>"rank" "统计"</td>
+<td>统计指令使用情况</td>
+<td>&lt;空&gt; 或 "me"</td>
+<td>me</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>&lt;条目ID&gt;</th>
+<th>含意</th>
+<th>参数[括号内可部分或全部缺省]</th>
+<th>参数举例</th>
+<th>高级参数举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt;数字&gt;</td>
+<td>原生的条目ID</td>
+<td>无</td>
+<td>123</td>
+<td>无</td>
+</tr>
+<tr>
+<td>"#"</td>
+<td>从数据库中查找指定关键字的条目ID</td>
+<td>&lt;搜索关键字&gt;(-&lt;条目下标&gt;)</td>
+<td>#一拳超人</td>
+<td>#一拳超人-2</td>
+</tr>
+<tr>
+<td>"%"</td>
+<td>从Bangumi中查找指定关键字的条目ID</td>
+<td>&lt;搜索关键字&gt;(*&lt;条目类型&gt;*&lt;条目下标&gt;)</td>
+<td>%一拳超人</td>
+<td>%一拳超人*a*2</td>
+</tr>
+<tr>
+<td>&lt;空&gt;</td>
+<td>返回上次查询，更新或收藏的条目ID</td>
+<td>无</td>
+<td>&lt;空&gt;</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
 <h1 id="3">3. 指令集</h1>
 <h2 id="31">3.1 用户查询</h2>
 <ul>
@@ -728,5 +839,5 @@
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2019-06-02 15:21:27
+Build Date UTC : 2019-06-05 03:53:04
 -->
