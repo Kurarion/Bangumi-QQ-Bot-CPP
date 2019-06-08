@@ -410,6 +410,35 @@ namespace bangumi {
 		}
 
 	}
+	std::string GetTimeLine() {
+		std::string request = "GET " "/timeline"" HTTP/1.1\r\n"
+			"Host: " "bgm.tv" "\r\n" "\r\n";
+		try {
+			//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
+			std::string html = code_converter.Conv(http_client.SyncBGMHTTPRequest(request));
+
+			return std::move(html);
+		}
+		catch (boost::system::system_error&) {
+			return "";
+		}
+
+	}
+	std::string GetUserTimeLine(std::string uid) {
+		std::string request = "GET " "/feed/user/"+ uid +"/timeline HTTP/1.1\r\n"
+			"Host: " "bgm.tv" "\r\n" "\r\n";
+		try {
+			//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
+			std::string html = code_converter.Conv(http_client.SyncBGMHTTPRequest(request));
+
+			return std::move(html);
+		}
+		catch (boost::system::system_error&) {
+			return "";
+		}
+
+	}
+
 	//同步Https下载一个HTML页面
 	std::string GetHttpsHtml(std::string host,std::string uri) {
 
@@ -2089,7 +2118,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 		DEFAULT_SEND(param.type, msg);
 	}
 	
-		//API: 返回Bangumi用户信息
+	//API: 返回Bangumi用户信息
 	inline void BGM_API_User(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
 
 		//bangumi::string ret("<User>");
@@ -2107,6 +2136,16 @@ param.find(s1)!=npos||param.find(s2)!=npos
 		for (const auto& name : parameters_str) {
 			//Main Func
 			//===============================
+			std::string bangumi_name;
+			if (name=="#")
+			{
+				auto verify_result = VerifyToken(param); 
+				size_t &user_id = verify_result.first; 
+				bangumi_name = std::to_string(user_id);
+			}
+			else {
+				bangumi_name = name;
+			}
 			//尝试从缓存中查找
 			//如果不需要强制refresh
 			if (!param.extra.refresh)
@@ -2157,9 +2196,9 @@ param.find(s1)!=npos||param.find(s2)!=npos
 			std::shared_ptr<HTTPRequest> request_one =
 				http_client.create_request_fixed(http_client.GetID());
 
-			request_one->set_ret_param(bangumi::BGMRetParam{ param,0,name });
+			request_one->set_ret_param(bangumi::BGMRetParam{ param,0,bangumi_name });
 			request_one->set_host("api.bgm.tv");
-			request_one->set_uri("/user/" + name);
+			request_one->set_uri("/user/" + bangumi_name);
 			//只有搜索条目时需要Cookie: chii_searchDateLine
 			request_one->set_request(request_message(request_one, HTTP_WAY::GET,/* "Cookie: chii_searchDateLine = 0;\r\n"*/""));
 			//设置回调函数
@@ -2299,7 +2338,7 @@ param.find(s1)!=npos||param.find(s2)!=npos
 				continue;
 			}
 			
-	}
+		}
 		//注意参数名
 #define ComplexParamRet(subject_id,complex_param,type,refresh)\
 std::string html = bangumi::GetSubjectHtml(subject_id);\
@@ -2320,23 +2359,37 @@ if (complex_param.add_role){\
 	auto roles = Resolve::ResolveSubjectCharacter(html,refresh);\
 	if(!roles.first.empty())\
 		res1 << roles.first; \
-	else\
-		res1 >>"未收录角色...";\
+	/*else*/\
+	/*	res1 >>"未收录角色...";*/\
 	/*res2 << roles.second;*/ \
 } \
 if (complex_param.add_air_status){\
-	auto& resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, refresh);\
-	res3<< resolved_subject.Get();\
 	/*关联用户信息 */\
 	auto verify_result = VerifyToken(param);\
 	size_t &user_id = verify_result.first;\
 	std::string &access_token = verify_result.second.first;\
 	std::string &refresh_token = verify_result.second.second;\
 	if (!access_token.empty()) {\
+		/*解析条目状态*/\
+		auto& resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, refresh);\
 		/*如果有此注册用户*/\
+		auto& progress_struct =  GetUserSubjectProgress(subject_id, resolved_subject.GetEpsCount(), user_id,\
+			param.qq, access_token, refresh_token, refresh);\
+		/*取得进度的str*/\
+		auto& user_progress = progress_struct.second.progress.progress;\
+		int curr_eps = 0;\
+		/*转换为数字类型*/\
+		try {\
+			curr_eps = std::stoi(user_progress);\
+		}\
+		catch(std::exception&) {}\
+		resolved_subject.SetCurrentEps(curr_eps);\
+		res3 << resolved_subject.Get();\
 		/*加上进度信息*/\
-		res3 << GetUserSubjectProgress(subject_id, resolved_subject.GetEpsCount(), user_id,\
-			param.qq, access_token, refresh_token, refresh).first;\
+		res3 << progress_struct.first;\
+	}else{\
+		auto& resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, refresh);\
+		res3 << resolved_subject.Get();\
 	}\
 }\
 if (complex_param.add_staff)\
@@ -4365,6 +4418,63 @@ if (!res4.empty())\
 
 
 		
+	}
+
+	//API: 返回时光机信息
+	inline void BGM_TML(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
+
+		//bangumi::string ret("<User>");
+		//ret >> "ID:\n";
+		//for (const auto &i : parameters_id)
+		//	ret << i << " ";
+		//ret >> "STR:\n";
+		//std::string name;
+		//for (const auto &i : parameters_str)
+		//	ret << i << " ";
+
+		//DEFAULT_SEND(param.type, ret);
+		if (parameters_str.empty())
+		{
+			try {
+				//说明是全局的时光机
+				std::string html = bangumi::GetTimeLine();
+				bangumi::string time_str = Resolve::ResolveTimeLine(html);
+				//发送回复
+				DEFAULT_SEND(param.type, time_str);
+			}
+			catch (boost::system::system_error&) {
+				//发送回复
+				DEFAULT_SEND(param.type, "发生了点问题...");
+			}
+			//直接返回
+			return;
+		}
+		//对每一个识别的ID进行main func
+		for (const auto& name : parameters_str) {
+			//====
+			std::string bangumi_name;
+			if (name == "#")
+			{
+				auto verify_result = VerifyToken(param);
+				size_t &user_id = verify_result.first;
+				bangumi_name = std::to_string(user_id);
+			}
+			else {
+				bangumi_name = name;
+			}
+			//=====
+			try {
+				std::string html = bangumi::GetUserTimeLine(bangumi_name);
+				bangumi::string tml = Resolve::ResolveTimeLineRSS(html, bangumi_name);
+				//发送回复
+				DEFAULT_SEND(param.type, tml);
+			}
+			catch (boost::system::system_error&) {
+				//发送回复
+				DEFAULT_SEND(param.type, "发生了点问题...");
+			}
+		}
+
 	}
 }
 #endif

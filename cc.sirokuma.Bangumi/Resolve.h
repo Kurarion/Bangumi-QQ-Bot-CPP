@@ -4,6 +4,7 @@
 #include "Init.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include <iostream>
+#include <bitset>
 
 
 
@@ -301,8 +302,8 @@ namespace Resolve {
 	size_t
 		Resolve_Auth_Status(std::string json) {
 		//{
-		//	"access_token": "f1b237aexxxxxxxxxxx42f9ac6de6b",
-		//		"client_id" : "bgm101xxxxxxxxxxxxxx05b",
+		//	"access_token": "f1b237xxxxxxxxxxxxxxxxxx2f9ac6de6b",
+		//		"client_id" : "bgm101xxxxxxxxxxd09805b",
 		//		"user_id" : 423387,
 		//		"expires" : 1556354941,
 		//		"scope" : null
@@ -471,7 +472,7 @@ namespace Resolve {
 		//		}
 		//}
 		//{
-		//	"request": "/collection/21811?access_token=088e7xxxxxxxxxxxxxx6c33a45d",
+		//	"request": "/collection/21811?access_token=088e77fb1xxxxxxxxxxxxxxxxxxxx06c33a45d",
 		//		"code" : 400,
 		//		"error" : "40001 Error: Nothing found with that ID"
 		//}
@@ -1207,7 +1208,7 @@ namespace Resolve {
 			size_t character_start = html.find("class=\"subject_section clearit\">", 1500);
 			//判断是否存在
 			if (character_start == std::string::npos) {
-				return{ "","" };
+				return{ "未收录角色...","" };
 			}
 			//因为只是最后检测,为了防止出界,先缩小最后的范围
 			size_t character_end = html.find("class=\"more\">", character_start) - 11;
@@ -1959,7 +1960,7 @@ namespace Resolve {
 			size_t info_start = raw_html.find("\"bangumiInfo\"", 800);
 			if (info_start == std::string::npos) {
 				//一般是无法打开html 502
-				return "";
+				return "未收录Staff...";
 			}
 			size_t infobox_end = raw_html.find("id=\"infobox\"", info_start);
 			std::string info_str = raw_html.substr(info_start + 13, infobox_end - info_start - 13);
@@ -2455,7 +2456,7 @@ namespace Resolve {
 			size_t attach_start = raw_html.find("关联条目", 800);
 			if (attach_start == std::string::npos) {
 				//一般是无法打开html 502
-				return "";
+				return "未收录关联条目...";
 			}
 			size_t attach_end = raw_html.find("</li></ul>", attach_start);
 			std::string attach_str = raw_html.substr(attach_start + 9, attach_end - attach_start - 9);
@@ -2580,4 +2581,332 @@ namespace Resolve {
 			return "访问失败...";
 		}
 	}
+
+	//解析时间线
+	inline bangumi::string ResolveTimeLine(const std::string &raw_html, bool refresh = false) {
+		try {
+
+			size_t tml_start = raw_html.find("\"timeline\">", 800);
+			if (tml_start == std::string::npos) {
+				//一般是无法打开html 502
+				return "访问失败...";
+			}
+			size_t tml_end = raw_html.find("tmlPager", tml_start);
+			std::string tml_str = raw_html.substr(tml_start + 10, tml_end - tml_start - 19);
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+			//返回的结果
+			bangumi::string result;
+			bangumi::string tml;
+			bangumi::string temp_url;
+			bangumi::string temp_file_path;
+			bangumi::string temp_pic_name;
+			//是否写入
+			bool write = false;
+			bool h_after_line = false;
+			//开始循环查找
+			for (int c = 0; c < tml_str.length(); ++c) {
+				//如果是一个标签的开始
+				if (tml_str[c] == '<') {
+					//首先之后不进行写入,同时也全部0
+					write = false;
+					//预读一位
+					switch (tml_str[++c])
+					{
+					case 's':
+					{
+						//特殊
+						while (++c) {
+							if (tml_str[c + 1] == '>')
+								break;
+							if (tml_str[c + 1] != '(') {
+								//进行评分与吐槽的判断
+								if (tml_str[c + 1] == 'a'&&tml_str[c + 2] == 'r'&&tml_str[c + 3] == 's') {
+									c += 3;
+									bangumi::string star;
+									while (tml_str[++c] != ' ') {
+										star << tml_str[c];
+									}
+									tml << "评分: " <<std::move(star);
+									break;
+								}
+								continue;
+							}
+							//进行图片的判断	
+							else if (tml_str[c + 2] == '\'') {
+								//说明到了\\lain.xxx
+								temp_url << "http:";
+								c += 2;
+								while (tml_str[++c]!='\'') {
+									temp_url << tml_str[c];
+								}
+#ifndef NDEBUG
+								{
+									bangumi::string debug_msg;
+									debug_msg << "temp_url: "<<temp_url;
+									CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Timeline", debug_msg);
+								}
+#endif
+								//进行图片的下载
+								//将图片大小换成l类型
+								size_t	temp = temp_url.find("/m/");
+								temp_url[temp + 1] = 'l';
+								//获取图片中的名字
+								temp = temp_url.find_last_of('/');
+								size_t temp2 = temp_url.find_last_of('.');
+								temp_pic_name = temp_url.substr(temp + 1, temp2 - temp - 1);
+
+								//
+								//下载图片
+								auto result = PicDownload(http_client, temp_url, USER_PIC_PATH, temp_pic_name, temp_file_path, refresh);
+
+								//返回的线程保存到返回值中
+								if (result.first == DownloadStatus::MultiThread)
+								{
+									//将下载线程压入线程池中
+									ThreadVector.push_back(result.second);
+								}
+
+								//保存图片消息
+								if (h_after_line) {
+									tml << "\n[CQ:image,file=" << temp_file_path << "]\n";
+									h_after_line = false;
+								}
+								else
+									tml << "[CQ:image,file=" << temp_file_path << "]\n";
+							}
+						}
+					}
+					break;
+					case 'd':
+					{
+						//换行
+						//简单判断一下图片问题 i
+						if(tml_str[c+11]!='i')
+							tml>> ">>";
+					}
+					break;
+					case 'h':
+					{
+						tml << "● ";
+						h_after_line = true;
+					}
+					break;
+					case 'p':
+					{
+						//时间
+						//简单判断一下图片问题 i
+						tml >> "@ ";
+					}
+					break;
+					case '/':
+					{
+						//判断是否结束一个记录
+						if (tml_str[c + 1] == 'l') {
+							//此条时间线保存
+							result << tml;
+							result >> "-------\n";
+							//清空时间线
+							tml = "";
+							temp_url = "";
+							temp_file_path = "";
+						}
+					}
+					break;
+					default:
+						break;
+					}
+					//继续下一个
+					continue;
+				}
+				//如果是一个标签的结束
+				if (tml_str[c] == '>') {
+					//置写入为真
+					write = true;
+					//继续下一个
+					continue;
+				}
+				//判断是否需要写入
+				if (write) {
+					if (tml_str[c]!='\n')
+					{
+						if (tml_str[c] == '/'&&tml_str[c + 1] == '/')
+						{
+							c += 1;
+							continue;
+						}
+						tml << tml_str[c];
+					}
+					
+				}
+			}
+			//等待图片下载完成
+			for (auto &t : ThreadVector) {
+				if (t != nullptr&&t->joinable())
+					t->join();
+			}
+			//去除换行
+			if (!result.empty()) {
+				result[result.length() - 1] = ' ';
+			}
+			return result;
+
+		}
+		catch (const std::exception&)
+		{
+			return "访问失败...";
+		}
+	}
+
+	//解析具体用户时间线RSS
+	inline bangumi::string ResolveTimeLineRSS(std::string &xml, std::string user_id, bool refresh = false) {
+		//返回的结果
+		//bangumi::string ret;
+		bangumi::string ret;
+
+		//窄字符
+		boost::property_tree::ptree pt;
+		std::istringstream input(xml);
+		try {
+			boost::property_tree::read_xml(input, pt);
+		}
+		catch (std::exception&e) {
+			ret << "访问失败...";
+			return ret;
+		}
+		//用户头像
+		std::string & json = GetHtml("/user/" + user_id, bgm.bangumi_api_url);
+		//宽解析树
+		boost::property_tree::ptree json_pt;
+		//因为解析需要一个流输入,因此使用stringstream,也支持文件流读取
+		std::istringstream json_input(json);
+		//解析json
+		boost::property_tree::read_json(json_input, json_pt);
+		//
+		size_t id = json_pt.get<size_t>("id", 0);
+		std::string url = json_pt.get<std::string>("avatar.large", "");
+		std::string pic_name = std::to_string(id);
+
+		//PIC图片下载线程
+		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+		//
+		std::string pic_file_path;
+		//下载图片
+		if (!url.empty()) {
+			//下载图片
+			auto result = PicDownload(http_client, url, USER_PIC_PATH, pic_name, pic_file_path, refresh);
+
+			//返回的线程保存到返回值中
+			if (result.first == DownloadStatus::MultiThread)
+			{
+				//将下载线程压入线程池中
+				ThreadVector.push_back(result.second);
+			}
+
+			//保存图片消息
+			ret << "[CQ:image,file=" << pic_file_path << "]";
+
+		}
+		//日期的处理
+		//std::string strDateTime = "Fri, 17 May 2019 00:30:27 GMT";
+		//"Fri, 17 May 2019 09:40:26 +0800"
+		std::string date_format;
+		date_format = "%a, %d %b %Y %H:%M:%S +0000";
+		//所有下载图片的URL
+
+		//开始解析
+		try
+		{
+			//直接赋值channel节点
+			pt = pt.get_child("rss.channel");
+			//标题
+			std::string all_title = pt.get<std::string>("title").data();
+			if (all_title[all_title.length()-1])
+			{
+				all_title[all_title.length() - 1] = ' ';
+			}
+			ret << all_title;
+			//主页
+			std::string user_url = pt.get<std::string>("link").data();
+			//是否有时间线
+			bool have_time_line = false;
+			//遍历item
+			for (ptree::assoc_iterator iter2 = pt.find("item"); iter2 != pt.not_found(); ++iter2)
+			{
+				if (iter2->first != "item") {
+					//如果此节点并非一个item节点
+					break;
+				}
+				if (!have_time_line)
+				{
+					have_time_line = true;
+				}
+				//标题
+				std::string title = iter2->second.get<std::string>("title").data();
+				//描述
+				//std::string description = iter2->second.get<std::string>("description").data();
+				//网址
+				//std::string link = iter2->second.get<std::string>("link").data();
+				//发布日期
+				std::string pubDate = iter2->second.get<std::string>("pubDate").data();
+				//创建一个DATE类
+				//std::string strDateTime = "Fri, 17 May 2019 00:30:27 +0000";
+				boost::posix_time::ptime pub_time;
+				std::stringstream ss(pubDate);
+				boost::posix_time::time_input_facet* input_facet = new boost::posix_time::time_input_facet(date_format);
+				ss.imbue(std::locale(ss.getloc(), input_facet));
+				ss >> pub_time;
+				pub_time += boost::posix_time::hours(8);
+				std::string pubDate_ = boost::posix_time::to_iso_extended_string(pub_time);
+				pubDate_[pubDate_.find_first_of('T')] = ' ';
+				////发布人
+				//std::string author = iter2->second.get<std::string>("author").data();
+				////发布类别
+				//std::string category = iter2->second.get<std::string>("category").data();
+				////BT地址
+				//std::string bt_url = iter2->second.find("enclosure")->second.get<std::string>("<xmlattr>.url");
+				////去除附加参数
+				//size_t extra = bt_url.find_first_of('&');
+				//if (extra != std::string::npos)
+				//	bt_url.erase(extra);
+				//std::cout << title << description << link << pubDate;
+				//std::cout << "\n================\n";
+				//std::cout << bt_url;
+				//std::cout << "\n================\n";
+				//boost::this_thread::sleep(boost::posix_time::seconds(6));
+
+				ret >> "-------"
+					>> title
+					>> "@ " << pubDate_;
+					
+
+			}
+			if (!have_time_line) {
+				//如果没有正确处理一个
+				//抛出一个异常
+				ret << "暂无时间线...";
+				return ret;
+			}
+			ret >> "-------\n用户主页: " << user_url;
+		}
+		catch (std::exception& e)
+		{
+			//不存在此节点
+			//自动忽略
+			//std::cout << e.what();
+			ret << "访问失败...";
+			return ret;
+		}
+
+		//等待图片下载完成
+		for (auto &t : ThreadVector) {
+			if (t != nullptr&&t->joinable())
+				t->join();
+		}
+		//释放资源
+		//delete input_facet;
+		//返回
+		return ret;
+	}
+
 }

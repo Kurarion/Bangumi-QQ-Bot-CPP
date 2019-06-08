@@ -34,6 +34,7 @@ enum class BgmCode {
 	Tag,
 	Statis,
 	RSS,
+	TML,
 	Unknow
 };
 //转码类
@@ -528,6 +529,11 @@ if(var.compare(var2)!=0)\
 		std::vector<std::string> sp_unair_eps_info;
 		int eps_counts = 0;
 		int sp_eps_counts = 0;
+		int curr_eps = 0;
+
+		void SetCurrentEps(const int &curr) {
+			curr_eps = curr;
+		}
 		//有效性
 		bool valid = true;
 	public:
@@ -565,7 +571,10 @@ if(var.compare(var2)!=0)\
 					int start_pos = n - output_num;
 					if (start_pos < 0)
 						start_pos = 0;
-					for (int i = start_pos; i < n; ++i) {
+					if (curr_eps != 0&& curr_eps<start_pos) {
+						start_pos = curr_eps;
+					}
+					for (int i = start_pos; i < start_pos + output_num; ++i) {
 
 						ret >> "● " << air_eps[i];
 						//额外信息
@@ -1031,6 +1040,8 @@ if(var.compare(var2)!=0)\
 	extern void BGM_API_Tag(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
 	//RSS
 	extern void BGM_RSS(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&, BgmCode);
+	//TML
+	extern void BGM_TML(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
 }
 
 

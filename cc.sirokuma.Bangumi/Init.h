@@ -26,7 +26,6 @@ TimeWorker time_worker(http_client.GetIOS());
 void HTTPRequest::RemoveSelf() {
 	http_client.RemoveID(m_id);
 }
-
 //数字简单替换加密
 const boost::bimap<char, char> num_bimap;
 //@me
@@ -119,7 +118,6 @@ inline bangumi::BangumiUser& BangumiPreFindUser(size_t user_id) {
 inline bangumi::BangumiUser& BangumiAddUser(size_t &user_id, std::string &url,
 	std::string &user_name, std::string &nick_name,
 	std::string &ava_file, std::string &sign/*, bool refresh = false*/) {
-
 
 		{
 			//没有命中,直接构造
@@ -297,7 +295,6 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 ) {
 
 
-	
 	{
 		//没有命中,直接构造
 #ifndef NDEBUG
@@ -486,5 +483,19 @@ std::string url_encode(const std::string &value) {
 	return escaped.str();
 }
 
+
+std::string GetHtml(std::string uri, std::string host) {
+	std::string request = "GET " + uri + " HTTP/1.1\r\n"
+		"Host: " + host + "\r\n" "\r\n";
+	try {
+		//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
+		std::string html = http_client.SyncBGMHTTPRequest(request);
+
+		return std::move(html);
+	}
+	catch (boost::system::system_error&) {
+		return "";
+	}
+}
 
 #endif
