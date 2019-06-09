@@ -441,7 +441,7 @@ namespace bangumi {
 
 	//同步Https下载一个HTML页面
 	std::string GetHttpsHtml(std::string host,std::string uri) {
-
+		//
 		std::string request = "GET " + uri + " HTTP/1.1\r\n"
 			"Host: " +host+ "\r\n" "\r\n";
 		try {
@@ -452,6 +452,40 @@ namespace bangumi {
 		}
 		catch (boost::system::system_error&) {
 			return "";
+		}
+
+	}
+	std::string GetBGMAPI(bangumi::string uri) {
+		std::string request = "GET " + uri+" HTTP/1.1\r\n"
+			"Host: " +bgm.bangumi_api_url +"\r\n" "\r\n";
+		try {
+			//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
+			std::string html = code_converter.Conv(http_client.SyncBGMHTTPRequest(request));
+
+			return std::move(html);
+		}
+		catch (boost::system::system_error&) {
+			return "";
+		}
+
+	}
+	//用户收藏概括
+	bangumi::string GetUserSumCollections(std::string bangumi_user) {
+		//
+		bangumi::string uri("/user/");
+		uri << bangumi_user;
+		uri << "/collections/status?app_id=" << bgm.bangumi_client_id;
+		try {
+			//进行请求
+			auto& json = GetBGMAPI(uri);
+			//进行解析
+			return Resolve::Resolve_User_Collection_Sum(json);
+		}
+		catch (boost::system::system_error&) {
+			return "收藏获取失败...";
+		}
+		catch (std::exception&) {
+			return "收藏获取失败";
 		}
 
 	}
@@ -689,7 +723,7 @@ param.find_first_of(c1)!=npos
 			//前面的参数
 			std::string pre_param = str.substr(0, delim);
 			try {
-				if (code != BgmCode::Search&&code != BgmCode::Tag)
+				if (code != BgmCode::Search&&code != BgmCode::Tag &&code != BgmCode::BGM)
 					id = std::stoul(pre_param);
 				else
 					throw std::invalid_argument("no need int");
@@ -702,10 +736,12 @@ param.find_first_of(c1)!=npos
 					PARA_Resolve_Search_KeyWord(pre_param);
 					ret.str = pre_param;
 				}
-				else {
-					//否则什么也不做
-					//
-				}
+				else 
+				//UserCollection
+				if (code == BgmCode::BGM) {
+					//如果是一个User Collection的命令
+					ret.bangumi_user = pre_param;
+				}else
 				
 				//SubjectAPI
 				if (code == BgmCode::Subject||code == BgmCode::Collect||code == BgmCode::Up) {
@@ -729,10 +765,12 @@ param.find_first_of(c1)!=npos
 					}
 					//否则什么也不做
 				}
+				else
 				//Tag API
 				if (code == BgmCode::Tag) {
 					ret.tag_keyword = pre_param;
 				}
+				else
 				//Rss API
 				if (code == BgmCode::RSS) {
 					//
@@ -785,6 +823,8 @@ param.find_first_of(c1)!=npos
 first.find_first_of(c1)!=npos||first.find_first_of(c2)!=npos
 #define STRHAVE(s1,s2)\
 param.find(s1)!=npos||param.find(s2)!=npos
+#define EXSTRHAVE(sss,s1,s2)\
+sss.find(s1)!=npos||sss.find(s2)!=npos
 		//对应不同命令解析
 		switch (code)
 		{
@@ -893,6 +933,119 @@ param.find(s1)!=npos||param.find(s2)!=npos
 		case BgmCode::List:
 			break;
 		case BgmCode::BGM:
+		{
+			//分隔符
+			size_t delim;
+			size_t str_start = 0;
+			//参数数组
+			std::string para[5];
+			int para_num = -1;
+			//第一个连接符
+			delim = param.find_first_of('/');
+			while (delim != npos)
+			{
+				//参数
+				para[++para_num] = param.substr(str_start, delim - str_start);
+				str_start = delim + 1;
+				delim = param.find_first_of('/', delim + 1);
+			}
+			//存入最后一个参数
+			para[++para_num] = param.substr(str_start);
+
+			//处理识别出的参数
+			for (int i = 0;i<5;++i)
+			{
+				if (para[i].empty())
+				{
+					continue;
+				}
+				else {
+					auto& s = para[i];
+					switch (i)
+					{
+					case 0:
+					{
+						//条目类型
+						if (EXHAVE(s, 'a', '2')) {
+							//动画
+							ret.ucollection_subject_type = "anime";
+						}
+						else if (EXHAVE(s, 'g', '4')) {
+							//游戏
+							ret.ucollection_subject_type = "game";
+						}
+						else if (EXHAVE(s, 'c', '1')) {
+							//书
+							ret.ucollection_subject_type = "book";
+						}
+						else if (EXHAVE(s, 'r', '6')) {
+							//三次元
+							ret.ucollection_subject_type = "real";
+						}
+						else if (EXHAVE(s, 'm', '3')) {
+							//音乐
+							ret.ucollection_subject_type = "music";
+						}
+					}
+						break;
+					case 1:
+					{
+						//收藏状态
+						if (EXSTRHAVE(s,"collect", "fin")) {
+							ret.ucollection_co_type = "collect";
+						}
+						else if (EXSTRHAVE(s,"wish", "td")) {
+							ret.ucollection_co_type = "wish";
+						}
+						else if (EXSTRHAVE(s,"do", "on")) {
+							ret.ucollection_co_type = "do";
+						}
+						else if (s.find("hold") != npos) {
+							ret.ucollection_co_type = "on_hold";
+						}
+						else if (s.find("drop") != npos) {
+							ret.ucollection_co_type = "dropped";
+						}
+					}
+						break;
+					case 2:
+					{
+						//页码
+						try {
+							ret.ucollection_page = std::stoi(s);
+						}
+						catch (std::exception&) {
+						}
+					}
+						break;
+					case 3:
+					{
+						//排序方式
+						if (s.find("date") != npos) {
+							ret.ucollection_order_type = "date";
+						}
+						else if (s.find("rate") != npos) {
+							ret.ucollection_order_type = "rate";
+						}
+						else if (s.find("title") != npos) {
+							ret.ucollection_order_type = "title";
+						}
+					}
+						break;
+					case 4:
+					{
+						//标签
+						ret.ucollection_tag = s;
+					}
+						break;
+					default:
+						break;
+					}
+				}
+			}
+
+
+		}
 			break;
 		case BgmCode::DMHY:
 			break;
@@ -1239,6 +1392,15 @@ param.find(s1)!=npos||param.find(s2)!=npos
 			//字符串,并且如果有的话,否则默认
 			if (!third_param.empty() && delim2 + 1 < param.length()) {
 				ret.collection_comment = third_param;
+			}
+			//评论和标签位置之间的/
+			auto delim3 = third_param.find_first_of('/');
+			//第四个参数
+			std::string fourth_param;
+			if (delim3 != npos) {
+				ret.collection_comment = third_param.substr(0, delim3);
+				fourth_param = third_param.substr(delim3 + 1);
+				ret.collection_tags = fourth_param;
 			}
 
 		}
@@ -1839,10 +2001,34 @@ param.find(s1)!=npos||param.find(s2)!=npos
 
 	}
 
+	//用于解析User Collection的参数封装
+	inline ComplexParam ResolveUserCollectionPara(const std::string& str) {
+		BgmCode code = BgmCode::BGM;
+		try {
+			//只有'/'的解析
+			return PARA_Resolve_Virgule(str, code);
+		}
+		catch (boost::system::system_error&e) {
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << "PARA_Resolve_Virgule 失败";
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-ResolveTagPara-Virgule", debug_msg);
+			}
+#endif		
+			//都不能解析
+			//最后直接抛出异常 不解析此参数
+			throw e;
+		}
+	}
+
+
 	//Bot: 读取Bangumi娘的配置信息
 	inline void BOT_Read_Ini(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
+
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
+
 
 	}
 	//Bot: Help信息
@@ -2153,6 +2339,8 @@ param.find(s1)!=npos||param.find(s2)!=npos
 				try {
 					size_t temp_id = std::stoul(name);
 					bangumi::string msg = BangumiPreFindUser(temp_id).Get();
+					//获取用户收藏信息
+					msg>>'\n'<<GetUserSumCollections(std::to_string(temp_id));
 					DEFAULT_SEND(param.type, msg);
 #ifndef NDEBUG
 					{
@@ -2221,6 +2409,9 @@ param.find(s1)!=npos||param.find(s2)!=npos
 
 					auto pic_threads = Resolve::Resolve_User(json, param.extra.refresh);
 					msg = pic_threads.second.Get();
+
+					//获取用户收藏信息
+					msg >> '\n' << GetUserSumCollections(param.cur_str);
 
 					//结束的等待
 					for (auto &t : pic_threads.first) {
@@ -2914,12 +3105,31 @@ if (!res4.empty())\
 				//
 				continue;
 			}
-
+			//处理Tag
+			bangumi::string tag_msg;
+			if (!complex_param.collection_tags.empty())
+			{
+				tag_msg << "&tags=";
+				std::string temp = code_encoder.Conv(complex_param.collection_tags);
+				for (auto &c : temp) {
+					if (c=='+')
+					{
+						tag_msg << "%20";
+						continue;
+					}
+					tag_msg << c;
+				}
+				
+			}
 			//只能请求API
 			bangumi::string content;
 			content << "status=" << complex_param.collection_status
 				<< "&rating=" << complex_param.collection_rating
 				<< "&comment=" << code_encoder.Conv(complex_param.collection_comment);
+			if (!tag_msg.empty())
+			{
+				content << tag_msg;
+			}
 
 			//post中的www编码其实是为了防止URI过长而将参数放在了content中,POST时一定不能忘记使用Content-Length指定大小
 			//否则会出现不能正常读取参数的问题
@@ -4476,5 +4686,231 @@ if (!res4.empty())\
 		}
 
 	}
+
+	//API: 返回用户收藏
+	inline void BGM_User_Collection(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
+
+		//bangumi::string ret("<Tag>");
+		//ret >> "ID:\n";
+		//for (const auto &i : parameters_id)
+		//	ret << i << " ";
+		//ret >> "STR:\n";
+		//std::string name;
+		//for (const auto &i : parameters_str)
+		//	ret << i << " ";
+
+		//DEFAULT_SEND(param.type, ret);
+
+		//排除空语句
+		if (parameters_str.empty() && parameters_id.empty()) {
+			bangumi::string error;
+			error << "缺少参数...";
+			//回复消息
+			DEFAULT_SEND(param.type, error);
+			return;
+		}
+
+
+
+		//构建一个复杂参数类的Vector
+		std::vector<ComplexParam> paramters;
+		//压入解析参数(只有STR参数)
+		for (const auto& i : parameters_str) {
+			try {
+				auto temp = ResolveUserCollectionPara(i);
+				//压入paramters
+				paramters.emplace_back(temp);
+			}
+			catch (boost::system::system_error&) {
+				//因为str可以不使用complex_param
+				//因此str怎样都是一个合法的参数
+				//因此直接构造一个默认的
+				bangumi::ComplexParam temp;
+				temp.bangumi_user = i;
+				paramters.emplace_back(temp);
+			}
+
+		}
+
+
+		//http://bgm.tv/anime/list/wz97315/collect
+		//http://bgm.tv/game/list/wz97315/do?page=2
+		//http://bgm.tv/game/list/wz97315/do?orderby=rate
+		//http://bgm.tv/anime/list/wz97315/collect?tag=%E7%BB%9D%E8%B5%9E
+		
+		//{用户ID}/{条目类型}/{收藏状态}/{页码}/{排序方式}/{标签}
+
+		//首先下载html
+		//对每一个识别的ID进行main func
+		for (const auto& complex_param : paramters) {
+			//返回消息
+			bangumi::string ret;
+
+			//根据信息构造uri
+			bangumi::string uri2;
+			
+			//条目类型
+			uri2 << '/' << complex_param.ucollection_subject_type << "/list/";
+
+			//用户名
+			std::string bangumi_id;
+			//是否使用自己绑定的bangumi id
+			if (complex_param.use_last_subject_id || complex_param.bangumi_user == "#") {
+				auto verify_result = VerifyToken(param);
+				size_t &user_id = verify_result.first;
+				bangumi_id = std::to_string(user_id);
+			}
+			else {
+				bangumi_id = complex_param.bangumi_user;
+			}
+			//用户头像
+			std::string & json = GetHtml("/user/" + bangumi_id, bgm.bangumi_api_url);
+			//宽解析树
+			boost::property_tree::ptree json_pt;
+			//因为解析需要一个流输入,因此使用stringstream,也支持文件流读取
+			std::istringstream json_input(json);
+			//解析json
+			boost::property_tree::read_json(json_input, json_pt);
+			//
+			size_t id = json_pt.get<size_t>("id", 0);
+			bangumi_id = json_pt.get<std::string>("username", "");
+			std::string url = json_pt.get<std::string>("avatar.large", "");
+			std::string pic_name = std::to_string(id);
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+			//
+			std::string pic_file_path;
+			//下载图片
+			if (!url.empty()) {
+				//下载图片
+				auto result = PicDownload(http_client, url, USER_PIC_PATH, pic_name, pic_file_path, param.extra.refresh);
+
+				//返回的线程保存到返回值中
+				if (result.first == DownloadStatus::MultiThread)
+				{
+					//将下载线程压入线程池中
+					ThreadVector.push_back(result.second);
+				}
+
+				//保存图片消息
+				ret << "[CQ:image,file=" << pic_file_path << "]";
+
+			}
+
+			//等待图片下载完成
+			for (auto &t : ThreadVector) {
+				if (t != nullptr&&t->joinable())
+					t->join();
+			}
+
+			//加用户名
+			uri2 << bangumi_id << '/';
+
+
+			//收藏类型
+			uri2 << complex_param.ucollection_co_type;
+
+			//页码
+			uri2 << "?page=" << complex_param.ucollection_page;
+
+			//排序方式
+			if (!complex_param.ucollection_order_type.empty())
+			{
+				uri2 << "&orderby=" << complex_param.ucollection_order_type;
+			}
+
+			//标签
+			if (!complex_param.ucollection_tag.empty()) {
+				uri2 << "&tag=" << code_encoder.Conv(complex_param.ucollection_tag);
+			}
+
+
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << "请求的URI为: " << uri2;
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-User-Collection", debug_msg);
+			}
+#endif
+			try {
+				//Main Func
+
+				std::string request = "GET " + uri2 + " HTTP/1.1\r\n"
+					"Host: " "bgm.tv" "\r\n" "\r\n";
+
+				//请求html
+				std::string html = code_converter.Conv(http_client.SyncBGMHTTPRequest(request));
+
+				//消息头构造
+				ret >> '[' << bangumi_id << "] ";
+				switch (complex_param.ucollection_co_type[0])
+				{
+				case 'w':
+					ret << "想看/玩/听";
+					break;
+				case 'c':
+					ret << "看/玩/听过";
+					break;
+				case 'd':
+					if (complex_param.ucollection_co_type[1] == 'o')
+						ret << "在看/玩/听";
+					else
+						ret << "抛弃";
+					break;
+				case 'o':
+					ret << "搁置";
+					break;
+				default:
+					break;
+				}
+				ret << " 的 ";
+				switch (complex_param.ucollection_subject_type[0])
+				{
+				case 'a':
+					ret << "[动画]";
+					break;
+				case 'b':
+					ret << "[书]";
+					break;
+				case 'g':
+					ret << "[游戏]";
+					break;
+				case 'm':
+					ret << "[音乐]";
+					break;
+				case 'r':
+					ret << "[三次元]";
+					break;
+				default:
+					break;
+				}
+
+				ret >> "------";
+
+				bangumi::string ret1(ret);
+				//解析html
+				auto& result = Resolve::ResolveUserCollection(html, param.extra.refresh);
+				ret << '\n';
+				ret << result.first;
+				//回复消息
+				DEFAULT_SEND(param.type, ret);
+				if (!result.second.empty()) {
+					ret1 << "[续]\n";
+					ret1 << result.second;
+					//回复消息
+					DEFAULT_SEND(param.type, ret1);
+				}
+					
+
+			}
+			catch (boost::system::system_error& e) {
+				//回复消息
+				DEFAULT_SEND(param.type, e.what());
+				continue;
+			}
+
+		}
+	}
+
 }
 #endif

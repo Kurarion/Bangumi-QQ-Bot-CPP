@@ -12,6 +12,7 @@ namespace Resolve {
 	//为了方便书写使用宏定义
 	//将wstring转换为string
 #define ResolveConv(ws) boost::locale::conv::from_utf(ws, "UTF8")
+#define UTF16ToGB(ws) code_converter.Conv(boost::locale::conv::from_utf(ws, "UTF8"))
 	//解析User
 	std::pair<std::vector<std::shared_ptr<boost::thread>>, bangumi::BangumiUser&>
 		Resolve_User(std::string json, bool refresh) {
@@ -162,6 +163,24 @@ namespace Resolve {
 //#endif
 			int wair_weekday = pt.get<int>(L"air_weekday", 0);
 			int wrating_num = pt.get<int>(L"rating.total", 0);
+			//添加评价分段人数
+			int detail_score[11] = {0};
+			detail_score[1] = pt.get<int>(L"rating.count.1", 0);
+			detail_score[2] = pt.get<int>(L"rating.count.2", 0);
+			detail_score[3] = pt.get<int>(L"rating.count.3", 0);
+			detail_score[4] = pt.get<int>(L"rating.count.4", 0);
+			detail_score[5] = pt.get<int>(L"rating.count.5", 0);
+			detail_score[6] = pt.get<int>(L"rating.count.6", 0);
+			detail_score[7] = pt.get<int>(L"rating.count.7", 0);
+			detail_score[8] = pt.get<int>(L"rating.count.8", 0);
+			detail_score[9] = pt.get<int>(L"rating.count.9", 0);
+			detail_score[10] = pt.get<int>(L"rating.count.10", 0);
+			//求最大的分段数
+			for (int i = 1; i < 11; ++i) {
+				if (detail_score[0] < detail_score[i])
+					detail_score[0] = detail_score[i];
+			}
+			
 			float wrating_score = pt.get<float>(L"rating.score", 0);
 			int wrank = pt.get<int>(L"rank", 0);
 			std::wstring wimage_url = pt.get<std::wstring>(L"images.large", L"");
@@ -203,7 +222,8 @@ namespace Resolve {
 				wrating_score,
 				wrank,
 				file_path, 
-				wcollection);
+				wcollection,
+				detail_score);
 			//返回结构体
 			return{ ThreadVector,subject };
 
@@ -267,11 +287,10 @@ namespace Resolve {
 			std::string token_type = pt.get<std::string>("token_type", "");
 			size_t user_id = pt.get<size_t>("user_id", 0);
 			std::string refresh_token = pt.get<std::string>("refresh_token", "");
-
-
+			
 
 			//返回结构体
-			return bangumi::AuthReply(access_token,token_type,user_id,refresh_token);
+			return bangumi::AuthReply(access_token,token_type,user_id, refresh_token);
 
 		}
 		catch (boost::system::system_error & e)
@@ -689,6 +708,23 @@ namespace Resolve {
 				}
 				int wair_weekday = pt.get<int>(L"air_weekday", 0);
 				int wrating_num = pt.get<int>(L"rating.total", 0);
+				//添加评价分段人数
+				int detail_score[11] = { 0 };
+				detail_score[1] = pt.get<int>(L"rating.count.1", 0);
+				detail_score[2] = pt.get<int>(L"rating.count.2", 0);
+				detail_score[3] = pt.get<int>(L"rating.count.3", 0);
+				detail_score[4] = pt.get<int>(L"rating.count.4", 0);
+				detail_score[5] = pt.get<int>(L"rating.count.5", 0);
+				detail_score[6] = pt.get<int>(L"rating.count.6", 0);
+				detail_score[7] = pt.get<int>(L"rating.count.7", 0);
+				detail_score[8] = pt.get<int>(L"rating.count.8", 0);
+				detail_score[9] = pt.get<int>(L"rating.count.9", 0);
+				detail_score[10] = pt.get<int>(L"rating.count.10", 0);
+				//求最大的分段数
+				for (int i = 1; i < 11; ++i) {
+					if (detail_score[0] < detail_score[i])
+						detail_score[0] = detail_score[i];
+				}
 				float wrating_score = pt.get<float>(L"rating.score", 0);
 				int wrank = pt.get<int>(L"rank", 0);
 				std::wstring wimage_url = pt.get<std::wstring>(L"images.large", L"");
@@ -728,7 +764,8 @@ namespace Resolve {
 					wrating_score,
 					wrank,
 					file_path,
-					wcollection);
+					wcollection,
+					detail_score);
 				//返回结构体
 				//return{ ThreadVector,subject };
 				msg << subject.SearchGet(++subject_pos);
@@ -848,6 +885,23 @@ namespace Resolve {
 				}
 				int wair_weekday = pt.get<int>(L"air_weekday", 0);
 				int wrating_num = pt.get<int>(L"rating.total", 0);
+				//添加评价分段人数
+				int detail_score[11] = { 0 };
+				detail_score[1] = pt.get<int>(L"rating.count.1", 0);
+				detail_score[2] = pt.get<int>(L"rating.count.2", 0);
+				detail_score[3] = pt.get<int>(L"rating.count.3", 0);
+				detail_score[4] = pt.get<int>(L"rating.count.4", 0);
+				detail_score[5] = pt.get<int>(L"rating.count.5", 0);
+				detail_score[6] = pt.get<int>(L"rating.count.6", 0);
+				detail_score[7] = pt.get<int>(L"rating.count.7", 0);
+				detail_score[8] = pt.get<int>(L"rating.count.8", 0);
+				detail_score[9] = pt.get<int>(L"rating.count.9", 0);
+				detail_score[10] = pt.get<int>(L"rating.count.10", 0);
+				//求最大的分段数
+				for (int i = 1; i < 11; ++i) {
+					if (detail_score[0] < detail_score[i])
+						detail_score[0] = detail_score[i];
+				}
 				float wrating_score = pt.get<float>(L"rating.score", 0);
 				int wrank = pt.get<int>(L"rank", 0);
 				std::wstring wimage_url = pt.get<std::wstring>(L"images.large", L"");
@@ -887,7 +941,8 @@ namespace Resolve {
 					wrating_score,
 					wrank,
 					file_path,
-					wcollection);
+					wcollection,
+					detail_score);
 				//返回结构体
 				return{ ThreadVector,subject };
 				//msg << subject.SearchGet(++subject_pos);
@@ -2907,6 +2962,354 @@ namespace Resolve {
 		//delete input_facet;
 		//返回
 		return ret;
+	}
+
+	bangumi::string Resolve_User_Collection_Sum(std::string &json) {
+		//[
+		//{
+		//	"type": 1,
+		//		"name" : "book",
+		//		"name_cn" : "书籍",
+		//		"collects" : [
+		//		{
+		//		"status": {
+		//			"id": 3,
+		//				"type" : "do",
+		//				"name" : "在读"
+		//			},
+		//			"count" : 2
+		//		}
+		//		]
+		//},
+
+		//null
+		try
+		{
+			bangumi::string ret("● 收藏统计:");
+			//完全不需要在底层来对\u进行解码,property_tree会进行这项工作的,前提是使用wptree
+			//将string转换wstring直接使用C++ 11的构造函数
+			std::wstring wjson(json.begin(), json.end());
+			//宽解析树
+			boost::property_tree::wptree pt;
+			//因为解析需要一个流输入,因此使用stringstream,也支持文件流读取
+			std::wistringstream input(wjson);
+			//解析json
+			boost::property_tree::read_json(input, pt);
+			//解析元素,[注意]:解析后的都是UTF编码,并非GBK,后面会用Locale进行转换
+
+
+			//首先判断是否有效
+			//TODO:完成无效回复
+			int code = pt.get<int>(L"code", 200);
+			if (code != 200) {
+				//请求是无效的
+#ifndef NDEBUG
+				{
+					bangumi::string debug_msg;
+					debug_msg << "未找到该用户";
+					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Resolve-User", debug_msg);
+				}
+#endif
+				//std::shared_ptr<bangumi::Msg_Interface> msg(new bangumi::Reply("查找用户失败..."));
+				//return{ ThreadVector, bangumi::Reply("查找用户失败...") };
+				//直接抛出异常来给上层(Function)提供构造信息
+				throw boost::system::system_error(bangumi_bot_errors::empty_user);
+			}
+			//取得列表
+			boost::property_tree::wptree& list = pt;
+			boost::property_tree::wptree::iterator pos = list.begin();
+			//提前遍历一遍查找最大数
+			int collect_max_num = 0;
+			for (; pos != list.end(); ++pos) {
+				//使用局部变量
+				auto &pt = pos->second;
+				//取得收藏列表
+				boost::property_tree::wptree collects_list = pt.get_child(L"collects");
+				boost::property_tree::wptree::iterator collects_pos = collects_list.begin();
+				//遍历收藏列表
+				for (; collects_pos != collects_list.end(); ++collects_pos) {
+
+					//使用局部变量
+					auto &pt = collects_pos->second;
+					//状态
+					auto &status = pt.get_child(L"status");
+
+					int counts = pt.get<int>(L"count", 0);
+					if (collect_max_num < counts)
+					{
+						collect_max_num = counts;
+					}
+				}
+			}
+			pos = list.begin();
+
+			//遍历种类列表
+			for (; pos != list.end(); ++pos) {
+				//使用局部变量
+				auto &pt = pos->second;
+
+				//std::wstring name = pt.get<std::wstring>(L"name", L"???");
+				std::wstring name_cn = pt.get<std::wstring>(L"name_cn", L"???");
+				//写入消息
+				//注意是UTF-16格式
+				ret >> "● " << UTF16ToGB(name_cn) ;
+				//取得收藏列表
+				boost::property_tree::wptree collects_list = pt.get_child(L"collects");
+				boost::property_tree::wptree::iterator collects_pos = collects_list.begin();
+				//遍历收藏列表
+				for (; collects_pos != collects_list.end(); ++collects_pos) {
+					//使用局部变量
+					auto &pt = collects_pos->second;
+					//状态
+					auto &status = pt.get_child(L"status");
+
+					//std::wstring name = pt.get<std::wstring>(L"name", L"???");
+					std::wstring status_name = status.get<std::wstring>(L"name", L"???");
+
+					int counts = pt.get<int>(L"count", 0);
+
+					//添加信息
+					ret >> UTF16ToGB(status_name) << "| "<<CalPhyProgress(counts, collect_max_num)<<' ' << counts;
+
+				}
+			}
+			
+			//返回消息
+			return ret;
+
+		}
+		catch (boost::system::system_error & e)
+		{
+			//Boost方面的问题
+			//同时可以通过这个catch来构造失败消息
+			throw e;
+		}
+		//property_tree在解析失败时并不会抛出system_error而是exception
+		catch (std::exception &e) {
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << e.what();
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Resolve-User", debug_msg);
+			}
+#endif
+			//解析树的问题
+			throw boost::system::system_error(bangumi_bot_errors::json_resolve_error);
+			//std::cout << "Error! Code = "
+			//	<< "Message = " << e.what() << std::endl;
+		}
+
+
+	}
+
+	//解析用户收藏信息
+	//只解析一页
+	inline std::pair<bangumi::string,bangumi::string> ResolveUserCollection(const std::string &raw_html, bool refresh = false) {
+#define ONE_MAX_SUBJECT_IN_CO 12
+		try {
+			//查找收藏目录的开头
+			size_t section_start = raw_html.find("browserItemList", 800);
+			//可能有意外问题
+			if (section_start == std::string::npos) {
+				//一般是无法打开html 502
+				return {"无法访问...", ""	};
+			}
+			//查找结尾
+			size_t section_end = raw_html.find("footer", section_start);
+			//有效的html
+			std::string html = raw_html.substr(section_start, section_end - section_start);
+			//单个条目的起始位置
+			size_t subject_start = html.find("item_");
+			//
+			bangumi::string ret[2];
+			int current_n = 0;
+			int current_sub_num = 0;
+			//
+			std::string subject_id;
+			std::string pic_url;
+			std::string file_path;
+			std::string name_cn;
+			std::string name;
+			std::string tips;
+			std::string rate;
+			std::string collect_time;
+			std::string comment;
+			size_t temp;
+			//
+			//PIC图片下载线程
+			std::vector<std::shared_ptr<boost::thread>> ThreadVector;
+			while (subject_start != std::string::npos) {
+				++current_sub_num;
+				if (current_sub_num > ONE_MAX_SUBJECT_IN_CO)
+				{
+					current_n = 1;
+					current_sub_num = 0;
+				}
+				//subject id
+				size_t href_end = html.find("\"", subject_start + 5);
+
+				subject_id = html.substr(subject_start + 5, href_end - subject_start - 5);
+				//最后循环查找下一个item
+				//同时限定此条目的查找范围
+				subject_start = html.find("item_", subject_start + 10);
+
+				//
+				//std::cout << html<<std::endl;
+
+
+				//中文名
+				size_t name_cn_start = html.find("ass=\"l\">", href_end);
+				size_t name_cn_end = html.find("</a>", name_cn_start + 8);
+				name_cn = html.substr(name_cn_start + 8, name_cn_end - name_cn_start - 8);
+
+				//由于有没有图片的风险，因此将判断放在中文名之后
+				//图片下载地址
+				size_t src_start = html.find("src=\"/", href_end);
+				//可以真的没有图片
+				if (src_start < name_cn_start) {
+					size_t src_end = html.find("\"", src_start + 5);
+					std::string pre_url = html.substr(src_start + 5, src_end - src_start - 5);
+					std::string pic_subject_id = subject_id;
+					if (pre_url[1] == 'i'&&pre_url[2] == 'm') {
+						//img/no_icon
+						pre_url = "//bgm.tv" + pre_url;
+						pic_subject_id = "no_icon";
+					}
+					else {
+						//将图片大小换成l类型
+						temp = pre_url.find("/s/");
+						pre_url[temp + 1] = 'l';
+					}
+					pic_url = "http:" + pre_url;
+					//#ifndef NDEBUG
+					//			{
+					//				bangumi::string debug_msg;
+					//				debug_msg << "图片下载地址 " << pic_url;
+					//				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-TAG-PIC-DOWNLOAD", debug_msg);
+					//			}
+					//#endif
+					//开始下载图片
+					//下载图片
+					auto result = PicDownload(http_client, pic_url, SUBJECT_PIC_PATH, pic_subject_id, file_path, refresh);
+					//返回的线程保存到返回值中
+					if (result.first == DownloadStatus::MultiThread)
+					{
+						//将下载线程压入线程池中
+						ThreadVector.push_back(result.second);
+					}
+				}
+				else {
+					//直接使用404图片
+					auto result = PicDownload(http_client, "", TAG_PIC_PATH, subject_id, file_path, refresh);
+					//返回的线程保存到返回值中
+					//if (result.first == DownloadStatus::MultiThread)
+					//{
+					//	//将下载线程压入线程池中
+					//	ThreadVector.push_back(result.second);
+					//}
+				}
+
+				//原名(可能没有)
+				name = "";
+				size_t name_start = html.find("ass=\"grey\">", name_cn_end);
+				if (name_start < subject_start) {
+					//在此条目的范围内有效
+					size_t name_end = html.find("</small>", name_start + 11);
+					name = html.substr(name_start + 11, name_end - name_start - 11);
+				}
+
+				//info tips
+				size_t tips_start = html.find("tip\">", name_cn_end);
+				size_t tips_end = html.find("</p>", tips_start + 5);
+				tips = html.substr(tips_start + 5, tips_end - tips_start - 5);
+				//评分(可能没有)
+				rate = "";
+				size_t rate_start = html.find("sstars", tips_end);
+				if (rate_start < subject_start) {
+					//在此条目的范围内有效
+					size_t rate_end = html.find(" ", rate_start);
+					rate = html.substr(rate_start + 6, rate_end - rate_start - 6);
+				}
+				//收藏日期
+				collect_time = "";
+				size_t collect_time_start = html.find("tip_j\">", tips_end);
+				if (collect_time_start < subject_start) {
+					//在此条目的范围内有效
+					size_t collect_time_end = html.find("<", collect_time_start + 7);
+					collect_time = html.substr(collect_time_start + 7, collect_time_end - collect_time_start - 7);
+				}
+				//吐槽
+				comment = "";
+				size_t comment_start = html.find("\"text\">", tips_end+16);
+				if (comment_start < subject_start)
+				{
+					//在此条目的范围内有效
+					size_t comment_end = html.find("<", comment_start + 7);
+					comment = html.substr(comment_start + 7, comment_end - comment_start - 7);
+				}
+
+
+				//ret回复
+				ret[current_n] << "[CQ:image,file=" << std::move(file_path) << "]"
+					>> "ID: " << subject_id
+					>> std::move(name_cn);
+				if (!name.empty()) {
+					ret[current_n] << " <" << std::move(name) << ">";
+				}
+				//条目的简介
+				if (!tips.empty()) {
+					//tips自带\n
+					tips[0] = ' ';
+					ret[current_n] >> "简介:"<<tips;
+				}
+				//评分
+				if (!rate.empty()) {
+					try {
+						int num = std::stoi(rate);
+						std::string temp;
+						for (int i = 0; i<num ;++i)
+						{
+							temp += "★";
+						}
+						ret[current_n] >> "评分: " << temp <<' '<< rate;
+					}
+					catch (std::exception&) {
+
+					}
+				}
+				//吐槽
+				if (!comment.empty()) {
+					ret[current_n] >> "吐槽: " << comment;
+				}
+				//收藏时间
+				if (!collect_time.empty()) {
+					ret[current_n] >>"收藏于 <"<< collect_time<<'>';
+				}
+				ret[current_n] << "\n";
+
+
+
+			}
+
+			//等待图片下载完成
+			for (auto &t : ThreadVector) {
+				if (t != nullptr&&t->joinable())
+					t->join();
+			}
+			//如果不为空
+			if (!ret[0].empty()) {
+				ret[0][ret[0].length() - 1] = ' ';
+			}
+			//如果不为空
+			if (!ret[1].empty()) {
+				ret[1][ret[1].length() - 1] = ' ';
+			}
+
+			return{ ret[0],ret[1] };
+		}
+		catch (std::exception&) {
+			return{ "访问失败...","" };
+		}
 	}
 
 }

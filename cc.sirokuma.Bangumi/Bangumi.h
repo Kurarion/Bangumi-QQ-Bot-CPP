@@ -7,7 +7,6 @@
 #include "BangumiExceptions.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include "iconv.h"
-
 #ifndef BANGUMI_H
 #define BANGUMI_H
 
@@ -41,7 +40,22 @@ enum class BgmCode {
 CodeConverter code_converter("utf-8", "gb18030");
 //转码类
 CodeConverter code_encoder("gb18030", "utf-8");
-
+//计算图形化进度条
+#define PHY_PROGRESS_MAX_NUM 16
+inline std::string CalPhyProgress(int current_num, int max_num) {
+	if (current_num==0 || max_num ==0)
+	{
+		return "";
+	}
+	if (max_num <= PHY_PROGRESS_MAX_NUM) {
+		//如果个数很少直接几个就是几个
+		std::string ret(current_num, '>');
+		return std::move(ret);
+	}
+	int n = std::ceil(PHY_PROGRESS_MAX_NUM * current_num / max_num);
+	std::string ret(n,'>');
+	return std::move(ret);
+}
 namespace bangumi {
 	//	//UTF-8字符转GBK
 	//#define UTF82GBK(s)  boost::locale::conv::from_utf(s, "GBK")
@@ -355,7 +369,8 @@ if(var.compare(var2)!=0)\
 			float irating_score,
 			int irank,
 			std::string iimage_file,
-			Collection icollection
+			Collection icollection,
+			int idscore[11]
 		)
 			:subject_id(isubject_id),
 			url(iurl),
@@ -371,7 +386,12 @@ if(var.compare(var2)!=0)\
 			rank(irank),
 			image_file(iimage_file),
 			collection(icollection)
-		{}
+		{
+			for (int i = 0;i<11;++i)
+			{
+				detail_score[i] = idscore[i];
+			}
+		}
 		BangumiSubject() {}
 
 		//return subject id
@@ -420,7 +440,19 @@ if(var.compare(var2)!=0)\
 			ret >> ""
 				>> "排名:  " << (rank == 0 ? "无" : std::to_string(rank))
 				>> "评分:  " << rating_score << "    评分数:  " << rating_num
-				>> ""
+				>> "------";
+			//增加评分分布
+			for (int i = 1; i < 10; ++i) {
+				ret >> "●   " << i << "分| ";
+				ret << CalPhyProgress(detail_score[i], detail_score[0])
+					<< ' ' << detail_score[i] << "人";
+			}
+			//因为位数不同10单独
+			ret >> "● " << 10 << "分| ";
+			ret << CalPhyProgress(detail_score[10], detail_score[0])
+				<< ' ' << detail_score[10] << "人";
+
+			ret	>> ""
 				>> collection.Get()
 				>> "条目主页:  " << url;
 			return std::move(ret);
@@ -465,6 +497,7 @@ if(var.compare(var2)!=0)\
 		int rank = 0;
 		std::string image_file;
 		Collection collection;
+		int detail_score[11];
 	};
 	//条目章节等结构体
 	struct BangumiSubjectCollection :public Msg_Interface
@@ -700,6 +733,16 @@ if(var.compare(var2)!=0)\
 		void AddEps(int eps) {
 			progress += std::to_string(eps);
 		}
+		std::string GetRateStr() {
+			std::string ret;
+			for (int i = 0; i < rating; ++i)
+			{
+				ret += "★";
+			}
+			ret += ' ';
+			ret += std::to_string(rating);
+			return std::move(ret);
+		}
 
 		//size_t user_id;
 		//std::string url;
@@ -724,7 +767,10 @@ if(var.compare(var2)!=0)\
 			bangumi::string ret;
 			ret <<" 收藏为 [" << UTF82GBK(status_name) << "]";
 			STRRET("完成度:  ", progress);
-			RET("评分:  ", rating);
+			if (rating != 0) {
+				ret >> "评分:  " << GetRateStr();
+			}
+			//RET("评分:  ", rating);
 			STRRET("吐槽:  ", UTF82GBK(comment));
 			//ret >> "用户主页: " << url;
 			return std::move(ret);
@@ -913,6 +959,7 @@ if(var.compare(var2)!=0)\
 		std::string collection_status;
 		int collection_rating = 0;
 		std::string collection_comment;
+		std::string collection_tags;
 
 		//Update用
 		int update_watched_eps = 0;
@@ -930,6 +977,30 @@ if(var.compare(var2)!=0)\
 		//RSS用
 		std::string rss_keyword;
 		int rss_max_items = 5;
+
+		//用户查询收藏用
+		//	a = 动画
+		//	c = 书
+		//	g = 游戏
+		//	m = 音乐
+		//	r = 三次元
+		//
+		//	wish td = 想做
+		//	collect fin = 做过
+		//	do on = 在做
+		//	hold = 搁置
+		//	drop = 抛弃
+		//
+		//	 = 收藏时间
+		//	rate = 评分
+		//	date = 发售时间
+		//	title = 名称
+		std::string bangumi_user;
+		std::string ucollection_subject_type = "anime";
+		std::string ucollection_co_type = "collect";
+		int ucollection_page = 1;
+		std::string ucollection_order_type;
+		std::string ucollection_tag;
 	};
 	//消息回复简单结构体
 	struct BGMRetParam {
@@ -1042,6 +1113,9 @@ if(var.compare(var2)!=0)\
 	extern void BGM_RSS(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&, BgmCode);
 	//TML
 	extern void BGM_TML(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
+	//User Collection
+	extern void BGM_User_Collection(const BGMCodeParam &, const std::set<size_t>&, const std::set<std::string>&);
+	
 }
 
 

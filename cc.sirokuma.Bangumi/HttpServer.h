@@ -389,9 +389,9 @@ private:
 							if (std::to_string(auth.user_id) != std::string(pre_result[2])) {
 								same_bgm_id = false;
 							}
-
-							if (pre_result[2][0] != '0') {
-								//不是首次注册
+							
+							if (pre_result[2][0] != '0'){
+								//说明不是首次注册
 								first_reg = false;
 								//已注册的QQ提示消息
 								msg << "原[" << pre_result[0] << "]号契约"

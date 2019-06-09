@@ -12,7 +12,6 @@
 
 
 
-
 //global variable 
 //Http
 //TODO:完成Client的超时暂时关闭功能(使用asio的计时器)
@@ -26,6 +25,7 @@ TimeWorker time_worker(http_client.GetIOS());
 void HTTPRequest::RemoveSelf() {
 	http_client.RemoveID(m_id);
 }
+
 //数字简单替换加密
 const boost::bimap<char, char> num_bimap;
 //@me
@@ -241,6 +241,18 @@ inline bangumi::BangumiSubject& BangumiSQLFindSubject(size_t subject_id) {
 			collection.on_hold = std::stoi(result[16]);
 			collection.dropped = std::stoi(result[17]);
 			collection.type = type;
+			int detail_score[11];
+			detail_score[1] = std::stoi(result[18]);
+			detail_score[2] = std::stoi(result[19]);
+			detail_score[3] = std::stoi(result[20]);
+			detail_score[4] = std::stoi(result[21]);
+			detail_score[5] = std::stoi(result[22]);
+			detail_score[6] = std::stoi(result[23]);
+			detail_score[7] = std::stoi(result[24]);
+			detail_score[8] = std::stoi(result[25]);
+			detail_score[9] = std::stoi(result[26]);
+			detail_score[10] = std::stoi(result[27]);
+			detail_score[0] = std::stoi(result[28]);
 #ifndef NDEBUG
 			{
 				bangumi::string debug_msg;
@@ -263,7 +275,8 @@ inline bangumi::BangumiSubject& BangumiSQLFindSubject(size_t subject_id) {
 				rating_score,
 				rank,
 				image_file,
-				collection })).first)->second;
+				collection,
+				detail_score })).first)->second;
 		}
 		catch (std::invalid_argument) {
 			throw boost::system::system_error(bangumi_bot_errors::sql_result_convert_filed);
@@ -291,11 +304,12 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 	float& rating_score,
 	int& rank,
 	std::string& image_file,
-	bangumi::Collection& collection
+	bangumi::Collection& collection,
+	int detail_score[11]
 ) {
 
 
-	{
+		{
 		//没有命中,直接构造
 #ifndef NDEBUG
 		{
@@ -324,7 +338,7 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 		//REPLACE INTO这个Subject
 		query << "REPLACE INTO bgm_subjects VALUES("
 			<< subject_id << ","
-			<< "'"<<url << "',"
+			<< "'" << url << "',"
 			<< type << ","
 			<< "'" << name << "',"
 			<< "'" << name_cn << "',"
@@ -344,7 +358,18 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 			<< collection.collect << ","
 			<< collection.doing << ","
 			<< collection.on_hold << ","
-			<< collection.dropped << ")";
+			<< collection.dropped << ","
+			<< detail_score[1] << ","
+			<< detail_score[2] << ","
+			<< detail_score[3] << ","
+			<< detail_score[4] << ","
+			<< detail_score[5] << ","
+			<< detail_score[6] << ","
+			<< detail_score[7] << ","
+			<< detail_score[8] << ","
+			<< detail_score[9] << ","
+			<< detail_score[10] << ","
+			<< detail_score[0] << ")";
 #ifndef NDEBUG
 		{
 			bangumi::string debug_msg;
@@ -451,7 +476,8 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 			rating_score,
 			rank,
 			image_file,
-			collection })).first)->second;
+			collection,
+			detail_score })).first)->second;
 		//因为同时要处理Refresh的情况,直接构造不会覆盖相同的key的value
 
 	}
