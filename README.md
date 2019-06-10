@@ -57,6 +57,6 @@ Bangumi娘QQ号: 272242684
 
 ---
 + 依据实际情况填写配置文件，同时创建以上文件夹并给予Cache及其子文件夹写入权限
-+ 本插件还需要WEB环境【PHP 5.6+ 及 MySQL 5.6+】
++ 本插件还需要WEB环境【PHP 5.5+ 及 MySQL 5.6+】
 + Linux下推荐使用LNMP搭建WEB及MYSQL环境
 + Windows下推荐使用WampServer搭建WEB及MYSQL环境
