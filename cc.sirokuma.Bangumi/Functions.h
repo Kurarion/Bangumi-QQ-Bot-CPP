@@ -2037,7 +2037,8 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 		bangumi::string help_msg;
 
 		//
-		help_msg << "使用指南: " << "https://bangumi.irisu.cc/";
+		help_msg << "[CQ:image,file=" << bgm.help_pic << "]";
+		help_msg >> "使用指南: " << "https://bangumi.irisu.cc/";
 		
 		DEFAULT_SEND(param.type, help_msg);
 
