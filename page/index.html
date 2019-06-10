@@ -72,11 +72,15 @@
             <li><a href="#36">3.6 条目更新</a></li>
             <li><a href="#37">3.7 标签搜索</a></li>
             <li><a href="#38">3.8 统计使用情况</a></li>
+            <li><a href="#39">3.9 查询时间线</a></li>
+            <li><a href="#310">3.10 查询用户收藏列表</a></li>
+            <li><a href="#311-dmhy-moe">3.11 dmhy, moe指令</a></li>
         <li class="main "><a href="#4">4. 复杂参数</a></li>
             <li><a href="#41">4.1 基本复杂参数</a></li>
             <li><a href="#42">4.2 条目查询的复杂参数</a></li>
             <li><a href="#43">4.3 条目收藏的复杂参数</a></li>
             <li><a href="#44">4.4 条目更新的复杂参数</a></li>
+            <li><a href="#45-id">4.5 用户ID</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -139,14 +143,14 @@
 <tr>
 <td>"co" "收藏"</td>
 <td>进行条目的收藏</td>
-<td>&lt;条目ID&gt;(/&lt;收藏类型&gt;/&lt;评分&gt;/&lt;吐槽&gt;)</td>
+<td>&lt;条目ID&gt;(/&lt;收藏类型&gt;/&lt;评分&gt;/&lt;吐槽&gt;/&lt;标签1&gt;+&lt;标签2&gt;...)</td>
 <td>123456</td>
-<td>123456/fin/8/制作精良</td>
+<td>123456/fin/8/制作精良/原创+热血</td>
 </tr>
 <tr>
 <td>"up" "++" "更新"</td>
 <td>进行条目的更新</td>
-<td>&lt;条目ID&gt;(/&lt;要更新的进度&gt;)</td>
+<td>&lt;条目ID&gt;(/&lt;要更新的进度&gt;...)</td>
 <td>21435</td>
 <td>21435/air</td>
 </tr>
@@ -163,6 +167,20 @@
 <td>&lt;空&gt; 或 "me"</td>
 <td>me</td>
 <td>无</td>
+</tr>
+<tr>
+<td>"tml" "时光机"</td>
+<td>查询用户或全站时间线</td>
+<td>&lt;空&gt; 或 &lt;用户ID&gt;</td>
+<td>sai</td>
+<td>无</td>
+</tr>
+<tr>
+<td>"bgm" "bangumi"</td>
+<td>查询用户收藏列表</td>
+<td>&lt;用户ID&gt;(/&lt;条目类型&gt;/&lt;收藏类型&gt;/&lt;页码&gt;/&lt;排序方式&gt;/&lt;标签&gt;)</td>
+<td>1</td>
+<td>#/a/fin/1/rate/原创</td>
 </tr>
 </tbody>
 </table>
@@ -204,6 +222,194 @@
 <td>无</td>
 <td>&lt;空&gt;</td>
 <td>无</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>&lt;用户ID&gt;</th>
+<th>含意</th>
+<th>参数举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"#"</td>
+<td>QQ号关联的Bangumi账号</td>
+<td>"#"</td>
+</tr>
+<tr>
+<td>&lt;数字&gt;</td>
+<td>Bangumi账号的数字UID</td>
+<td>1</td>
+</tr>
+<tr>
+<td>&lt;用户名&gt;</td>
+<td>Bangumi账号的自定义字母数字组合UID</td>
+<td>sai</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>&lt;条目额外信息标识符&gt;(不区分大小写)</th>
+<th>对应的信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>t</td>
+<td>此条目的标签</td>
+</tr>
+<tr>
+<td>r</td>
+<td>此条目的角色</td>
+</tr>
+<tr>
+<td>c</td>
+<td>此条目的吐槽</td>
+</tr>
+<tr>
+<td>s</td>
+<td>此条目的放送状态</td>
+</tr>
+<tr>
+<td>o</td>
+<td>此条目的staff信息</td>
+</tr>
+<tr>
+<td>a</td>
+<td>此条目的关联条目</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>&lt;条目类型&gt;(不区分大小写)</th>
+<th>对应的条目类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a (默认)</td>
+<td>动画</td>
+</tr>
+<tr>
+<td>c</td>
+<td>书籍</td>
+</tr>
+<tr>
+<td>g</td>
+<td>游戏</td>
+</tr>
+<tr>
+<td>m</td>
+<td>音乐</td>
+</tr>
+<tr>
+<td>r</td>
+<td>三次元</td>
+</tr>
+<tr>
+<td>x (bgm指令中无效)</td>
+<td>全部分类</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>&lt;收藏类型&gt;(不区分大小写)</th>
+<th>对应的收藏状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"do" "on" (默认)</td>
+<td>在看/玩/听/读</td>
+</tr>
+<tr>
+<td>"collect" "fin"</td>
+<td>看/玩/听/读过</td>
+</tr>
+<tr>
+<td>"wish" "td"</td>
+<td>想看/玩/听/读</td>
+</tr>
+<tr>
+<td>"hold"</td>
+<td>搁置</td>
+</tr>
+<tr>
+<td>"drop"</td>
+<td>抛弃</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>&lt;要更新的进度&gt;</th>
+<th>对应进度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt;数字&gt;</td>
+<td>此数字的大小</td>
+</tr>
+<tr>
+<td>"air"</td>
+<td>已放送话数</td>
+</tr>
+<tr>
+<td>"fin"</td>
+<td>总话数(同时会收藏为看过状态)</td>
+</tr>
+<tr>
+<td>+x</td>
+<td>在自己进度基础上向后加上 x 话</td>
+</tr>
+<tr>
+<td>-x</td>
+<td>在自己进度基础上向前减去 x 话</td>
+</tr>
+<tr>
+<td>(数/参)+x</td>
+<td>在原有的数字和参数表示基础上向后加上 x 话</td>
+</tr>
+<tr>
+<td>(数/参)-x</td>
+<td>在原有的数字和参数表示基础上向前减去 x 话</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>&lt;排序方式&gt;</th>
+<th>对应的排序方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt;空&gt; (默认)</td>
+<td>按收藏时间排序(倒序)</td>
+</tr>
+<tr>
+<td>"rate"</td>
+<td>按评分排序(从高到低倒序)</td>
+</tr>
+<tr>
+<td>"date"</td>
+<td>按作品发售日期排序(倒序)</td>
+</tr>
+<tr>
+<td>"title"</td>
+<td>按作品名排序(正序)</td>
 </tr>
 </tbody>
 </table>
@@ -629,6 +835,89 @@
 <li>具体使用示例如下：</li>
 </ul>
 <p><img alt="用户查询" src="pic/rank.png" /></p>
+<h2 id="39">3.9 查询时间线</h2>
+<ul>
+<li><strong>关键字</strong><code>tml</code>或<code>时光机</code>表示<code>查询时间线</code></li>
+<li><strong>参数</strong>：<code>空</code>或<code>&lt;用户ID&gt;</code></li>
+<li><strong>返回</strong>：如下表</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>返回</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>空</td>
+<td>返回当前全站的时间线</td>
+</tr>
+<tr>
+<td>&lt;用户ID&gt;</td>
+<td>返回指定用户的时间线</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>具体使用示例如下：</li>
+</ul>
+<p><img alt="用户查询" src="pic/tml.png" /></p>
+<h2 id="310">3.10 查询用户收藏列表</h2>
+<ul>
+<li><strong>关键字</strong><code>bgm</code>或<code>bangumi</code>表示<code>查询用户收藏列表</code></li>
+<li><strong>参数</strong>：需要查询的用户与可选的额外的精确条件</li>
+<li>
+<p><strong>返回</strong>：指定用户的收藏列表</p>
+</li>
+<li>
+<p>额外的参数</p>
+</li>
+<li><code>用户ID/条目类型/收藏类型/页码/排序方式/标签</code></li>
+<li><code>用户ID</code>即想要查询的用户的ID</li>
+<li><code>条目类型</code>即想要查询的收藏列表的条目的类型</li>
+<li><code>收藏类型</code>即想要查询的收藏列表的收藏的类型</li>
+<li><code>页码</code>即想要查询收藏列表的页码号</li>
+<li><code>排序方式</code>即想要以什么方式排序列表</li>
+<li><code>标签</code>即只查询此用户标记的指定标签的条目列表</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>排序方式参数</th>
+<th>对应的排序方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt;空&gt; (默认)</td>
+<td>按收藏时间排序(倒序)</td>
+</tr>
+<tr>
+<td>"rate"</td>
+<td>按评分排序(从高到低倒序)</td>
+</tr>
+<tr>
+<td>"date"</td>
+<td>按作品发售日期排序(倒序)</td>
+</tr>
+<tr>
+<td>"title"</td>
+<td>按作品名排序(正序)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>具体使用示例如下：</li>
+</ul>
+<p><img alt="用户查询" src="pic/bgm.png" /></p>
+<h2 id="311-dmhy-moe">3.11 dmhy, moe指令</h2>
+<ul>
+<li><strong>关键字</strong><code>dmhy</code>或<code>moe</code>表示<code>dmhy, moe指令</code></li>
+<li><strong>参数</strong>：&lt;条目ID&gt; 或 &lt;搜索关键字&gt;/&lt;要更新的进度&gt;/&lt;返回个数&gt; <strong>后面两个参数可以省略</strong></li>
+<li><strong>注意</strong>：使用前需要首先通过Bangumi娘的测试, 首次使用指令时会告知如何开始测试</li>
+<li><strong>返回</strong>：搜索的结果列表</li>
+</ul>
 <h1 id="4">4. 复杂参数</h1>
 <h2 id="41">4.1 基本复杂参数</h2>
 <ul>
@@ -756,7 +1045,42 @@
 </li>
 <li><code>:++ 220632  _24</code> 表示 <code>24分钟</code>后会执行此指令</li>
 </ul>
-<p><img alt="延时指令" src="pic/delay_update.png" /></p></div>
+<p><img alt="延时指令" src="pic/delay_update.png" /></p>
+<h2 id="45-id">4.5 用户ID</h2>
+<ul>
+<li>如下表</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>&lt;用户ID&gt;</th>
+<th>含意</th>
+<th>参数举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"#"</td>
+<td>QQ号关联的Bangumi账号</td>
+<td>"#"</td>
+</tr>
+<tr>
+<td>&lt;数字&gt;</td>
+<td>Bangumi账号的数字UID</td>
+<td>1</td>
+</tr>
+<tr>
+<td>&lt;用户名&gt;</td>
+<td>Bangumi账号的自定义字母数字组合UID</td>
+<td>sai</td>
+</tr>
+<tr>
+<td>&lt;空&gt; (仅在bgm指令中有效)</td>
+<td>同"#", 表示QQ号关联的Bangumi账号</td>
+<td>&lt;空&gt;</td>
+</tr>
+</tbody>
+</table></div>
         </div>
 
         <footer class="col-md-12">
@@ -839,5 +1163,5 @@
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2019-06-05 03:53:04
+Build Date UTC : 2019-06-10 06:35:22
 -->
