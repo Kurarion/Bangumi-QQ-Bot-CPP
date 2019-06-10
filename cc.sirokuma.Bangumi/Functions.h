@@ -3690,7 +3690,7 @@ if (!res4.empty())\
 
 				//=========计算进度Over==========
 				//判断如果进度已经超过了TV的总EPS则直接收藏为看完
-				if (to_update_eps >= subject_data.GetEpsCount()) {
+				if (to_update_eps >= subject_data.GetEpsCount() && subject_data.GetEpsCount() != 0) {
 					//使用CollectionAPI收藏为看完
 					try {
 						//Collection API 同步
