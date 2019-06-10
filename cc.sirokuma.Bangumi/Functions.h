@@ -4297,7 +4297,7 @@ if (!res4.empty())\
 			if (result[0][0] == '0')
 			{
 				//发送回复
-				DEFAULT_SEND(param.type, "请尝试@我或喊[\"BGM娘\"/\"Bgm娘\"]来接受我的考核~");
+				DEFAULT_SEND(param.type, "请尝试@我或喊[\"BGM娘\"/\"bgm娘\"]来接受我的考核~");
 				return;
 			}
 			else if (result[0][0] == '9') {

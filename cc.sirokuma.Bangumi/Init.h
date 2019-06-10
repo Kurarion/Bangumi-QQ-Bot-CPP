@@ -31,13 +31,13 @@ const boost::bimap<char, char> num_bimap;
 //@me
 static std::string at_me_cq;//在Init中初始化
 static const std::string at_me_1 = "BGM娘";
-static const std::string at_me_2 = "Bgm娘";
+static const std::string at_me_2 = "bgm娘";
 static const bangumi::string test_passed = "恭喜通过全部考核！\n已解锁 dmhy 和 moe 指令~";
 static const bangumi::string error_answer = "不对哦~\n重复一下问题：\n";
 static const bangumi::string right_answer = "Bingo！\n接着下一个问题：\n";
 static const bangumi::string question[] =
 {
-	"请@或喊[Bgm娘]并回复\"OK\"来接受我的考核吧~",
+	"请@或喊[bgm娘]并回复\"OK\"来接受我的考核吧~",
 	"[1]如何使用帮助功能？(提示：帮助指令为help)",
 	"[2]如何使用标签查询查找标签为\"原创\"的2018年10月番的第二页的结果？",
 	"[3]如果想要进行自身使用统计并强制缓存刷新式查询Bangumi ID为 1 和 92981 的用户应当如何输入指令？",

@@ -3291,6 +3291,10 @@ namespace Resolve {
 
 			}
 
+			//判断当前页是否有结果
+			if (current_sub_num == 0 && current_n == 0) {
+				ret[0] << "没有相关收藏结果...\n";
+			}
 			//等待图片下载完成
 			for (auto &t : ThreadVector) {
 				if (t != nullptr&&t->joinable())
