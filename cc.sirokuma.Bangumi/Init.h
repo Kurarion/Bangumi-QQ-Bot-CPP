@@ -197,7 +197,12 @@ inline bangumi::BangumiSubject& BangumiSQLFindSubject(size_t subject_id) {
 	//这些都会在Add函数中处理
 	if (affect_rows_num > 0) {
 		//如果行数不为0,则存在
-
+		//首先检查SQL中score_max是否为0,0则强制刷新
+		if (result[28][0] == '0')
+		{
+			//通过异常结束函数
+			throw boost::system::system_error(bangumi_bot_errors::subject_sql_miss);
+		}
 		//
 		try {
 #ifndef NDEBUG
