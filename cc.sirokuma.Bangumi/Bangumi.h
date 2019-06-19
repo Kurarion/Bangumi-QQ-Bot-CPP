@@ -628,7 +628,7 @@ if(var.compare(var2)!=0)\
 					const int output_num = 2;
 					ret >> "-----------"
 						>> "未放送TV:";
-					int n = GetEpsUnAiredCount() < output_num ? GetEpsAiredCount() : output_num;
+					int n = GetEpsUnAiredCount() < output_num ? GetEpsUnAiredCount() : output_num;
 					for (int i = 0; i < n; ++i) {
 						ret >> "● " << unair_eps[i];
 						//额外信息
