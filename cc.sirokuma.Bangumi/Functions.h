@@ -1586,6 +1586,13 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 				}
 				else {
 					//说明没有匹配项
+					//判断是否是0条目
+					if (subject_id == 0) {
+						//使用%解析
+						std::string temp_str = str;
+						temp_str[sharp_pos] = '%';
+						return bangumi::PARA_Resolve_Percent(temp_str, code);
+					}
 					//返回0
 					return 0;
 				}
