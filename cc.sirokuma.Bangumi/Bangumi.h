@@ -602,8 +602,10 @@ if(var.compare(var2)!=0)\
 					int n = GetEpsAiredCount();
 					//从低到高输出
 					int start_pos = n - output_num;
-					if (start_pos < 0)
+					if (start_pos < 0) {
 						start_pos = 0;
+						output_num = n;
+					}
 					if (curr_eps != 0&& curr_eps<start_pos) {
 						start_pos = curr_eps;
 					}
