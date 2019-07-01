@@ -1714,7 +1714,7 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 				bangumi::string request;
 				request << "GET " << uri << " HTTP/1.1\r\n"
 					<< "Host: api.bgm.tv\r\n"
-					<< "Cookie: chii_searchDateLine = 0;\r\n\r\n";
+					<< "Cookie: chii_searchDateLine=0;\r\n\r\n";
 #ifndef NDEBUG
 				{
 					bangumi::string debug_msg;
@@ -2396,7 +2396,7 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 			request_one->set_host("api.bgm.tv");
 			request_one->set_uri("/user/" + bangumi_name);
 			//只有搜索条目时需要Cookie: chii_searchDateLine
-			request_one->set_request(request_message(request_one, HTTP_WAY::GET,/* "Cookie: chii_searchDateLine = 0;\r\n"*/""));
+			request_one->set_request(request_message(request_one, HTTP_WAY::GET,/* "Cookie: chii_searchDateLine=0;\r\n"*/""));
 			//设置回调函数
 			request_one->set_callback([](std::shared_ptr<HTTPRequest>request_one, bangumi::BGMRetParam param, int ec) {
 				//要回复的string
@@ -2791,7 +2791,7 @@ if (!res4.empty())\
 				//默认就是小的json结构体
 				request_one->set_uri("/subject/" + std::to_string(subject_id));
 				//只有搜索条目时需要Cookie: chii_searchDateLine
-				request_one->set_request(request_message(request_one, HTTP_WAY::GET,/* "Cookie: chii_searchDateLine = 0;\r\n"*/""));
+				request_one->set_request(request_message(request_one, HTTP_WAY::GET,/* "Cookie: chii_searchDateLine=0;\r\n"*/""));
 				//设置回调函数
 				request_one->set_callback([](std::shared_ptr<HTTPRequest>request_one, bangumi::BGMRetParam param, int ec) {
 					//要回复的string
@@ -4029,7 +4029,7 @@ if (!res4.empty())\
 					<< "&max_results=" << complex_param.search_max_num;
 				request_one->set_uri("/search/subject/" + code_encoder.Conv(subject_str) + extra_search_param);
 				//只有搜索条目时需要Cookie: chii_searchDateLine, 也为防止限制搜索
-				request_one->set_request(request_message(request_one, HTTP_WAY::GET, "Cookie: chii_searchDateLine = 0;\r\n", ""));
+				request_one->set_request(request_message(request_one, HTTP_WAY::GET, "Cookie: chii_searchDateLine=0;\r\n", ""));
 				//设置回调函数
 				request_one->set_callback([](std::shared_ptr<HTTPRequest>request_one, bangumi::BGMRetParam param, int ec) {
 					//要回复的string
