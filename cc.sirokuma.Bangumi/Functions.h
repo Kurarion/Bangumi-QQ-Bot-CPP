@@ -2032,7 +2032,7 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 
 	//Bot: 读取Bangumi娘的配置信息
 	inline void BOT_Read_Ini(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
-
+		
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
@@ -2571,6 +2571,10 @@ if (complex_param.add_air_status){\
 	if (!access_token.empty()) {\
 		/*解析条目状态*/\
 		auto& resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, refresh);\
+		if(resolved_subject.GetEpsCount() == 0){\
+		/*如果请求失败,重新请求一次*/\
+		resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, false);\
+		}\
 		/*如果有此注册用户*/\
 		auto& progress_struct =  GetUserSubjectProgress(subject_id, resolved_subject.GetEpsCount(), user_id,\
 			param.qq, access_token, refresh_token, refresh);\
@@ -2588,6 +2592,10 @@ if (complex_param.add_air_status){\
 		res3 << progress_struct.first;\
 	}else{\
 		auto& resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, refresh);\
+		if(resolved_subject.GetEpsCount() == 0){\
+		/*如果请求失败,重新请求一次*/\
+		resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, false);\
+		}\
 		res3 << resolved_subject.Get();\
 	}\
 }\
@@ -3206,6 +3214,10 @@ if (!res4.empty())\
 					std::string html = bangumi::GetSubjectHtml(param.cur_id);
 					
 					BangumiSubjectCollection subject_data = Resolve::ResolveSubjectCollection(html, param.cur_id, param.extra.refresh);
+					if (subject_data.GetEpsCount() == 0) {
+						/*如果请求失败,重新请求一次*/\
+						subject_data = Resolve::ResolveSubjectCollection(html, param.cur_id, false);
+					}
 					if (!subject_data.Valid()) {
 						//说明 这个条目是不对非会员开放的
 						throw boost::system::system_error(bangumi_bot_errors::maybe_301_maybe_limit);
@@ -3530,6 +3542,11 @@ if (!res4.empty())\
 				//从HTML解析需要的信息: 作品名,总集数,图片,当前放送的话数等
 				std::string html = bangumi::GetSubjectHtml(subject_id);
 				BangumiSubjectCollection subject_data = Resolve::ResolveSubjectCollection(html, subject_id, param.extra.refresh);
+				if (subject_data.GetEpsCount() == 0)
+				{
+					//如果请求的信息集合总话数为0则再请求一次以防止更新失败
+					subject_data = Resolve::ResolveSubjectCollection(html, subject_id, false);
+				}
 				if (!subject_data.Valid()) {
 					//说明 这个条目是不对非会员开放的
 					throw boost::system::system_error(bangumi_bot_errors::maybe_301_maybe_limit);
