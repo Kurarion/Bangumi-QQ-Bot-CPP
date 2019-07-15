@@ -68,8 +68,10 @@ inline std::pair<bool,bool> VerifyMsg(const char &first, const char &second, con
 //分析原msg中的计时,并返回countdown
 inline std::pair<unsigned,std::string> AnalyseTimeWork(const char *msg) {
 	std::string temp = msg;
+	//去除所有回车
+	boost::erase_all(temp, "\r\n");
 	//当前使用_作为计时的符号
-	size_t t_pos = temp.find_last_of('_');
+	size_t t_pos = temp. find_last_of('_');
 	unsigned countdown = 0;
 	if (t_pos != std::string::npos) {
 		//如果有这个符号
@@ -85,7 +87,7 @@ inline std::pair<unsigned,std::string> AnalyseTimeWork(const char *msg) {
 		}
 	}
 	//最后返回countdown
-	return {countdown,msg};
+	return {countdown,temp};
 }
 //向数据库中更新指令使用情况
 void UpdateCodeType(std::set<BgmCode>&pool,int64_t qq) {
@@ -237,8 +239,10 @@ inline void ParsingM(int32_t subType, int32_t msgId, int64_t fromDiscussGroup, B
 	std::list<bangumi::Code> code_pool;
 	//本次命令的标识符set
 	std::set<BgmCode> code_type;
+	//计时检测
+	auto time_result = AnalyseTimeWork(msg);
 	//本次命令的参数对象
-	bangumi::BGMCodeParam code_param(bangumi::BGMCodeExtraVar{ 0,refresh }, msg, code_pool, code_type, DiscussOrGroup, fromQQ, fromDiscussGroup);
+	bangumi::BGMCodeParam code_param(bangumi::BGMCodeExtraVar{ time_result.first,refresh }, time_result.second.c_str(), code_pool, code_type, DiscussOrGroup, fromQQ, fromDiscussGroup);
 	//构造BGMCode处理命令
 	bangumi::BGMCode input(code_param);
 #ifndef NDEBUG
