@@ -6,6 +6,7 @@
 #include "cqp.h"
 #include "BangumiExceptions.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include "boost/date_time/posix_time/posix_time.hpp"
 #include "iconv.h"
 #ifndef BANGUMI_H
 #define BANGUMI_H
@@ -42,6 +43,7 @@ CodeConverter code_converter("utf-8", "gb18030");
 CodeConverter code_encoder("gb18030", "utf-8");
 //计算图形化进度条
 #define PHY_PROGRESS_MAX_NUM 16
+#define PROCRESS_MAX_NUM 12
 inline std::string CalPhyProgress(int current_num, int max_num) {
 	if (current_num==0 || max_num ==0)
 	{
@@ -370,7 +372,8 @@ if(var.compare(var2)!=0)\
 			int irank,
 			std::string iimage_file,
 			Collection icollection,
-			int idscore[11]
+			int idscore[11],
+			std::string p_time_str
 		)
 			:subject_id(isubject_id),
 			url(iurl),
@@ -385,7 +388,8 @@ if(var.compare(var2)!=0)\
 			rating_score(irating_score),
 			rank(irank),
 			image_file(iimage_file),
-			collection(icollection)
+			collection(icollection),
+			refresh_time(p_time_str)
 		{
 			for (int i = 0;i<11;++i)
 			{
@@ -440,7 +444,7 @@ if(var.compare(var2)!=0)\
 			ret >> ""
 				>> "排名:  " << (rank == 0 ? "无" : std::to_string(rank))
 				>> "评分:  " << rating_score << "    评分数:  " << rating_num
-				>> "------";
+				>> "------\n<更新于 " << get_current_time() << ">";
 			//增加评分分布
 			for (int i = 1; i < 10; ++i) {
 				ret >> "●   " << i << "分| ";
@@ -482,6 +486,10 @@ if(var.compare(var2)!=0)\
 			ret	>> "条目主页:  " << url;
 			return std::move(ret);
 		}
+	private:
+		std::string get_current_time() {
+			return refresh_time;
+		}
 	public:
 		size_t subject_id = 0;
 		std::string url;
@@ -498,6 +506,8 @@ if(var.compare(var2)!=0)\
 		std::string image_file;
 		Collection collection;
 		int detail_score[11];
+		//条目的最后的更新的日期
+		std::string refresh_time;
 	};
 	//条目章节等结构体
 	struct BangumiSubjectCollection :public Msg_Interface
@@ -567,6 +577,18 @@ if(var.compare(var2)!=0)\
 		void SetCurrentEps(const int &curr) {
 			curr_eps = curr;
 		}
+		bangumi::string GetExStr() {
+			//排除没有获取到有效总话数的情况
+			if (GetAllEpsCount() == 0)
+			{
+				return "";
+			}
+			bangumi::string res;
+			res << "已观看: " << std::string(std::ceil(PROCRESS_MAX_NUM * curr_eps / GetAllEpsCount()), '>')<< " " << curr_eps
+				>> "已放送: " << std::string(std::ceil(PROCRESS_MAX_NUM * GetEpsAiredCount() / GetAllEpsCount()), '>') << " " << GetEpsAiredCount()
+				>> "总话数: " << std::string(PROCRESS_MAX_NUM, '>')<<" "<<GetAllEpsCount();
+			return std::move(res);
+		}
 		//有效性
 		bool valid = true;
 	public:
@@ -596,7 +618,7 @@ if(var.compare(var2)!=0)\
 			else {
 				ret >> "放送状态:  " << GetEpsAiredCount() << '/' << GetEpsCount();
 				if (GetEpsAiredCount() != 0) {
-					const int output_num = 3;
+					int output_num = 3;
 					ret >> "-----------"
 						>> "已放送TV:";
 					int n = GetEpsAiredCount();
@@ -648,7 +670,7 @@ if(var.compare(var2)!=0)\
 					}
 				}
 				if (GetSPEpsAiredCount() != 0) {
-					const int output_num = 3;
+					int output_num = 3;
 					ret >> "-----------"
 						>> "已放送SP:";
 					int n = GetSPEpsAiredCount();
@@ -735,6 +757,9 @@ if(var.compare(var2)!=0)\
 		void AddEps(int eps) {
 			progress += std::to_string(eps);
 		}
+		void SetExStr(const std::string&to_add_str) {
+			this->to_add_str = to_add_str;
+		}
 		std::string GetRateStr() {
 			std::string ret;
 			for (int i = 0; i < rating; ++i)
@@ -757,6 +782,7 @@ if(var.compare(var2)!=0)\
 		std::string comment;
 		std::string progress;
 		bool valid;
+		std::string to_add_str = "";
 	public:
 		bangumi::string Get() override {
 			//[图片]
@@ -769,6 +795,9 @@ if(var.compare(var2)!=0)\
 			bangumi::string ret;
 			ret <<" 收藏为 [" << UTF82GBK(status_name) << "]";
 			STRRET("完成度:  ", progress);
+			if (to_add_str != "") {
+				ret >> to_add_str;
+			}
 			if (rating != 0) {
 				ret >> "评分:  " << GetRateStr();
 			}
@@ -788,6 +817,9 @@ if(var.compare(var2)!=0)\
 			bangumi::string ret;
 			ret << " 收藏为 [" << UTF82GBK(status_name) << "]";
 			STRRET("完成度:  ", progress);
+			if (to_add_str != "") {
+				ret >> to_add_str;
+			}
 			RET("评分:  ", rating);
 			STRRET("吐槽:  ", UTF82GBK(comment));
 			//ret >> "用户主页: " << url;

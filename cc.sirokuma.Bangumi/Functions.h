@@ -2032,7 +2032,10 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 
 	//Bot: 读取Bangumi娘的配置信息
 	inline void BOT_Read_Ini(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
-		
+		//TEST CQ:shared
+		//DEFAULT_SEND(param.type, "[CQ:share,url=http://bgm.tv/subject/220566,title=杀戮的天使,content=简介,image=http://lain.bgm.tv/pic/cover/c/1a/b7/220566_0CMxK.jpg]");
+		//TEST CQ:music
+		//DEFAULT_SEND(type, "[CQ:music,type=custom,url=http://bgm.tv/subject/220566,audio=https://bangumi.moe/,title=杀戮的天使,content=简介,image=http://lain.bgm.tv/pic/cover/c/1a/b7/220566_0CMxK.jpg]");
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
@@ -2589,7 +2592,9 @@ if (complex_param.add_air_status){\
 		resolved_subject.SetCurrentEps(curr_eps);\
 		res3 << resolved_subject.Get();\
 		/*加上进度信息*/\
-		res3 << progress_struct.first;\
+		/*res3 << progress_struct.first;*/\
+		progress_struct.second.progress.SetExStr(resolved_subject.GetExStr());\
+		res3 << progress_struct.second.ProgressGet();\
 	}else{\
 		auto& resolved_subject = Resolve::ResolveSubjectCollection(html, subject_id, refresh);\
 		if(resolved_subject.GetEpsCount() == 0){\
@@ -3810,6 +3815,7 @@ if (!res4.empty())\
 				//同时更新到User对象中的进度对象中
 				this_bgm_user.progress.progress = std::to_string(to_update_eps) + '/';
 				this_bgm_user.progress.AddEps(subject_data.GetEpsCount());
+				this_bgm_user.progress.SetExStr(subject_data.GetExStr());
 				//最后可以得出成功后的回复
 				bangumi::string success_msg;
 				bangumi::string extra_msg;

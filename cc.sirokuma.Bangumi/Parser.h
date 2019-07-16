@@ -1,6 +1,6 @@
 #include "Functions.h"
 //需要本地的时间
-#include "boost/date_time/posix_time/posix_time.hpp"
+//#include "boost/date_time/posix_time/posix_time.hpp"
 #ifndef BANGUMI_PARSER_H
 #define BANGUMI_PARSER_H
 //模板函数的显式声明/暂时不用,当前只有在本文件中使用过模板函数
@@ -20,6 +20,20 @@ inline std::pair<bool,bool> VerifyMsg(const char &first, const char &second, con
 	//std::string test_str(temp);
 	//小于0说明不是单字节的
 	if (temp[0] < 0) {
+		//识别特殊双字符前缀
+		for (const auto& i : pre_code_refresh) {
+#ifndef NDEBUG
+			CQ_addLog(ac, CQLOG_DEBUG, "Pre_code", i);
+#endif
+
+			if (temp[0] == i[0] && temp[1] == i[1]) {
+				//首先设置msg向前移动一位
+				//为了后面code识别不出现问题
+				++origin;
+				return{ true,true };
+			}
+		}
+
 		for (const auto& i : pre_code_muli) {
 #ifndef NDEBUG
 			CQ_addLog(ac, CQLOG_DEBUG, "Pre_code", i);
@@ -36,18 +50,28 @@ inline std::pair<bool,bool> VerifyMsg(const char &first, const char &second, con
 	}
 	//大于0说明是单字节的处理
 	else {
-		//识别特殊双字符前缀
+		//识别特殊双或单字符前缀
 		for (const auto& i : pre_code_refresh) {
 #ifndef NDEBUG
 			CQ_addLog(ac, CQLOG_DEBUG, "Pre_code", i);
 #endif
-
-			if (temp[0] == i[0] && temp[1] == i[1]) {
-				//首先设置msg向前移动一位
-				//为了后面code识别不出现问题
-				++origin;
-				return{ true,true };
+			if (i[1] != '\0') {
+				if (temp[0] == i[0] && temp[1] == i[1]) {
+					//首先设置msg向前移动一位
+					//为了后面code识别不出现问题
+					++origin;
+					return{ true,true };
+				}
 			}
+			else {
+				if (temp[0] == i[0]) {
+					//首先设置msg向前移动一位
+					//为了后面code识别不出现问题
+					//++origin;
+					return{ true,true };
+				}
+			}
+
 		}
 
 		//识别单字符的前缀

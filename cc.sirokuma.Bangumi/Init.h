@@ -9,6 +9,21 @@
 #define BANGUMI_INIT_H
 //bangumi-bot init
 
+std::string GetCurrentTimeStr() {
+	std::string res;
+	//当前时间 东八区
+	boost::posix_time::ptime currentTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::hours(8);
+	res = boost::posix_time::to_iso_extended_string(currentTime);
+	res[res.find_first_of('T')] = ' ';
+	return std::move(res);
+}
+std::string GetStrFromTime(boost::posix_time::ptime& t) {
+	std::string res = boost::posix_time::to_iso_extended_string(t);
+	res[res.find_first_of('T')] = ' ';
+	return std::move(res);
+}
+
+
 
 
 
@@ -60,16 +75,16 @@ void Init() {
 	//num_bimap初始化
 	auto x = num_bimap.left;
 
-	x.insert({ '0','0' });
-	x.insert({ '1','1' });
-	x.insert({ '2','2' });
-	x.insert({ '3','3' });
-	x.insert({ '4','4' });
-	x.insert({ '5','5' });
-	x.insert({ '6','6' });
-	x.insert({ '7','7' });
-	x.insert({ '8','8' });
-	x.insert({ '9','9' });
+    x.insert({ '0','0' });
+    x.insert({ '1','1' });
+    x.insert({ '2','2' });
+    x.insert({ '3','3' });
+    x.insert({ '4','4' });
+    x.insert({ '5','5' });
+    x.insert({ '6','6' });
+    x.insert({ '7','7' });
+    x.insert({ '8','8' });
+    x.insert({ '9','9' });
 
 	at_me_cq = "[CQ:at,qq=" + std::to_string(CQ_getLoginQQ(ac)) + "]";
 	
@@ -119,6 +134,7 @@ inline bangumi::BangumiUser& BangumiAddUser(size_t &user_id, std::string &url,
 	std::string &user_name, std::string &nick_name,
 	std::string &ava_file, std::string &sign/*, bool refresh = false*/) {
 
+	
 		{
 			//没有命中,直接构造
 #ifndef NDEBUG
@@ -258,6 +274,8 @@ inline bangumi::BangumiSubject& BangumiSQLFindSubject(size_t subject_id) {
 			detail_score[9] = std::stoi(result[26]);
 			detail_score[10] = std::stoi(result[27]);
 			detail_score[0] = std::stoi(result[28]);
+			boost::posix_time::ptime temp_time = boost::posix_time::time_from_string(result[29]);
+			std::string temp_time_str = GetStrFromTime(temp_time);
 #ifndef NDEBUG
 			{
 				bangumi::string debug_msg;
@@ -281,7 +299,8 @@ inline bangumi::BangumiSubject& BangumiSQLFindSubject(size_t subject_id) {
 				rank,
 				image_file,
 				collection,
-				detail_score })).first)->second;
+				detail_score,
+				temp_time_str })).first)->second;
 		}
 		catch (std::invalid_argument) {
 			throw boost::system::system_error(bangumi_bot_errors::sql_result_convert_filed);
@@ -314,7 +333,8 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 ) {
 
 
-		{
+
+	{
 		//没有命中,直接构造
 #ifndef NDEBUG
 		{
@@ -337,6 +357,7 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 		bangumi::string query;
 		//只是插入就不用Res了
 		//BGMSQLResult res;
+		std::string current_time_str = GetCurrentTimeStr();
 
 		std::string sql_image_file = image_file;
 		replace(sql_image_file.begin(), sql_image_file.end(), '\\', '/');
@@ -374,7 +395,8 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 			<< detail_score[8] << ","
 			<< detail_score[9] << ","
 			<< detail_score[10] << ","
-			<< detail_score[0] << ")";
+			<< detail_score[0] << ",'"
+			<< current_time_str << "')";
 #ifndef NDEBUG
 		{
 			bangumi::string debug_msg;
@@ -482,7 +504,8 @@ inline bangumi::BangumiSubject& BangumiAddSubject(
 			rank,
 			image_file,
 			collection,
-			detail_score })).first)->second;
+			detail_score,
+			current_time_str })).first)->second;
 		//因为同时要处理Refresh的情况,直接构造不会覆盖相同的key的value
 
 	}
@@ -528,5 +551,6 @@ std::string GetHtml(std::string uri, std::string host) {
 		return "";
 	}
 }
+
 
 #endif

@@ -17,17 +17,17 @@ const static std::map<BgmRetType, std::function<decltype(CQ_sendPrivateMsg)>> Se
 };
 //************
 //刷新缓存的命令识别前缀
-const static std::set<const char *> pre_code_refresh{ "::" };
+const static std::set<const char *> pre_code_refresh{ "::",";","；" };
 //命令识别前缀(单)
-const static std::set<const char *> pre_code_single{ ":",";","=","\\" };
+const static std::set<const char *> pre_code_single{ ":","=","\\" };
 //命令识别前缀(双)
-const static std::set<const char *> pre_code_muli{ "：","；" };
+const static std::set<const char *> pre_code_muli{ "："};
 //主要用于处理无命令符指令时使用
 const static std::string Default_Key("Subject");
 //************
 //unordered_set的直接初始化中后写的默认在set的前列
 //命令连接符是 , .
-const static std::unordered_set<char> code_link{ ':'/*,'.',','*/,';','=','\\' };
+const static std::unordered_set<const char *> code_link{ "：","；",":"/*,'.',','*/,";","=","\\"};
 //指令集 //注意这里是识别指令的关键,顺序不能放反
 //后面的元素优先级高,因此长字符放在后面
 const static std::unordered_map<std::string, BgmCode> instruct
