@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: 2019-06-10 14:13:49
+-- Generation Time: 2019-07-16 21:55:49
 -- 服务器版本： 5.5.60-log
 -- PHP Version: 5.6.36
 
@@ -57,7 +57,8 @@ CREATE TABLE `bgm_subjects` (
   `score_8` smallint(6) NOT NULL DEFAULT '0',
   `score_9` smallint(6) NOT NULL DEFAULT '0',
   `score_10` smallint(6) NOT NULL DEFAULT '0',
-  `score_max` smallint(6) NOT NULL DEFAULT '0'
+  `score_max` smallint(6) NOT NULL DEFAULT '0',
+  `subject_last_refresh` datetime NOT NULL DEFAULT '1400-01-01 00:00:00'
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
