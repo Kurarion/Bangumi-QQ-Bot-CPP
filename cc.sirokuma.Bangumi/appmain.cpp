@@ -210,7 +210,7 @@ CQEVENT(int32_t, __eventSystem_GroupMemberIncrease, 32)(int32_t subType, int32_t
 		message << "欢迎加入本群~";
 	}
 	else {
-		message << "欢迎使用~\n使用指南：https://bangumi.irisu.cc/";
+		message << "欢迎使用~\n使用指令「:help」可以获取使用帮助\n使用指南：https://bangumi.irisu.cc/";
 	}
 	SendMsg.at(BgmRetType::Group)(ac, fromGroup, message);
 	return EVENT_BLOCK;
@@ -223,7 +223,7 @@ CQEVENT(int32_t, __eventSystem_GroupMemberIncrease, 32)(int32_t subType, int32_t
 */
 CQEVENT(int32_t, __eventFriend_Add, 16)(int32_t subType, int32_t sendTime, int64_t fromQQ) {
 
-	SendMsg.at(BgmRetType::Private)(ac, fromQQ, "欢迎使用~\n使用指南：https://bangumi.irisu.cc/");
+	SendMsg.at(BgmRetType::Private)(ac, fromQQ, "欢迎使用~\n使用指令「:help」可以获取使用帮助\n使用指南：https://bangumi.irisu.cc/");
 	//向主上汇报
 	bangumi::string message;
 	message << "当前同意好友请求：" << fromQQ;
@@ -264,7 +264,7 @@ CQEVENT(int32_t, __eventRequest_AddGroup, 32)(int32_t subType, int32_t sendTime,
 		//向主上汇报
 		bangumi::string message;
 		message << "当前同意加入群：" << fromGroup
-			<< "邀请人：" << fromQQ;
+			<< "\n邀请人：" << fromQQ;
 		SendMsg.at(BgmRetType::Private)(ac, std::stoll(bgm.owner_qq), message);
 		//向群初次见面
 		SendMsg.at(BgmRetType::Group)(ac, fromGroup, "欢迎使用~\n使用指南：https://bangumi.irisu.cc/");

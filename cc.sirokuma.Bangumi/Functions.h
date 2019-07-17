@@ -2040,6 +2040,7 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
 
+
 	}
 	//Bot: Help信息
 	inline void BOT_Help(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
@@ -3815,7 +3816,8 @@ if (!res4.empty())\
 				//同时更新到User对象中的进度对象中
 				this_bgm_user.progress.progress = std::to_string(to_update_eps) + '/';
 				this_bgm_user.progress.AddEps(subject_data.GetEpsCount());
-				this_bgm_user.progress.SetExStr(subject_data.GetExStr());
+				subject_data.SetCurrentEps(to_update_eps);
+				this_bgm_user.progress.SetExStr(subject_data.GetExStr(user_self_watched_eps));
 				//最后可以得出成功后的回复
 				bangumi::string success_msg;
 				bangumi::string extra_msg;

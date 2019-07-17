@@ -577,16 +577,21 @@ if(var.compare(var2)!=0)\
 		void SetCurrentEps(const int &curr) {
 			curr_eps = curr;
 		}
-		bangumi::string GetExStr() {
+		bangumi::string GetExStr(int before = -1) {
 			//排除没有获取到有效总话数的情况
 			if (GetAllEpsCount() == 0)
 			{
 				return "";
 			}
 			bangumi::string res;
-			res << "已观看: " << std::string(std::ceil(PROCRESS_MAX_NUM * curr_eps / GetAllEpsCount()), '>')<< " " << curr_eps
-				>> "已放送: " << std::string(std::ceil(PROCRESS_MAX_NUM * GetEpsAiredCount() / GetAllEpsCount()), '>') << " " << GetEpsAiredCount()
-				>> "总话数: " << std::string(PROCRESS_MAX_NUM, '>')<<" "<<GetAllEpsCount();
+			if (before != -1)
+			{
+				res << "更新前: |" << std::string(std::ceil(PROCRESS_MAX_NUM * before / GetAllEpsCount()), '>') << " " << before
+					<< '\n';
+			}	
+			res << "已观看: |" << std::string(std::ceil(PROCRESS_MAX_NUM * curr_eps / GetAllEpsCount()), '>')<< " " << curr_eps
+				>> "已放送: |" << std::string(std::ceil(PROCRESS_MAX_NUM * GetEpsAiredCount() / GetAllEpsCount()), '>') << " " << GetEpsAiredCount()
+				>> "总话数: |" << std::string(PROCRESS_MAX_NUM, '>')<<" "<<GetAllEpsCount();
 			return std::move(res);
 		}
 		//有效性
