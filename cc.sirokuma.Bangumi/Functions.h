@@ -4640,10 +4640,12 @@ if (!res4.empty())\
 				//解析HTML
 				auto ret_vec = Resolve::ResolveRSS(rss_html,rss_type, complex_param.rss_max_items, pre_ret, param.extra.refresh);
 				//消息数组
-				for (auto& ret : ret_vec){
+				for (auto& ret : ret_vec.first){
 					//回复消息
 					DEFAULT_SEND(param.type, ret);
 				}
+				//回复精简消息
+				DEFAULT_SEND(param.type, ret_vec.second);
 				
 			}
 			catch (const boost::system::system_error&e)

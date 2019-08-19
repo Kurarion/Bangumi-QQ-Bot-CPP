@@ -2112,7 +2112,7 @@ namespace Resolve {
 	}
 
 	//解析RSS
-	inline std::vector<bangumi::string> ResolveRSS(std::string &xml, BgmCode rss_type,int max_num,bangumi::string pre_str="", bool refresh = false) {
+	inline std::pair<std::vector<bangumi::string>,bangumi::string> ResolveRSS(std::string &xml, BgmCode rss_type,int max_num,bangumi::string pre_str="", bool refresh = false) { ResolveRSS(std::string &xml, BgmCode rss_type,int max_num,bangumi::string pre_str="", bool refresh = false) {
 		//一条消息最多的条目数
 #define RSS_ONE_MESSAGE_NUM 5
 #define RSS_ALL_NUM 10
@@ -2138,7 +2138,7 @@ namespace Resolve {
 		}
 		catch(std::exception&e){
 			ret[0] << "访问失败...";
-			return ret;
+			return { ret,"" };
 		}
 
 		//窄字符
@@ -2149,7 +2149,7 @@ namespace Resolve {
 		}
 		catch (std::exception&e) {
 			ret[0] << "访问失败...";
-			return ret;
+			return { ret,"" };
 		}
 		//日期的处理
 		//std::string strDateTime = "Fri, 17 May 2019 00:30:27 GMT";
@@ -2174,6 +2174,10 @@ namespace Resolve {
 		//PIC图片下载线程
 		std::vector<std::shared_ptr<boost::thread>> ThreadVector;
 		//开始解析
+		//精简信息
+		bangumi::string miniMess;
+		std::vector<std::string> title_vec;
+		std::vector<std::string> magn_vec;
 		switch (rss_type)
 		{
 
@@ -2302,12 +2306,15 @@ namespace Resolve {
 						
 					++num_in_mssage;
 					++num;
+					//压入数组
+					title_vec.emplace_back(title);
+					magn_vec.emplace_back(bt_url);
 				}
 				if (num == 1) {
 					//如果没有正确处理一个
 					//抛出一个异常
 					ret[0] << "暂无资源...";
-					return ret;
+					return { ret,miniMess };
 				}
 			}
 			catch (std::exception& e)
@@ -2316,7 +2323,7 @@ namespace Resolve {
 				//自动忽略
 				//std::cout << e.what();
 				ret[0] << "...";
-				return ret;
+				return { ret,miniMess };
 			}
 		}
 			break;
@@ -2443,12 +2450,16 @@ namespace Resolve {
 						>> "种子链接:" >> encode_url << '\n';
 
 					++num;
+					++num_in_mssage;
+					//压入数组
+					title_vec.emplace_back(title);
+					magn_vec.emplace_back(bt_url);
 				}
 				if (num == 1) {
 					//如果没有正确处理一个
 					//抛出一个异常
 					ret[0] << "暂无资源...";
-					return ret;
+					return { ret,miniMess };
 				}
 			}
 			catch (std::exception& e)
@@ -2457,12 +2468,21 @@ namespace Resolve {
 				//自动忽略
 				//std::cout << e.what();
 				ret[0] << "...";
-				return ret;
+				return { ret,miniMess };
 			}
 		}
 			break;
 		default:
 			break;
+		}
+		//生成精简信息
+		miniMess << "----<全部资源>----";
+		for (auto& t : title_vec) {
+			miniMess >> t;
+		}
+		miniMess >> "----<链接>----";
+		for (auto& m : magn_vec) {
+			miniMess >> m;
 		}
 #ifndef NDEBUG
 		{
@@ -2499,7 +2519,7 @@ namespace Resolve {
 		//释放资源
 		//delete input_facet;
 		//返回
-		return ret;
+		return { ret,miniMess };
 	}
 
 	//解析关联条目
