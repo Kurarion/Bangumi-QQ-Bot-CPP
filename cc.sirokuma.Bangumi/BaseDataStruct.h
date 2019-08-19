@@ -89,7 +89,7 @@ namespace bangumi {
 					continue;
 				}
 				//命令的参数,因为一个命令只能有一个命令符,因此用if
-				if (instruct_iter != instruct_map.cend() && instruct_iter->first < sen_end) {
+				if (instruct_iter != instruct_map.cend() && instruct_iter->first < sen_end && instruct_iter->first > sen_beg) {
 					//一个语句可能出现两个命令符,借此忽略上个语句多出的命令,也就是说只使用一个指令中出现的第一个指令
 					while (instruct_iter->first < sen_beg) {
 						++instruct_iter;
