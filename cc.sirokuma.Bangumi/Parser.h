@@ -123,10 +123,16 @@ void UpdateCodeType(std::set<BgmCode>&pool,int64_t qq) {
 	boost::posix_time::ptime currentTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::hours(8);
 	boost::gregorian::date current_date = currentTime.date();
 	std::string current_date_str(boost::gregorian::to_iso_extended_string(current_date));
+	//最后加上更新日期,使用东八区的时间
+
+	std::string curr_time = boost::posix_time::to_iso_extended_string(currentTime);
+	curr_time[curr_time.find_first_of('T')] = ' ';
 	//查询语句
 	bangumi::string query;
-	query << "INSERT INTO bgm_users(user_id, user_qq, user_bangumi, user_access_token, user_refresh_token) "
-		<< "VALUE(NULL, " << qq << ", 0, '', '') ON DUPLICATE KEY UPDATE ";
+	query << "INSERT INTO bgm_users(user_id, user_qq, user_bangumi, user_access_token, user_refresh_token, dmhy_lastpubDate) "
+		<< "VALUE(NULL, " << qq << ", 0, '', '', '"
+		<< curr_time
+		<< "') ON DUPLICATE KEY UPDATE ";
 //便捷宏
 #define IF_QUERY(name)\
 name<<"=IF(BgmCode_Last_Date<'"<<current_date_str<<"',0,"<<name<<"),"
@@ -199,10 +205,7 @@ name<<"=IF(BgmCode_Last_Date<'"<<current_date_str<<"',0,"<<name<<"),"
 			break;
 		}
 	}
-	//最后加上更新日期,使用东八区的时间
-	
-	std::string curr_time = boost::posix_time::to_iso_extended_string(currentTime);
-	curr_time[curr_time.find_first_of('T')] = ' ';
+
 
 	query << "BgmCode_Last_Date = '"<< curr_time <<"'";
 	//最后执行SQL查询
@@ -460,14 +463,27 @@ else {\
 	return true;\
 }\
 }
+	//后的处理宏
+#define EXHandle_down(curr_right_num, to_return_num)\
+if (is_right_answer) {\
+	has_updated = true;\
+	Update_Right(fromQQ, curr_right_num+1);\
+}\
+else {\
+	BATSU();\
+	ret << question[to_return_num];\
+	AT_SEND_MSG(ret);\
+	return true;\
+}\
+}
 	//进行当前的状态检查
 	bool has_updated = false;
 	//
 	if (affect_rows_num > 0) {
 		//检查权限
-		switch (result[0][0])
+		switch (std::stoi(result[0]))
 		{
-		case '0':
+		case 0:
 		{
 			//验证是否正确回复
 			bool is_right_answer = false;
@@ -485,7 +501,7 @@ else {\
 			}
 
 		}
-		case '1': 
+		case 1: 
 		{
 			if (has_updated) {
 				//是从上一个阶段过来的
@@ -526,7 +542,7 @@ else {\
 			}
 
 		}
-		case '2':
+		case 2:
 		{
 			Handle_top(2);
 			//--问题答案的验证--
@@ -547,7 +563,7 @@ else {\
 			//--
 			Handle_down(2);
 		}
-		case '3':
+		case 3:
 		{
 			Handle_top(3);
 			//--问题答案的验证--
@@ -584,7 +600,7 @@ else {\
 			//--
 			Handle_down(3);
 		}
-		case '4':
+		case 4:
 		{
 			Handle_top(4);
 			//--问题答案的验证--
@@ -606,7 +622,7 @@ else {\
 			//--
 			Handle_down(4);
 		}
-		case '5':
+		case 5:
 		{
 			Handle_top(5);
 			//--问题答案的验证--
@@ -628,7 +644,7 @@ else {\
 			//--
 			Handle_down(5);
 		}
-		case '6':
+		case 6:
 		{
 			Handle_top(6);
 			//--问题答案的验证--
@@ -650,7 +666,7 @@ else {\
 			//--
 			Handle_down(6);
 		}
-		case '7':
+		case 7:
 		{
 			Handle_top(7);
 			//--问题答案的验证--
@@ -675,7 +691,7 @@ else {\
 			//--
 			Handle_down(7);
 		}
-		case '8':
+		case 8:
 		{
 			Handle_top(8);
 			//--问题答案的验证--
@@ -698,9 +714,9 @@ else {\
 				}
 			}
 			//--
-			Handle_down(8);
+			EXHandle_down(998,8);
 		}
-		case '9':
+		case 999:
 		{
 			if (has_updated) {
 				//是从上一个阶段过来的

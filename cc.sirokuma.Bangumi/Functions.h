@@ -2039,7 +2039,41 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
+		//test asio
+		//{
+		//	//https://api.bgm.tv/user/wz97315
 
+		//	//std::this_thread::sleep_for(std::chrono::seconds(3));
+		//	//http_client.resolve_url("api.bgm.tv");
+		//	std::shared_ptr<HTTPRequest> request_one =
+		//		http_client.create_request_fixed(1);
+		//	//boost::thread use([request_one]() {
+		//	//request_one->set_host("api.bgm.tv");
+		//	//request_one->set_uri("/user/kirie");
+		//	request_one->set_host("www.baidu.com");
+		//	request_one->set_uri("/");
+		//	request_one->set_request(request_message(request_one,HTTP_WAY::GET));
+		//	//设置回调函数
+		//	//request_one->set_callback([] {
+		//	//	//TODO
+		//	//	//首先在on_finish中创建一个Subject对象
+		//	//	//在on_finish函数中调用的回调函数中(也就是这个函数体中)或索引或参数返回
+		//	//	//创建的对象
+		//	//	//之后调用Subject的Get()[Get中可能会下载图片等操作]和酷Q API发送消息(参数通过这里的lambda捕捉)
+		//	//	//[注意]create_request_fixed没有创建新的线程
+		//	//});
+		//	request_one->execute();
+
+		//	//});
+
+		//	boost::this_thread::sleep(boost::posix_time::seconds(2));
+		//	//
+		//	std::cout << "=======" << std::endl;
+		//	std::string test1;
+		//	GetResponseContent(request_one, test1);
+
+		//	DEFAULT_SEND(param.type, test1.c_str());
+		//}
 
 	}
 	//Bot: Help信息
@@ -4299,7 +4333,7 @@ if (!res4.empty())\
 		}
 		//检查权限
 		bangumi::string query;
-		query << "SELECT dmhy_open "
+		query << "SELECT dmhy_open, BgmCode_subject, BgmCode_up ,user_bangumi "
 			<< "FROM bgm_users "
 			<< "WHERE user_qq="
 			<< param.qq;
@@ -4333,9 +4367,50 @@ if (!res4.empty())\
 				DEFAULT_SEND(param.type, "请尝试@我或喊[\"BGM娘\"/\"bgm娘\"]来接受我的考核~");
 				return;
 			}
-			else if (result[0][0] == '9') {
-				//什么也不做
-				//进行后续的处理
+			else if (strlen(result[0]) == 3) {
+				//进一步的达标检测
+				//指令使用次数合格
+				if (result[3][0] == '0' )
+				{
+					//发送回复
+					DEFAULT_SEND(param.type, "您暂时无法使用此功能");
+					//取消权限
+					bangumi::string query;
+					query << "UPDATE bgm_users SET "
+						<< "dmhy_open=1000 "
+						<< "WHERE user_qq="
+						<< param.qq;
+					//更新权限
+					auto affect_rows_num = sql_pool.ExecQueryNoRes(query);
+					try
+					{
+						SQLCheckResult(affect_rows_num);
+					}
+					catch (boost::system::system_error& e)
+					{
+#ifndef NDEBUG
+						{
+							bangumi::string debug_msg;
+							debug_msg << "更新权限失败:"
+								<< std::to_string(affect_rows_num)
+								>> e.what();
+
+							CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-RSS", debug_msg);
+						}
+#endif	
+						//这里不结束
+						//通过异常结束函数
+						//throw e;
+					}
+					return;
+				}
+				if (strlen(result[1]) > 2 && strlen(result[2]) > 2) {
+				}
+				else {
+					//发送回复
+					DEFAULT_SEND(param.type, "指令使用次数不足，暂时无法使用");
+					return;
+				}
 			}
 			else {
 				//发送回复
