@@ -74,7 +74,7 @@ CREATE TABLE `bgm_users` (
   `user_access_token` text NOT NULL,
   `user_refresh_token` text NOT NULL,
   `user_last_searched` int(10) UNSIGNED NOT NULL DEFAULT '0',
-  `dmhy_open` tinyint(1) NOT NULL DEFAULT '0',
+  `dmhy_open` smallint(4) NOT NULL DEFAULT '0',
   `dmhy_keyword` mediumtext,
   `dmhy_lastpubDate` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
   `dmhy_moe` tinyint(1) NOT NULL DEFAULT '0',

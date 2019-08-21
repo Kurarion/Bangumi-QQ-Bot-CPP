@@ -108,6 +108,9 @@ CQEVENT(int32_t, __eventPrivateMsg, 24)(int32_t subType, int32_t msgId, int64_t 
 //#endif
 	//进行@等验证
 	std::string msg_str(msg);
+	if (ParsingPic(subType, msgId, msg_str, 0, fromQQ, BgmRetType::Private)) {
+		return EVENT_BLOCK;
+	}
 	if (ParsingAt(msg_str, 0, fromQQ, BgmRetType::Private)) {
 		return EVENT_BLOCK;
 	}
@@ -133,6 +136,9 @@ CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fr
 	//return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数
 	//进行@等验证
 	std::string msg_str(msg);
+	if (ParsingPic(subType, msgId, msg_str, fromGroup, fromQQ, BgmRetType::Group)) {
+		return EVENT_BLOCK;
+	}
 	if (ParsingAt(msg_str, fromGroup, fromQQ, BgmRetType::Group)) {
 		return EVENT_BLOCK;
 	}
@@ -158,6 +164,9 @@ CQEVENT(int32_t, __eventDiscussMsg, 32)(int32_t subType, int32_t msgId, int64_t 
 	//return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数
 	//进行@等验证
 	std::string msg_str(msg);
+	if (ParsingPic(subType, msgId, msg_str, fromDiscuss, fromQQ, BgmRetType::Discuss)) {
+		return EVENT_BLOCK;
+	}
 	if (ParsingAt(msg_str, fromDiscuss, fromQQ, BgmRetType::Discuss)) {
 		return EVENT_BLOCK;
 	}

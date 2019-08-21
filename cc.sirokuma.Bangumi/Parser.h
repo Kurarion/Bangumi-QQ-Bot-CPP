@@ -749,6 +749,216 @@ else {\
 	}
 	//======
 }
+struct PicResult
+{
+	std::string romaji;
+	std::string title;
+	std::string syoukai;
+	std::string eps_num;
+	std::string eptitle;
+	std::string progress;
+
+	bangumi::string toString() {
+		bangumi::string res;
+		res << "<匹配结果>"// << romaji << "(罗马音)"
+			>> "原名:  " << title
+			>> syoukai
+			>> "匹配话数:  第 " << eps_num << "话"
+			>> "此话标题:  " << eptitle
+			>> "所在时刻:  " << progress;
+		return std::move(res);
+	}
+};
+//识图相关
+inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t fromDiscussGroup, int64_t fromQQ, BgmRetType retType) {
+	//进行响应的前缀
+	size_t pos = msg.find(at_me_cq);
+	if (pos != std::string::npos)
+	{
+		//msg.erase(pos, at_me_cq.length());
+	}
+	else if (pos = msg.find(pic_find_2), pos != std::string::npos) {
+		//msg.erase(pos, at_me_1.length());
+	}
+	else if (pos = msg.find(pic_find_1), pos != std::string::npos) {
+		//msg.erase(pos, at_me_2.length());
+	}
+	else {
+		//忽视此条处理
+		return false;
+	}
+	//进行接收图片的识别
+	size_t pic_pos = msg.find(pre_get_image);
+	if (pic_pos == std::string::npos)
+	{
+		return false;
+	}
+	//[CQ:image,file=1.jpg]
+	std::string recv_pic_name =msg.substr(pic_pos+pre_get_image.length(), msg.find(']', pic_pos) - pic_pos - pre_get_image.length());
+	//cqimg文件读取
+	ptree ipt;
+	read_ini(bgm.Bangumi_Img_Dir + recv_pic_name + ".cqimg", ipt);
+	//获取图片的url
+	std::string image_url = ipt.get<std::string>("image.url");
+//	std::string image_url = "https://c2cpicdw.qpic.cn/offpic_new/597320012//8808f6f9-80c1-448e-847b-b18218586526/0?vuin=272242684&term=2";
+	//请求Nao
+	//saucenao.com/search.php?db=999&api_key=????&dbmaski=32768&numres=1&url=https://iqdb.org/thu/thu_5318b582.jpg
+	bangumi::string uri("/search.php?db=21&numres=1");
+	
+	uri << "&api_key=" << bgm.nao_api;
+	uri << "&url=" << image_url;
+	std::string request = "GET " + uri + " HTTP/1.1\r\n"
+		"Host: " "saucenao.com" "\r\n" "\r\n";
+	//https请求
+	std::string page_result;
+	try {
+		//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
+		page_result = code_converter.Conv(http_client.SyncHTTPSRequest("saucenao.com", request));
+
+	}
+	catch (boost::system::system_error&) {
+		AT_SEND_MSG("图片匹配失败...");
+		return true;
+	}
+	//对结果进行处理
+	//=====
+	size_t tag_start_pos = page_result.find("<div class=\"resulttitle\">");
+	if (tag_start_pos == std::string::npos)
+	{
+		//说明没有匹配
+		//直接返回
+		AT_SEND_MSG("暂无匹配结果...");
+		return true;
+	}
+	size_t tag_end_pos = page_result.find("</span><br /></div></div></td></tr></table>",tag_start_pos);
+	//要处理的结果字符串
+	std::string result = page_result.substr(tag_start_pos + 25, tag_end_pos - tag_start_pos - 25);
+	//循环处理每一个字符 
+	bool is_in = false;
+	bangumi::string output_message;
+	for (int c = 0; c < result.length(); ++c) {
+		if (result[c] == '<')
+		{
+			is_in = true;
+			//尝试判断是否为<br标签
+			if (result[c+1] == 'b')
+			{
+				++c;
+				output_message << '\n';
+			}
+			continue;
+		}
+		if (result[c] == '>')
+		{
+			is_in = false;
+			continue;
+		}
+		if (!is_in)
+		{
+			output_message << result[c];
+		}
+	}
+	//---
+	//对原文本进行后续处理
+	size_t title_pos = output_message.find("Title: ");
+	if (title_pos != std::string::npos)
+	{
+		if (output_message[title_pos - 1] == 'P')
+		{
+			//说明是JPTitle
+			output_message[title_pos - 2] = ' ';
+			output_message[title_pos - 1] = ' ';
+			output_message[title_pos] = '\n';
+
+		}
+		else {
+			//说明是Title
+			output_message[title_pos] = '\n';
+		}
+	}
+	//生成一个结构体
+	PicResult subject;
+	//std::istringstream input(output_message);
+	try {
+		std::string temp;
+		size_t first_return = output_message.find_first_of('\n');
+		size_t first_gang = output_message.find_last_of('-', first_return - 1);
+		if (first_gang!=std::string::npos)
+		{
+			subject.eps_num += output_message[first_gang+2];
+			int i = 1;
+			while (output_message[first_gang + 2 + i]!='\n')
+			{
+				subject.eps_num += output_message[first_gang + 2 + i];
+				++i;
+			}
+		}
+
+		
+		//之后查找三个e: 
+		size_t pos = output_message.find("e: ", title_pos)+3;
+		size_t end = output_message.find('\n', pos);
+		subject.title = output_message.substr(pos, end - pos);
+		//此时查找此前最后一行
+		size_t pre_end_end = output_message.find_last_of('\n', pos);
+		size_t pre_end_start = output_message.find_last_of('\n', pre_end_end-1);
+		subject.syoukai = output_message.substr(pre_end_start + 1, pre_end_end - pre_end_start - 1);
+
+		pos = output_message.find("e: ", pos + 3)+3;
+		end = output_message.find('\n', pos);
+		subject.eptitle = output_message.substr(pos, end - pos);
+
+		pos = output_message.find("e: ", pos + 3)+3;
+		//end = output_message.find('\n', pos);
+		subject.progress = output_message.substr(pos);
+
+
+	}
+	catch (std::exception &e) {
+		AT_SEND_MSG("信息获取失败...");
+		return true;
+	}
+
+
+	//=====
+	//首先输出匹配结果 
+	AT_SEND_MSG(subject.toString());
+	//之后尝试进行条目查询
+	if (subject.title !="")
+	{
+		//替换这个标题中的空格
+		std::string title(subject.title);
+		size_t blank_pos = title.find(' ');
+		while (blank_pos != std::string::npos)
+		{
+			if (blank_pos >= title.length() / 3) {
+				title = title.substr(0, blank_pos);
+				break;
+			}
+			title[blank_pos] = '+';
+			blank_pos = title.find(' ', blank_pos + 1);
+		}
+		
+		//直接进行#刷新式查询
+		std::string to_exec_ins = ":#";
+		to_exec_ins += title;
+		//
+		switch (retType)
+		{
+		case BgmRetType::Private:
+			Parsing(subType, msgId, fromQQ, to_exec_ins.c_str(), false);
+			break; 
+		case BgmRetType::Group:
+		case BgmRetType::Discuss:
+			ParsingM(subType, msgId, fromDiscussGroup, retType, fromQQ, to_exec_ins.c_str(), false);
+			break; 
+		default:
+			break; 
+		}
+	}
+	return true;
+	
+}
 
 
 #endif

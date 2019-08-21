@@ -52,6 +52,7 @@ private:
 			batsu_answer = pt.get<std::string>("INI.Batsu_Pic", "Cache\\batsu.png");
 			goodjob_pic = pt.get<std::string>("INI.Good_Job_Pic", "Cache\\goodjob.png");
 			help_pic = pt.get<std::string>("INI.Help_Pic", "Cache\\help.png");
+			nao_api = pt.get<std::string>("INI.NAO_API", "");
 			//由于酪Q发送图片,其图片文件必须在data/image内部,因此注释以下语句
 			//cache_path = pt.get<std::string>("BOT.Cache_Path", ini_include_path + Bangumi_cache_name);
 			cache_path =  Bangumi_cache_name;
@@ -116,6 +117,7 @@ public:
 	std::string batsu_answer;
 	std::string goodjob_pic;
 	std::string help_pic;
+	std::string nao_api;
 
 	//初始化
 	void Init(const char *path) {
