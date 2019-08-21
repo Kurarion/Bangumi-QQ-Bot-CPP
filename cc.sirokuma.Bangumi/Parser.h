@@ -800,6 +800,7 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 	read_ini(bgm.Bangumi_Img_Dir + recv_pic_name + ".cqimg", ipt);
 	//获取图片的url
 	std::string image_url = ipt.get<std::string>("image.url");
+	ipt.clear();
 //	std::string image_url = "https://c2cpicdw.qpic.cn/offpic_new/597320012//8808f6f9-80c1-448e-847b-b18218586526/0?vuin=272242684&term=2";
 	//请求Nao
 	//saucenao.com/search.php?db=999&api_key=????&dbmaski=32768&numres=1&url=https://iqdb.org/thu/thu_5318b582.jpg
@@ -938,6 +939,14 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 			title[blank_pos] = '+';
 			blank_pos = title.find(' ', blank_pos + 1);
 		}
+
+		//去除可能的?防止误
+		size_t what_pos = title.find('?');
+		while (what_pos != std::string::npos)
+		{
+			title[what_pos] = '+';
+			what_pos = title.find(' ', what_pos + 1);
+		}
 		
 		//直接进行#刷新式查询
 		std::string to_exec_ins = ":#";
@@ -946,11 +955,11 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 		switch (retType)
 		{
 		case BgmRetType::Private:
-			Parsing(subType, msgId, fromQQ, to_exec_ins.c_str(), false);
+			Parsing(subType, msgId, fromQQ, to_exec_ins.c_str(), true);
 			break; 
 		case BgmRetType::Group:
 		case BgmRetType::Discuss:
-			ParsingM(subType, msgId, fromDiscussGroup, retType, fromQQ, to_exec_ins.c_str(), false);
+			ParsingM(subType, msgId, fromDiscussGroup, retType, fromQQ, to_exec_ins.c_str(), true);
 			break; 
 		default:
 			break; 
