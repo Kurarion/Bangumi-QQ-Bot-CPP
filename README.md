@@ -24,6 +24,7 @@ Bangumi娘QQ号: 272242684
 + MariaDB-Connector-C 3.0.7
 + libiconv&emsp;[github: <a href="https://github.com/kiyolee/libiconv-win-build" target="_blank">kiyolee/libiconv-win-build</a>]
 + CoolQ C++ SDK&emsp;[github: <a href="https://github.com/CoolQ/cqsdk-vc" target="_blank">CoolQ/cqsdk-vc</a>]
++ <a href="https://saucenao.com/" target="_blank">SauceNAO</a>
 
 
 ## 搭建自己的Bangumi娘
