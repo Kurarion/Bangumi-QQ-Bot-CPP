@@ -1484,9 +1484,14 @@ namespace Resolve {
 				//comment end===
 
 				//star===
-				temp = html.find("stars", time_end);
+				temp = html.find(" stars", time_end);
 				if (temp != std::string::npos&&temp < content_start) {
-					star = html[temp + 5];
+					star = html[temp + 6];
+					if (html[temp+7]!='"')
+					{
+						//ËµÃ÷10ÐÇ
+						star += html[temp + 7];
+					}
 				}
 				//star end===
 
