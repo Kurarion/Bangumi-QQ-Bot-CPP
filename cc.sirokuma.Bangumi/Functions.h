@@ -2039,41 +2039,6 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
-		//test asio
-		//{
-		//	//https://api.bgm.tv/user/wz97315
-
-		//	//std::this_thread::sleep_for(std::chrono::seconds(3));
-		//	//http_client.resolve_url("api.bgm.tv");
-		//	std::shared_ptr<HTTPRequest> request_one =
-		//		http_client.create_request_fixed(1);
-		//	//boost::thread use([request_one]() {
-		//	//request_one->set_host("api.bgm.tv");
-		//	//request_one->set_uri("/user/kirie");
-		//	request_one->set_host("www.baidu.com");
-		//	request_one->set_uri("/");
-		//	request_one->set_request(request_message(request_one,HTTP_WAY::GET));
-		//	//设置回调函数
-		//	//request_one->set_callback([] {
-		//	//	//TODO
-		//	//	//首先在on_finish中创建一个Subject对象
-		//	//	//在on_finish函数中调用的回调函数中(也就是这个函数体中)或索引或参数返回
-		//	//	//创建的对象
-		//	//	//之后调用Subject的Get()[Get中可能会下载图片等操作]和酷Q API发送消息(参数通过这里的lambda捕捉)
-		//	//	//[注意]create_request_fixed没有创建新的线程
-		//	//});
-		//	request_one->execute();
-
-		//	//});
-
-		//	boost::this_thread::sleep(boost::posix_time::seconds(2));
-		//	//
-		//	std::cout << "=======" << std::endl;
-		//	std::string test1;
-		//	GetResponseContent(request_one, test1);
-
-		//	DEFAULT_SEND(param.type, test1.c_str());
-		//}
 
 	}
 	//Bot: Help信息
@@ -3256,6 +3221,7 @@ if (!res4.empty())\
 					BangumiSubjectCollection subject_data = Resolve::ResolveSubjectCollection(html, param.cur_id, param.extra.refresh);
 					if (subject_data.GetEpsCount() == 0) {
 						/*如果请求失败,重新请求一次*/\
+						html = bangumi::GetSubjectHtml(param.cur_id);
 						subject_data = Resolve::ResolveSubjectCollection(html, param.cur_id, false);
 					}
 					if (!subject_data.Valid()) {
@@ -3585,6 +3551,7 @@ if (!res4.empty())\
 				if (subject_data.GetEpsCount() == 0)
 				{
 					//如果请求的信息集合总话数为0则再请求一次以防止更新失败
+					html = bangumi::GetSubjectHtml(param.cur_id);
 					subject_data = Resolve::ResolveSubjectCollection(html, subject_id, false);
 				}
 				if (!subject_data.Valid()) {
