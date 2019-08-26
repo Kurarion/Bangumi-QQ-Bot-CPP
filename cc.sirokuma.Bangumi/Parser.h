@@ -787,6 +787,12 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 		//忽视此条处理
 		return false;
 	}
+	bool db_default = true;
+	if (msg[0] == 'x')
+	{
+		//
+		db_default = false;
+	}
 	//进行接收图片的识别
 	size_t pic_pos = msg.find(pre_get_image);
 	if (pic_pos == std::string::npos)
@@ -804,7 +810,16 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 //	std::string image_url = "https://c2cpicdw.qpic.cn/offpic_new/597320012//8808f6f9-80c1-448e-847b-b18218586526/0?vuin=272242684&term=2";
 	//请求Nao
 	//saucenao.com/search.php?db=999&api_key=????&dbmaski=32768&numres=1&url=https://iqdb.org/thu/thu_5318b582.jpg
-	bangumi::string uri("/search.php?db=21&numres=1");
+	bangumi::string uri("/search.php?numres=1&db=");
+	if (db_default)
+	{
+		uri << "21";
+	}
+	else
+	{
+		uri << "22";
+	}
+	
 	
 	uri << "&api_key=" << bgm.nao_api;
 	uri << "&url=" << image_url;
@@ -911,8 +926,15 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 
 		pos = output_message.find("e: ", pos + 3)+3;
 		//end = output_message.find('\n', pos);
-		subject.progress = output_message.substr(pos);
-
+		if (pos == 3)
+		{
+			//说明没有EPTitle：
+			subject.progress = subject.eptitle;
+			subject.progress = "未知";
+		}
+		else {
+			subject.progress = output_message.substr(pos);
+		}
 
 	}
 	catch (std::exception &e) {
