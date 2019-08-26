@@ -788,7 +788,7 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 		return false;
 	}
 	bool db_default = true;
-	if (msg[0] == 'x')
+	if (msg.find("xxx") != std::string::npos)
 	{
 		//
 		db_default = false;
@@ -810,7 +810,7 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 //	std::string image_url = "https://c2cpicdw.qpic.cn/offpic_new/597320012//8808f6f9-80c1-448e-847b-b18218586526/0?vuin=272242684&term=2";
 	//«Î«ÛNao
 	//saucenao.com/search.php?db=999&api_key=????&dbmaski=32768&numres=1&url=https://iqdb.org/thu/thu_5318b582.jpg
-	bangumi::string uri("/search.php?numres=1&db=");
+	bangumi::string uri("/search.php?numres=2&db=");
 	if (db_default)
 	{
 		uri << "21";
