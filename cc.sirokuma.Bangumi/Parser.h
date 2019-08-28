@@ -926,7 +926,7 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 
 		pos = output_message.find("e: ", pos + 3)+3;
 		//end = output_message.find('\n', pos);
-		if (pos == 3)
+		if (pos == 2)
 		{
 			//说明没有EPTitle：
 			subject.progress = subject.eptitle;
