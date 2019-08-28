@@ -930,7 +930,7 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 		{
 			//说明没有EPTitle：
 			subject.progress = subject.eptitle;
-			subject.progress = "未知";
+			subject.eptitle = "未知";
 		}
 		else {
 			subject.progress = output_message.substr(pos);
