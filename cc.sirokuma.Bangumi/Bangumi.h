@@ -894,6 +894,11 @@ if(var.compare(var2)!=0)\
 
 		bangumi::string ProgressGet() {
 			bangumi::string ret;
+			if (ava_file.empty() && nick_name.empty()) {
+				ret >> '\n'
+					<< "<Î´ÊÕ²Ø>";
+				return std::move(ret);
+			}
 			ret >> "\n[CQ:image,file=" << ava_file << "]"
 				>> "[" << UTF82GBK(nick_name) << "]";
 			if (VerifyProgress()) {

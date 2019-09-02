@@ -2117,7 +2117,7 @@ namespace Resolve {
 	}
 
 	//解析RSS
-	inline std::pair<std::vector<bangumi::string>,bangumi::string> ResolveRSS(std::string &xml, BgmCode rss_type,int max_num,bangumi::string pre_str="", bool refresh = false) { ResolveRSS(std::string &xml, BgmCode rss_type,int max_num,bangumi::string pre_str="", bool refresh = false) {
+	inline std::pair<std::vector<bangumi::string>,bangumi::string> ResolveRSS(std::string &xml, BgmCode rss_type,int max_num,bangumi::string pre_str="", bool refresh = false) {
 		//一条消息最多的条目数
 #define RSS_ONE_MESSAGE_NUM 5
 #define RSS_ALL_NUM 10
@@ -2143,7 +2143,7 @@ namespace Resolve {
 		}
 		catch(std::exception&e){
 			ret[0] << "访问失败...";
-			return { ret,"" };
+			return{ ret,"" };
 		}
 
 		//窄字符
@@ -2154,7 +2154,7 @@ namespace Resolve {
 		}
 		catch (std::exception&e) {
 			ret[0] << "访问失败...";
-			return { ret,"" };
+			return{ ret,"" };
 		}
 		//日期的处理
 		//std::string strDateTime = "Fri, 17 May 2019 00:30:27 GMT";
@@ -2183,6 +2183,7 @@ namespace Resolve {
 		bangumi::string miniMess;
 		std::vector<std::string> title_vec;
 		std::vector<std::string> magn_vec;
+
 		switch (rss_type)
 		{
 
@@ -2319,7 +2320,7 @@ namespace Resolve {
 					//如果没有正确处理一个
 					//抛出一个异常
 					ret[0] << "暂无资源...";
-					return { ret,miniMess };
+					return{ ret,miniMess };
 				}
 			}
 			catch (std::exception& e)
@@ -2328,7 +2329,7 @@ namespace Resolve {
 				//自动忽略
 				//std::cout << e.what();
 				ret[0] << "...";
-				return { ret,miniMess };
+				return{ ret,miniMess };
 			}
 		}
 			break;
@@ -2458,13 +2459,13 @@ namespace Resolve {
 					++num_in_mssage;
 					//压入数组
 					title_vec.emplace_back(title);
-					magn_vec.emplace_back(bt_url);
+					magn_vec.emplace_back(encode_url);
 				}
 				if (num == 1) {
 					//如果没有正确处理一个
 					//抛出一个异常
 					ret[0] << "暂无资源...";
-					return { ret,miniMess };
+					return{ ret,miniMess };
 				}
 			}
 			catch (std::exception& e)
@@ -2473,7 +2474,7 @@ namespace Resolve {
 				//自动忽略
 				//std::cout << e.what();
 				ret[0] << "...";
-				return { ret,miniMess };
+				return{ ret,miniMess };
 			}
 		}
 			break;
@@ -2489,6 +2490,7 @@ namespace Resolve {
 		for (auto& m : magn_vec) {
 			miniMess >> m;
 		}
+
 #ifndef NDEBUG
 		{
 			bangumi::string debug_msg;
@@ -2524,7 +2526,7 @@ namespace Resolve {
 		//释放资源
 		//delete input_facet;
 		//返回
-		return { ret,miniMess };
+		return{ ret,miniMess };
 	}
 
 	//解析关联条目
@@ -2701,10 +2703,10 @@ namespace Resolve {
 								break;
 							if (tml_str[c + 1] != '(') {
 								//进行评分与吐槽的判断
-								if (tml_str[c + 1] == 'a'&&tml_str[c + 2] == 'r'&&tml_str[c + 3] == 's') {
+								if (tml_str[c + 1] == 'a'&&tml_str[c + 2] == 'r'&&tml_str[c + 3] == 's'&&tml_str[c-2]==' ') {
 									c += 3;
 									bangumi::string star;
-									while (tml_str[++c] != ' ') {
+									while (tml_str[++c] != '"') {
 										star << tml_str[c];
 									}
 									tml << "评分: " <<std::move(star);

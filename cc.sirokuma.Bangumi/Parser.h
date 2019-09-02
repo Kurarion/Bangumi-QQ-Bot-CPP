@@ -991,5 +991,34 @@ inline bool ParsingPic(int32_t subType, int32_t msgId, std::string &msg, int64_t
 	
 }
 
+bool RootMessage(int64_t fromQQ, std::string msg) {
+	//
+	if (fromQQ != std::stoll(bgm.owner_qq))
+	{
+		return false;
+	}
+	size_t pos = msg.find("cookie ");
+	if (pos != std::string::npos)
+	{
+		//自动忽略一个空格
+		msg = msg.substr(pos + 7);
+		//
+		bgm.SetBGMCookie(msg);
+		SendMsg.at(BgmRetType::Private)(ac, fromQQ, "Cookie更新成功");
+		return true;
+	}
+	pos = msg.find("user_agent ");
+	if (pos != std::string::npos)
+	{
+		//自动忽略一个空格
+		msg = msg.substr(pos + 11);
+		//
+		bgm.SetBGMUserAgent(msg);
+		SendMsg.at(BgmRetType::Private)(ac, fromQQ, "User-Agent更新成功");
+		return true;
+	}
+	return false;
+}
+
 
 #endif

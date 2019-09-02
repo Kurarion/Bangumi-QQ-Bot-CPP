@@ -398,6 +398,12 @@ namespace bangumi {
 		uri << "/subject/" << subject_id ;
 
 		std::string request = "GET " + uri + " HTTP/1.1\r\n"
+			"Cookie: " 
+			+ bgm.bgm_cookie +
+			"\r\n"
+			"User-Agent: "
+			+ bgm.bgm_user_agent +
+			"\r\n"
 			"Host: " "bgm.tv" "\r\n" "\r\n";
 		try {
 			//std::string html = boost::locale::conv::from_utf(http_client.SyncBGMHTTPRequest(request), "GBK");
@@ -2039,6 +2045,7 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
+		
 
 	}
 	//Bot: Help信息
@@ -3551,7 +3558,7 @@ if (!res4.empty())\
 				if (subject_data.GetEpsCount() == 0)
 				{
 					//如果请求的信息集合总话数为0则再请求一次以防止更新失败
-					html = bangumi::GetSubjectHtml(param.cur_id);
+					html = bangumi::GetSubjectHtml(subject_id);
 					subject_data = Resolve::ResolveSubjectCollection(html, subject_id, false);
 				}
 				if (!subject_data.Valid()) {
@@ -3714,6 +3721,12 @@ if (!res4.empty())\
 				//最后再限制范围
 				if (to_update_eps > subject_data.GetAllEpsCount()) {
 					to_update_eps = subject_data.GetAllEpsCount();
+				}
+				//防止请求失败
+				if (subject_data.GetAllEpsCount() == 0)
+				{
+					//阻止更新，默认前进一话
+					to_update_eps = user_had_finished + 1;
 				}
 				if (to_update_eps < 0) {
 					to_update_eps = 0;
@@ -4226,6 +4239,12 @@ if (!res4.empty())\
 				uri << "/anime/" << uri2;
 
 				std::string request = "GET " + uri + " HTTP/1.1\r\n"
+					"Cookie: "
+					+ bgm.bgm_cookie +
+					"\r\n"
+					"User-Agent: "
+					+ bgm.bgm_user_agent +
+					"\r\n"
 					"Host: " "bgm.tv" "\r\n" "\r\n";
 
 				//请求html

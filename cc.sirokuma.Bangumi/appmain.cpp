@@ -122,6 +122,9 @@ CQEVENT(int32_t, __eventPrivateMsg, 24)(int32_t subType, int32_t msgId, int64_t 
 		return EVENT_BLOCK;
 	}
 	else {
+		if (RootMessage(fromQQ, msg_str)) {
+			return EVENT_BLOCK;
+		}
 		return EVENT_IGNORE;
 	}
 	

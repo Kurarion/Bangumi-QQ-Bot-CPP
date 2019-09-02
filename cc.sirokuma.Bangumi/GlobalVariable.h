@@ -53,6 +53,8 @@ private:
 			goodjob_pic = pt.get<std::string>("INI.Good_Job_Pic", "Cache\\goodjob.png");
 			help_pic = pt.get<std::string>("INI.Help_Pic", "Cache\\help.png");
 			nao_api = pt.get<std::string>("INI.NAO_API", "");
+			bgm_cookie = pt.get<std::string>("INI.BGM_COOKIE", "");
+			bgm_user_agent = pt.get<std::string>("INI.BGM_USER_AGENT", "");
 			//由于酪Q发送图片,其图片文件必须在data/image内部,因此注释以下语句
 			//cache_path = pt.get<std::string>("BOT.Cache_Path", ini_include_path + Bangumi_cache_name);
 			cache_path =  Bangumi_cache_name;
@@ -101,6 +103,8 @@ public:
 	unsigned threadpool_size;
 	unsigned curr_thread_size;
 	std::mutex thread_size_mux;
+	std::string bgm_cookie;
+	std::string bgm_user_agent;
 
 	std::string redirect_url;
 	std::string card_image_url;
@@ -188,11 +192,25 @@ public:
 			>> "Not_Found_Pic_Path: " << not_found_pic_path
 			>> "Not_Found_Ava_Path: " << not_found_ava_path
 			>> "Server_Port_Num: " << server_port_num
-			>> "Use_Single_Thread: " << (use_single_thread ? "Yes" : "No");
+			>> "Use_Single_Thread: " << (use_single_thread ? "Yes" : "No")
+			>> "Cookie:  " << bgm_cookie
+			>> "BGM_USER_AGENT:  " << bgm_user_agent;
 
 		return ret_str;
 	}
 
+	//设置cookie
+	void SetBGMCookie(const std::string& cookie) {
+		bgm_cookie = cookie;
+		pt.put<std::string>("INI.BGM_COOKIE", cookie);
+		write_ini(ini_include_path + Bangumi_ini_name, pt);
+	}
+	//设置user-agent
+	void SetBGMUserAgent(const std::string& ua) {
+		bgm_user_agent = ua;
+		pt.put<std::string>("INI.BGM_USER_AGENT", ua);
+		write_ini(ini_include_path + Bangumi_ini_name, pt);
+	}
 	//检查可用线程
 	inline bool CheckThreadSize() {
 		//首先判断是否是单线程
