@@ -857,8 +857,10 @@ namespace Resolve {
 			//int subject_pos = 0;
 
 			//因为使用函数的前提是search_num = 1
-			//只处理第一个结果的Subject
-			if(pos!=list.end())
+			//[弃]只处理第一个结果的Subject 
+			//记录数组
+			std::map<boost::gregorian::date, bangumi::BangumiSubject&> subject_air_map;
+			while(pos!=list.end())
 			{
 				//使用局部变量
 				auto &pt = pos->second;
@@ -944,20 +946,34 @@ namespace Resolve {
 					wcollection,
 					detail_score);
 				//返回结构体
-				return{ ThreadVector,subject };
+				//return{ ThreadVector,subject };
+				//插入map
+				subject_air_map.emplace(wair_date, subject);
 				//msg << subject.SearchGet(++subject_pos);
+				++pos;
 
 			}
-			else {
-				//没有一条结果
-				//实际可能不存在这种情况,但还是为了以防万一抛出一个异常
-				throw boost::system::system_error(bangumi_bot_errors::search_failed);
-			}
+			//else {
+			//	//没有一条结果
+			//	//实际可能不存在这种情况,但还是为了以防万一抛出一个异常
+			//	//throw boost::system::system_error(bangumi_bot_errors::search_failed);
+			//}
 			//处理完成所有的Subject后
 			//由于统一是Subject的引用,只好在这个函数内直接返回Subject需要返回的内容SearchGet
 
 
+			//最后返回结构体
+			if (!subject_air_map.empty())
+			{
+				return{ ThreadVector,subject_air_map.rbegin()->second };
+			}
+			else {
 
+				//没有一条结果
+				//实际可能不存在这种情况,但还是为了以防万一抛出一个异常
+				throw boost::system::system_error(bangumi_bot_errors::search_failed);
+			}
+			
 
 
 			//return{ ThreadVector,std::move(msg) };

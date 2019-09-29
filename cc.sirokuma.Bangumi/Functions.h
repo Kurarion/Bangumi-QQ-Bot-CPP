@@ -1634,7 +1634,7 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 			//构造一个复杂参数对象
 			bangumi::ComplexParam complex_param;
 			//设定默认的Search参数
-			complex_param.search_max_num = 2;
+			complex_param.search_max_num = 5;
 			complex_param.search_start_pos = 0;
 			complex_param.search_type = 2;
 			//如果存在/则赋值
@@ -2045,7 +2045,6 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 		if(std::to_string(param.qq)==bgm.owner_qq&&param.type == BgmRetType::Private)
 			DEFAULT_SEND(param.type, bgm.GetConf());
 
-		
 
 	}
 	//Bot: Help信息
@@ -2453,33 +2452,7 @@ sss.find(s1)!=npos||sss.find(s2)!=npos
 			request_one->execute();
 		}
 
-		//boost::this_thread::sleep(boost::posix_time::seconds(10));
-//		std::string json;
-//
-//		//TODO:完成回调函数
-//		boost::this_thread::sleep(boost::posix_time::seconds(2));
-//
-//		GetResponseContent(request_one, json);
-//		//DEBUG
-//		//DEFAULT_SEND(param.type, json.c_str());
-//#ifndef NDEBUG
-//		{
-//			bangumi::string debug_msg;
-//			debug_msg<<"收到响应的Json"
-//				>>json.c_str();
-//			CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-HTTP", debug_msg);
-//		}
-//#endif
-//		auto pic_threads = Resolve::Resolve_User(json);
-//		bangumi::string msg = pic_threads.second.Get();
-//
-//		//结束的等待
-//		for (auto &t : pic_threads.first) {
-//			if(t != nullptr&&t->joinable())
-//				t->join();
-//		}
-//		//发送回复
-//		DEFAULT_SEND(param.type, msg);
+
 	}
 	//API: 返回Bangumi条目信息
 	inline void BGM_API_Subject(const BGMCodeParam & param, const std::set<size_t>& parameters_id, const std::set<std::string>& parameters_str) {
