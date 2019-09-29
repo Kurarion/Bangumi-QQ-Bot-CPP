@@ -881,8 +881,10 @@ namespace Resolve {
 				std::string wair_date_str = ResolveConv(pt.get<std::wstring>(L"air_date", L"0000-00-00"));
 				//默认是一个无效的日期
 				boost::gregorian::date wair_date;
+				bool need_add_map = false;
 				if (wair_date_str.compare("0000-00-00") != 0) {
 					//如果json中是一个有效的日期,则赋值
+					need_add_map = true;
 					wair_date = boost::gregorian::from_string(wair_date_str);
 				}
 				int wair_weekday = pt.get<int>(L"air_weekday", 0);
@@ -948,7 +950,10 @@ namespace Resolve {
 				//返回结构体
 				//return{ ThreadVector,subject };
 				//插入map
-				subject_air_map.emplace(wair_date, subject);
+				if (need_add_map)
+				{
+					subject_air_map.emplace(wair_date, subject);
+				}
 				//msg << subject.SearchGet(++subject_pos);
 				++pos;
 
