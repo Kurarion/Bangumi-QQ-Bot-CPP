@@ -295,8 +295,14 @@ namespace bangumi {
 		}
 
 	}
-
-	std::pair<bangumi::string,bangumi::BangumiUser> GetUserSubjectProgress(size_t subject_id, int eps, size_t user_id, int64_t qq,
+	//多变量使用结构体返回
+	struct UserSubjectProgress 
+	{
+		bangumi::string first;
+		bangumi::BangumiUser second;
+		bangumi::string third;
+	};
+	UserSubjectProgress GetUserSubjectProgress(size_t subject_id, int eps, size_t user_id, int64_t qq,
 		std::string access_token, std::string refresh_token, bool refresh, bool final_time = false) {
 
 		bangumi::string uri;
@@ -330,7 +336,7 @@ namespace bangumi {
 					t->join();
 			}
 
-			return{ std::move(msg), resolve_result.second };
+			return{ std::move(msg), resolve_result.second, access_token };
 		}
 		catch (boost::system::system_error&e) {
 			if (e.code() == boost::system::system_error(bangumi_bot_errors::user_not_collect_this_subject).code()) {
@@ -341,13 +347,13 @@ namespace bangumi {
 					BangumiUserProgress user_progress;
 					bgm_user.SetProgress(user_progress);
 					//为user添加Progress
-					return{ bgm_user.ProgressGet(),bgm_user };
+					return{ bgm_user.ProgressGet(),bgm_user,access_token };
 
 				}
 				catch (std::out_of_range) {
 					//没有找到
 					//直接返回
-					return{ e.what(),bangumi::BangumiUser() };
+					return{ e.what(),bangumi::BangumiUser(),access_token };
 				}
 			}
 			else if (e.code() == boost::system::system_error(bangumi_bot_errors::access_token_invalid).code()) {
@@ -360,7 +366,7 @@ namespace bangumi {
 					}
 					catch (boost::system::system_error&) {
 						//直接返回
-						return{ "",bangumi::BangumiUser() };
+						return{ "",bangumi::BangumiUser(),access_token };
 					}
 				}
 				else {
@@ -372,7 +378,7 @@ namespace bangumi {
 						CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-GetUserSubjectProgress", debug_msg);
 					}
 #endif	
-					return{ "\n\n授权发生了问题,请重新绑定Bangumi-ID...", bangumi::BangumiUser() };
+					return{ "\n\n授权发生了问题,请重新绑定Bangumi-ID...", bangumi::BangumiUser(),access_token };
 				}
 				
 			}
@@ -385,7 +391,7 @@ namespace bangumi {
 					CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-Func-GetUserSubjectProgress", debug_msg);
 				}
 #endif	
-				return{ "",bangumi::BangumiUser() };
+				return{ "",bangumi::BangumiUser(),access_token };
 			}
 		}
 
@@ -3550,6 +3556,8 @@ if (!res4.empty())\
 					auto progress_res = GetUserSubjectProgress(subject_id, subject_data.eps_counts, user_id,
 						param.qq, access_token, refresh_token, param.extra.refresh);
 					this_bgm_user = progress_res.second;
+					//防止以上函数进行了token的refresh而外面的函数并没有获得此更新
+					access_token = progress_res.third;
 					//user_progress = this_bgm_user.progress;
 				}
 
