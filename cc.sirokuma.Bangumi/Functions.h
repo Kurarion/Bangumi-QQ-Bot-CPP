@@ -48,7 +48,8 @@ namespace bangumi {
 		std::string request1 = "POST "  "/oauth/access_token"  " HTTP/1.1\r\n"
 			"Host: " "bgm.tv" "\r\n" + header1 + "\r\n" + content1;
 
-		std::string json1 = http_client.SyncBGMHTTPRequest(request1);
+		//std::string json1 = http_client.SyncBGMHTTPRequest(request1);
+		std::string json1 =*(time_worker.SyncBGMHTTPRequestWithCheckOverTime(http_client, request1, 3));
 
 #ifndef NDEBUG
 		{
@@ -4825,7 +4826,7 @@ if (!res4.empty())\
 
 			//根据信息构造uri
 			bangumi::string uri2;
-			
+
 			//条目类型
 			uri2 << '/' << complex_param.ucollection_subject_type << "/list/";
 
@@ -4846,8 +4847,15 @@ if (!res4.empty())\
 			boost::property_tree::ptree json_pt;
 			//因为解析需要一个流输入,因此使用stringstream,也支持文件流读取
 			std::istringstream json_input(json);
-			//解析json
-			boost::property_tree::read_json(json_input, json_pt);
+			try {
+				//解析json
+				boost::property_tree::read_json(json_input, json_pt);
+			}
+			catch (boost::exception& e) {
+				//回复消息
+				DEFAULT_SEND(param.type, "不存在的用户名");
+				continue;
+			}
 			//
 			size_t id = json_pt.get<size_t>("id", 0);
 			bangumi_id = json_pt.get<std::string>("username", "");

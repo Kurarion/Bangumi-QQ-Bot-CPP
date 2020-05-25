@@ -63,6 +63,43 @@ public:
 #endif	
 	}
 
+	//超时Json任务
+	std::shared_ptr<std::string> SyncBGMHTTPRequestWithCheckOverTime(HTTPClient& http_client,std::string request, unsigned countdown) {
+		
+		boost::mutex mutexWait;               // 互斥锁
+		boost::condition_variable condWait;   // 条件变量
+		std::shared_ptr<std::string>result = std::make_shared<std::string>("{\"error\":1}");
+
+		boost::thread httpTheard([&](){
+			result = std::make_shared<std::string>(http_client.SyncBGMHTTPRequest(request));
+			condWait.notify_one();
+		});
+
+		boost::mutex::scoped_lock lockWait(mutexWait);
+		bool isOk = condWait.timed_wait(lockWait, boost::posix_time::seconds(countdown));
+
+		if (!isOk) {
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << "超时!" << *result;
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-TimeWorker", debug_msg);
+			}
+#endif	
+		}
+		else {
+#ifndef NDEBUG
+			{
+				bangumi::string debug_msg;
+				debug_msg << "OK！" << *result;
+				CQ_addLog(ac, CQLOG_DEBUG, "Bangumi-Bot-TimeWorker", debug_msg);
+			}
+#endif	
+		}
+		httpTheard.interrupt();
+		return result;
+	}
+
 private:
 	asio::io_service& m_ios;
 	//std::shared_ptr<asio::steady_timer> m_timer;
